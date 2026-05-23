@@ -280,8 +280,15 @@ textarea {
 
     <!-- MAOSH -->
     <div class="page active" id="page-salary">
-      <div class="page-title">💼 Maosh Hisoboti</div>
-      <div class="page-sub">O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div class="page-title">💼 Maosh Hisoboti</div>
+          <div class="page-sub">O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash</div>
+        </div>
+        <button class="btn btn-ghost" style="padding:10px 18px;" onclick="showSalaryHistory()">
+          📜 Tarix
+        </button>
+      </div>
       <div class="stepper">
         <div class="step-dot active" id="dot0"></div>
         <div class="step-dot" id="dot1"></div>
@@ -370,6 +377,7 @@ Ozodbek 4</div>
 
       <div class="step" id="step4">
         <div class="result-status" id="resultStatus"></div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:12px;" id="syncStatus"></div>
         <div class="card success">
           <div class="file-name">📄 Maosh hisoboti</div>
           <div class="file-meta" id="fileMeta"></div>
@@ -380,6 +388,21 @@ Ozodbek 4</div>
           </div>
         </div>
         <div id="reportPreview"></div>
+      </div>
+
+      <!-- STEP 5: TARIX (Google Sheets) -->
+      <div class="step" id="step5">
+        <div class="card accent">
+          <div class="card-title">📜 Maosh Tarixi</div>
+          <div class="card-desc">Barcha qurilmalardan saqlangan hisobotlar (Google Sheets)</div>
+          <div id="historyList" style="margin-top:10px;">
+            <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(0)">⬅️ Orqaga</button>
+          <button class="btn btn-primary" onclick="showSalaryHistory()">🔄 Yangilash</button>
+        </div>
       </div>
     </div>
 
@@ -464,6 +487,11 @@ let currentStep = 0;
 let reportData = null;
 let currentTheme = localStorage.getItem('aok_theme') || 'dark';
 
+// ============================================================
+//  GOOGLE SHEETS API — sinxron server
+// ============================================================
+const SHEETS_API = 'https://script.google.com/macros/s/AKfycbxB1om_dk8WlUjDkesF0RRNL5OTuFzFMFQ4-SOuwYT1Kv-Y6OaeQ1WPAuOQTtx9zkQD/exec';
+
 window.addEventListener('DOMContentLoaded', () => {
   if (currentTheme === 'light') document.body.classList.add('light');
   updateThemeUI();
@@ -519,13 +547,69 @@ function goStep(step) {
   document.querySelectorAll('#page-salary .step').forEach(s => s.classList.remove('active'));
   document.getElementById('step' + step).classList.add('active');
   currentStep = step;
-  for (let i = 0; i <= 3; i++) {
-    const dot = document.getElementById('dot' + i);
-    dot.classList.remove('active', 'done');
-    if (i < step) dot.classList.add('done');
-    else if (i === step) dot.classList.add('active');
+  // Stepper — faqat 0-4 qadamlar uchun
+  const stepper = document.querySelector('#page-salary .stepper');
+  if (step >= 0 && step <= 4) {
+    if (stepper) stepper.style.display = 'flex';
+    for (let i = 0; i <= 3; i++) {
+      const dot = document.getElementById('dot' + i);
+      dot.classList.remove('active', 'done');
+      if (i < step) dot.classList.add('done');
+      else if (i === step) dot.classList.add('active');
+    }
+  } else {
+    if (stepper) stepper.style.display = 'none';
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ============================================================
+//  MAOSH TARIXI — Google Sheets dan o'qish
+// ============================================================
+function showSalaryHistory() {
+  goStep(5);
+  const listEl = document.getElementById('historyList');
+  listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ Server dan yuklanmoqda...</div>';
+  fetch(SHEETS_API + '?action=list_salary')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== 'ok') {
+        listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">⚠️ Xato: ' +
+          (res.message || 'noma\'lum') + '</div>';
+        return;
+      }
+      if (!res.rows || res.rows.length === 0) {
+        listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">' +
+          '📭 Hali hisobot yo\'q. Birinchi maosh hisobotini yarating!</div>';
+        return;
+      }
+      // Eng yangi birinchi
+      const rows = res.rows.slice().reverse();
+      let html = '<div style="font-size:13px;color:var(--text-dim);margin-bottom:10px;">' +
+        'Jami ' + rows.length + ' ta hisobot:</div>';
+      rows.forEach(row => {
+        let dateStr = row.date;
+        try {
+          const dt = new Date(row.date);
+          dateStr = dt.toLocaleDateString('uz-UZ') + ' ' +
+            dt.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
+        } catch (e) {}
+        html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+          'border-radius:8px;padding:12px 14px;margin-bottom:8px;">' +
+          '<div style="font-weight:700;color:var(--text);font-size:14px;">👨‍🏫 ' +
+          escapeHtml(String(row.teacher)) + '</div>' +
+          '<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">' +
+          '📅 ' + dateStr + '  •  👥 ' + row.studentCount + " ta o'quvchi</div>" +
+          '<div style="font-size:13px;color:var(--success);font-weight:700;margin-top:4px;">' +
+          '💰 Jami: ' + fmt(row.totalSumma) + " so'm  (QANCHADAN: " + fmt(row.baseAmount) + ')</div>' +
+          '</div>';
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(err => {
+      listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+        '⚠️ Server bilan aloqa yo\'q. Internet ulanishini tekshiring.</div>';
+    });
 }
 
 function parseStudents(text) {
@@ -584,6 +668,50 @@ function generateReport() {
   document.getElementById('fileMeta').textContent =
     students.length + " ta o'quvchi • Jami: " + fmt(totalSumma) + " so'm";
   goStep(4);
+  // Google Sheets ga saqlash (fonда)
+  saveSalaryToSheets(reportData);
+}
+
+// ============================================================
+//  GOOGLE SHEETS — Maosh hisobotini saqlash
+// ============================================================
+function saveSalaryToSheets(d) {
+  const syncEl = document.getElementById('syncStatus');
+  if (syncEl) {
+    syncEl.textContent = '☁️ Serverga saqlanmoqda...';
+    syncEl.style.color = 'var(--warning)';
+  }
+  const params = new URLSearchParams({
+    action: 'save_salary',
+    date: d.date.toISOString(),
+    teacher: d.teacher,
+    studentCount: d.students.length,
+    baseAmount: d.baseAmount,
+    totalSumma: d.totalSumma,
+    studentsJson: JSON.stringify(d.students)
+  });
+  fetch(SHEETS_API, {
+    method: 'POST',
+    body: params
+  })
+  .then(r => r.json())
+  .then(res => {
+    if (syncEl) {
+      if (res.status === 'ok') {
+        syncEl.textContent = '✅ Serverga saqlandi (sinxron)';
+        syncEl.style.color = 'var(--success)';
+      } else {
+        syncEl.textContent = '⚠️ Saqlanmadi: ' + (res.message || '');
+        syncEl.style.color = 'var(--danger)';
+      }
+    }
+  })
+  .catch(err => {
+    if (syncEl) {
+      syncEl.textContent = '⚠️ Server bilan aloqa yo\'q (faqat shu qurilmada)';
+      syncEl.style.color = 'var(--danger)';
+    }
+  });
 }
 
 function buildReportHTML(d) {
