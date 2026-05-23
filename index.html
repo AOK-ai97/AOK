@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1923">
+<title>AOK — Hisobot Dasturi</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root {
+  --bg:#0f1923; --sidebar:#162130; --card:#1c2d3f; --card-hover:#243a50;
+  --accent:#00d4aa; --accent2:#00b894; --accent-dark:#00a87e;
+  --text:#e8f0f8; --text-dim:#7a8ea0; --text-muted:#4a5e70;
+  --border:#2a3f55; --danger:#ff6b6b; --warning:#ffd93d;
+  --success:#00d4aa; --input-bg:#12202e;
+}
+body.light {
+  --bg:#f0f4f8; --sidebar:#e2e8f0; --card:#ffffff; --card-hover:#edf2f7;
+  --accent:#0891b2; --accent2:#0e7490; --accent-dark:#155e75;
+  --text:#1e293b; --text-dim:#475569; --text-muted:#94a3b8;
+  --border:#cbd5e1; --danger:#ef4444; --warning:#f59e0b;
+  --success:#10b981; --input-bg:#f8fafc;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Segoe UI','Trebuchet MS',system-ui,sans-serif;
+  background:var(--bg); color:var(--text); min-height:100vh;
+  -webkit-font-smoothing:antialiased; transition:background .3s,color .3s;
+}
+.app { display:flex; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width:230px; background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  position:fixed; top:0; left:0; bottom:0; z-index:200;
+  transition:transform .3s;
+}
+.sidebar-logo {
+  padding:22px 20px; text-align:center;
+  border-bottom:1px solid var(--border);
+}
+.logo-text { font-size:30px; font-weight:800; letter-spacing:1px; }
+.logo-text .a { color:var(--accent); }
+.logo-text .o { color:#2d64dc; }
+.logo-text .k { color:var(--warning); }
+.logo-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.nav { flex:1; padding:12px 0; overflow-y:auto; }
+.nav-item {
+  display:flex; align-items:center; gap:12px;
+  padding:13px 20px; cursor:pointer;
+  color:var(--text-dim); font-size:14px; font-weight:500;
+  transition:background .15s,color .15s;
+  border-left:3px solid transparent;
+}
+.nav-item:hover { background:var(--card); color:var(--text); }
+.nav-item.active {
+  background:var(--card-hover); color:var(--accent);
+  border-left-color:var(--accent); font-weight:700;
+}
+.nav-item .ic { font-size:18px; }
+.nav-soon {
+  font-size:9px; background:var(--border); color:var(--text-muted);
+  padding:2px 6px; border-radius:8px; margin-left:auto;
+}
+.sidebar-footer {
+  padding:14px 20px; border-top:1px solid var(--border);
+}
+.theme-toggle {
+  display:flex; align-items:center; gap:8px; cursor:pointer;
+  color:var(--text-muted); font-size:13px; padding:8px 0;
+}
+.theme-toggle:hover { color:var(--text); }
+.copyright { font-size:10px; color:var(--text-muted); text-align:center; margin-top:8px; }
+
+/* MAIN */
+.main { flex:1; margin-left:230px; min-height:100vh; }
+.mobile-bar {
+  display:none; background:var(--sidebar);
+  border-bottom:1px solid var(--border);
+  padding:12px 16px; align-items:center; gap:12px;
+  position:sticky; top:0; z-index:150;
+}
+.hamburger {
+  font-size:24px; cursor:pointer; color:var(--accent);
+  background:none; border:none;
+}
+.overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.5); z-index:199;
+}
+
+/* PAGE */
+.page { max-width:920px; margin:0 auto; padding:30px 24px 60px; display:none; }
+.page.active { display:block; animation:fadeIn .25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+.page-title { font-size:26px; font-weight:800; color:var(--accent); margin-bottom:4px; }
+.page-sub { color:var(--text-dim); font-size:14px; margin-bottom:26px; }
+
+/* CARD */
+.card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:14px; padding:22px; margin-bottom:16px;
+}
+.card.accent { border-color:var(--accent); border-width:2px; }
+.card.success { border-color:var(--success); border-width:2px; }
+.card-title { font-size:17px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+.card-desc { font-size:13px; color:var(--text-muted); margin-bottom:14px; }
+
+/* INPUT */
+label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--text); }
+input[type=text], input[type=number], textarea {
+  width:100%; background:var(--input-bg);
+  border:1.5px solid var(--border); border-radius:8px;
+  padding:12px 14px; color:var(--text);
+  font-size:15px; font-family:inherit; transition:border-color .2s;
+}
+input:focus, textarea:focus { outline:none; border-color:var(--accent); }
+textarea {
+  resize:vertical; min-height:200px;
+  font-family:'Consolas','Courier New',monospace;
+  font-size:14px; line-height:1.6;
+}
+
+/* BUTTON */
+.btn {
+  border:none; border-radius:9px; padding:12px 24px;
+  font-size:15px; font-weight:700; font-family:inherit;
+  cursor:pointer; transition:transform .1s,filter .2s;
+}
+.btn:active { transform:scale(.97); }
+.btn:hover { filter:brightness(1.1); }
+.btn-primary { background:var(--accent); color:#0f1923; }
+.btn-big { font-size:16px; padding:15px 32px; }
+.btn-ghost { background:var(--card-hover); color:var(--text); }
+.btn-warning { background:var(--warning); color:#333; }
+.btn-row {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:12px; margin-top:16px; flex-wrap:wrap;
+}
+
+/* STEPPER */
+.stepper { display:flex; gap:8px; margin-bottom:24px; }
+.step-dot {
+  flex:1; height:6px; border-radius:3px;
+  background:var(--border); transition:background .3s;
+}
+.step-dot.active { background:var(--accent); }
+.step-dot.done { background:var(--accent2); }
+.step { display:none; }
+.step.active { display:block; animation:fadeIn .3s ease; }
+
+/* NAMUNA */
+.namuna {
+  background:var(--input-bg); border:1px solid var(--border);
+  border-radius:8px; padding:12px 16px; margin-bottom:14px;
+}
+.namuna-title { font-size:12px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+.namuna-code {
+  font-family:'Consolas',monospace; font-size:13px;
+  color:var(--text-dim); line-height:1.7; white-space:pre-wrap;
+}
+.counter {
+  font-size:13px; font-weight:700; color:var(--text-muted);
+  padding:6px 12px; background:var(--input-bg); border-radius:20px;
+}
+.counter.ok { color:var(--success); }
+.steps-info { font-size:14px; line-height:1.9; color:var(--text); }
+.formula {
+  background:var(--input-bg); border-left:3px solid var(--accent);
+  padding:10px 16px; margin:12px 0; border-radius:0 8px 8px 0;
+  font-family:'Consolas',monospace; font-size:14px; color:var(--accent);
+}
+
+/* RESULT */
+.result-status { font-size:14px; font-weight:700; color:var(--success); margin-bottom:12px; line-height:1.5; }
+.file-name { font-size:16px; font-weight:700; color:var(--success); margin-bottom:4px; }
+.file-meta { font-size:12px; color:var(--text-muted); margin-bottom:14px; }
+
+/* PREVIEW */
+#reportPreview {
+  background:#fff; color:#1a1a1a; padding:28px;
+  border-radius:10px; margin-top:16px; overflow-x:auto;
+}
+.rp-title { text-align:center; font-size:22px; font-weight:800; color:#1a5276; margin-bottom:6px; }
+.rp-sub { text-align:center; font-size:13px; color:#555; margin-bottom:4px; }
+.rp-stat-table, .rp-main-table { width:100%; border-collapse:collapse; margin-top:14px; }
+.rp-stat-table td, .rp-stat-table th,
+.rp-main-table td, .rp-main-table th {
+  border:1px solid #ccc; padding:9px 12px; font-size:13px;
+}
+.rp-stat-table th, .rp-main-table th { background:#1a5276; color:#fff; font-weight:700; }
+.rp-stat-table .label { background:#f0f8ff; }
+.rp-total-row td { background:#d4edda !important; font-weight:800; border-top:2px solid #1a5276; }
+.rp-main-table tr:nth-child(even) td { background:#f5f9fc; }
+.rp-right { text-align:right; }
+.rp-center { text-align:center; }
+.rp-section-title { font-size:15px; font-weight:700; color:#1a5276; margin-top:18px; }
+
+/* COMING SOON */
+.coming-soon { text-align:center; padding:60px 20px; }
+.coming-soon .icon { font-size:60px; margin-bottom:16px; }
+.coming-soon .title { font-size:20px; font-weight:700; color:var(--text); margin-bottom:8px; }
+.coming-soon .desc { font-size:14px; color:var(--text-dim); }
+
+/* RESPONSIVE */
+@media (max-width:768px) {
+  .sidebar { transform:translateX(-100%); }
+  .sidebar.open { transform:translateX(0); }
+  .main { margin-left:0; }
+  .mobile-bar { display:flex; }
+  .overlay.show { display:block; }
+  .page { padding:20px 14px 40px; }
+  .page-title { font-size:22px; }
+  .card { padding:16px; }
+  .btn { padding:11px 18px; font-size:14px; }
+  .btn-big { font-size:15px; padding:14px 24px; }
+  .btn-row { flex-direction:column-reverse; }
+  .btn-row .btn { width:100%; }
+  .counter { width:100%; text-align:center; }
+  #reportPreview { padding:14px; }
+  .rp-stat-table td, .rp-main-table td,
+  .rp-stat-table th, .rp-main-table th { padding:6px 8px; font-size:11px; }
+}
+.export-only { position:absolute; left:-9999px; top:0; width:760px; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-text"><span class="a">A</span><span class="o">O</span><span class="k">K</span></div>
+      <div class="logo-sub">Hisobot v3.0</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item" data-page="home" onclick="navigate('home')">
+        <span class="ic">🏠</span> Bosh sahifa <span class="nav-soon">tez kunda</span>
+      </div>
+      <div class="nav-item active" data-page="salary" onclick="navigate('salary')">
+        <span class="ic">💼</span> Maosh
+      </div>
+      <div class="nav-item" data-page="library" onclick="navigate('library')">
+        <span class="ic">📚</span> Kutubxona <span class="nav-soon">tez kunda</span>
+      </div>
+      <div class="nav-item" data-page="store" onclick="navigate('store')">
+        <span class="ic">🛒</span> Konstovar <span class="nav-soon">tez kunda</span>
+      </div>
+      <div class="nav-item" data-page="archive" onclick="navigate('archive')">
+        <span class="ic">🗃️</span> Arxiv <span class="nav-soon">tez kunda</span>
+      </div>
+      <div class="nav-item" data-page="settings" onclick="navigate('settings')">
+        <span class="ic">⚙️</span> Sozlamalar
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="theme-toggle" onclick="toggleTheme()">
+        <span id="themeIcon">☀️</span>
+        <span id="themeText">Kunduzgi rejim</span>
+      </div>
+      <div class="copyright">© 2026 AOK</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="mobile-bar">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <div class="logo-text" style="font-size:22px;">
+        <span class="a">A</span><span class="o">O</span><span class="k">K</span>
+      </div>
+    </div>
+
+    <!-- MAOSH -->
+    <div class="page active" id="page-salary">
+      <div class="page-title">💼 Maosh Hisoboti</div>
+      <div class="page-sub">O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash</div>
+      <div class="stepper">
+        <div class="step-dot active" id="dot0"></div>
+        <div class="step-dot" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+      </div>
+
+      <div class="step active" id="step0">
+        <div class="card accent">
+          <div class="card-title">🎯 Qanday ishlaydi?</div>
+          <div class="steps-info">
+            1️⃣ O'qituvchi ismini kiritasiz<br>
+            2️⃣ O'quvchilar ro'yxatini kiritasiz (FIO va kelgan kunlar)<br>
+            3️⃣ Bita o'quvchidan 12 kun uchun qancha summa bo'lishini kiritasiz
+            <div class="formula">Maosh = (Summa ÷ 12) × kelgan kunlari</div>
+            📄 Natija: PDF va JPG hisobot tayyor!
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--warning)">📝 Ro'yxat namunasi (erkin format)</div>
+          <div class="namuna-code">Behruz -- 10
+Sarvinoz --10
+Aziza opa - 2
+
+Sardor 11
+Elyor - 7
+Ozodbek 4</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:10px;">
+            ✅ <b>-- , - , : , |</b> belgilarini ishlatishingiz mumkin. Bo'sh qatorlar e'tiborga olinmaydi.
+          </div>
+        </div>
+        <button class="btn btn-primary btn-big" style="width:100%" onclick="goStep(1)">🚀 Boshlash</button>
+      </div>
+
+      <div class="step" id="step1">
+        <div class="card accent">
+          <div class="card-title">👨‍🏫 O'QITUVCHI</div>
+          <div class="card-desc">O'qituvchining ism-familiyasini kiriting</div>
+          <label>O'qituvchi:</label>
+          <input type="text" id="teacherName" placeholder="Masalan: Fotima Berdiyeva"
+                 onkeydown="if(event.key==='Enter')goStep(2)">
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(0)">⬅️ Orqaga</button>
+          <button class="btn btn-primary" onclick="goStep(2)">Keyingi ➡️</button>
+        </div>
+      </div>
+
+      <div class="step" id="step2">
+        <div class="card accent">
+          <div class="card-title">📋 O'quvchilar Davomati</div>
+          <div class="card-desc" id="teacherLabel">O'quvchilar ro'yxatini kiriting</div>
+          <div class="namuna">
+            <div class="namuna-title">✅ Namuna formatlar:</div>
+            <div class="namuna-code">Behruz -- 10   |   Aziza opa - 2   |   Sardor 11</div>
+          </div>
+          <label>O'quvchilar ro'yxati:</label>
+          <textarea id="studentsText" placeholder="Behruz -- 10&#10;Sarvinoz -- 10&#10;Aziza opa - 2&#10;..."
+                    oninput="updateCounter()"></textarea>
+          <div style="margin-top:10px;text-align:right;">
+            <span class="counter" id="studentCounter">0 ta o'quvchi</span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(1)">⬅️ Orqaga</button>
+          <button class="btn btn-primary" onclick="goStep(3)">✅ Keyingi ➡️</button>
+        </div>
+      </div>
+
+      <div class="step" id="step3">
+        <div class="card accent">
+          <div class="card-title">💰 QANCHADAN</div>
+          <div class="card-desc">Bitta o'quvchidan 12 kun uchun qancha to'lov olinadi?</div>
+          <label>Summa (so'm):</label>
+          <input type="number" id="baseAmount" value="100000" placeholder="100000"
+                 onkeydown="if(event.key==='Enter')generateReport()">
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+            💡 Misol: 100000 — bu 12 kun uchun. Boshqa kunlar proportional hisoblanadi.
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="goStep(2)">⬅️ Orqaga</button>
+          <button class="btn btn-primary btn-big" onclick="generateReport()">📊 Hisobot tayyorlansin!</button>
+        </div>
+      </div>
+
+      <div class="step" id="step4">
+        <div class="result-status" id="resultStatus"></div>
+        <div class="card success">
+          <div class="file-name">📄 Maosh hisoboti</div>
+          <div class="file-meta" id="fileMeta"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <button class="btn btn-primary" onclick="downloadPDF()">📥 PDF yuklab olish</button>
+            <button class="btn btn-warning" onclick="downloadJPG()">🖼️ JPG yuklab olish</button>
+            <button class="btn btn-ghost" onclick="newReport()">🔄 Yangi hisobot</button>
+          </div>
+        </div>
+        <div id="reportPreview"></div>
+      </div>
+    </div>
+
+    <!-- BOSH -->
+    <div class="page" id="page-home">
+      <div class="page-title">🏠 Bosh Hisobot</div>
+      <div class="page-sub">HiBot Excel faylidan to'lovlar hisobotini yaratish</div>
+      <div class="card"><div class="coming-soon">
+        <div class="icon">🚧</div>
+        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="desc">Excel yuklash, xarajatlar, PDF hisobot — keyingi yangilanishda</div>
+      </div></div>
+    </div>
+
+    <!-- KUTUBXONA -->
+    <div class="page" id="page-library">
+      <div class="page-title">📚 Kutubxona</div>
+      <div class="page-sub">Kitoblar, qarzdorlar, kassa</div>
+      <div class="card"><div class="coming-soon">
+        <div class="icon">🚧</div>
+        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="desc">Kitoblar boshqaruvi — keyingi yangilanishda</div>
+      </div></div>
+    </div>
+
+    <!-- KONSTOVAR -->
+    <div class="page" id="page-store">
+      <div class="page-title">🛒 Konstovar</div>
+      <div class="page-sub">Maxsulotlar, sotish, kassa</div>
+      <div class="card"><div class="coming-soon">
+        <div class="icon">🚧</div>
+        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="desc">Maxsulotlar boshqaruvi — keyingi yangilanishda</div>
+      </div></div>
+    </div>
+
+    <!-- ARXIV -->
+    <div class="page" id="page-archive">
+      <div class="page-title">🗃️ Arxiv</div>
+      <div class="page-sub">Barcha hisobotlar tarixi</div>
+      <div class="card"><div class="coming-soon">
+        <div class="icon">🚧</div>
+        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="desc">Arxiv — keyingi yangilanishda</div>
+      </div></div>
+    </div>
+
+    <!-- SOZLAMALAR -->
+    <div class="page" id="page-settings">
+      <div class="page-title">⚙️ Sozlamalar</div>
+      <div class="page-sub">Dastur sozlamalari</div>
+      <div class="card">
+        <div class="card-title">🏫 O'quv markaz nomi</div>
+        <div class="card-desc">Bu nom har bir hisobotda chiqadi</div>
+        <label>Markaz nomi:</label>
+        <input type="text" id="markazName" placeholder="Masalan: OFEDU" onchange="saveSettings()">
+      </div>
+      <div class="card">
+        <div class="card-title">🎨 Rang sxemasi</div>
+        <div class="card-desc">Tungi yoki kunduzgi rejim</div>
+        <button class="btn btn-ghost" onclick="toggleTheme()">
+          <span id="themeBtn">☀️ Kunduzgi rejimga o'tish</span>
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title">ℹ️ Dastur haqida</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
+          AOK Hisobot Dasturi — sayt versiyasi v3.0<br>
+          O'quv markaz uchun hisobot tizimi<br>
+          📱 Telefonga o'rnatish mumkin (PWA)
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="export-only" id="exportPreview"></div>
+
+<script>
+let currentStep = 0;
+let reportData = null;
+let currentTheme = localStorage.getItem('aok_theme') || 'dark';
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (currentTheme === 'light') document.body.classList.add('light');
+  updateThemeUI();
+  document.getElementById('markazName').value = localStorage.getItem('aok_markaz') || '';
+});
+
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
+  closeSidebar();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+function toggleTheme() {
+  document.body.classList.toggle('light');
+  currentTheme = document.body.classList.contains('light') ? 'light' : 'dark';
+  localStorage.setItem('aok_theme', currentTheme);
+  updateThemeUI();
+}
+function updateThemeUI() {
+  const isLight = currentTheme === 'light';
+  document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
+  document.getElementById('themeText').textContent = isLight ? 'Tungi rejim' : 'Kunduzgi rejim';
+  const btn = document.getElementById('themeBtn');
+  if (btn) btn.textContent = isLight ? "🌙 Tungi rejimga o'tish" : "☀️ Kunduzgi rejimga o'tish";
+}
+function saveSettings() {
+  localStorage.setItem('aok_markaz', document.getElementById('markazName').value.trim());
+}
+
+function goStep(step) {
+  if (step === 2 && currentStep === 1) {
+    const name = document.getElementById('teacherName').value.trim();
+    if (!name) { alert("O'qituvchi ismini kiriting!"); return; }
+    document.getElementById('teacherLabel').textContent = "O'qituvchi: " + name;
+  }
+  if (step === 3 && currentStep === 2) {
+    const students = parseStudents(document.getElementById('studentsText').value);
+    if (students.length === 0) {
+      alert("O'quvchilar ro'yxatini to'g'ri kiriting!\n\nMisol:\nBehruz -- 10\nSardor 5");
+      return;
+    }
+  }
+  document.querySelectorAll('#page-salary .step').forEach(s => s.classList.remove('active'));
+  document.getElementById('step' + step).classList.add('active');
+  currentStep = step;
+  for (let i = 0; i <= 3; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.classList.remove('active', 'done');
+    if (i < step) dot.classList.add('done');
+    else if (i === step) dot.classList.add('active');
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function parseStudents(text) {
+  const students = [];
+  for (let line of text.split('\n')) {
+    line = line.trim();
+    if (!line) continue;
+    if (/^[\-=_~\s]+$/.test(line)) continue;
+    const m = line.match(/(\d+)\s*$/);
+    if (!m) continue;
+    const days = parseInt(m[1]);
+    let name = line.substring(0, m.index).trim();
+    name = name.replace(/[\-:|=]+\s*$/, '').trim();
+    name = name.replace(/^[\-:|=]+\s*/, '').trim();
+    name = name.replace(/\s+/g, ' ').trim();
+    if (name) students.push({ name: name, days: days });
+  }
+  return students;
+}
+
+function updateCounter() {
+  const count = parseStudents(document.getElementById('studentsText').value).length;
+  const counter = document.getElementById('studentCounter');
+  if (count > 0) {
+    counter.textContent = '✓ ' + count + " ta o'quvchi tanildi";
+    counter.classList.add('ok');
+  } else {
+    counter.textContent = "0 ta o'quvchi";
+    counter.classList.remove('ok');
+  }
+}
+
+function fmt(num) { return Math.round(num).toLocaleString('en-US'); }
+
+function generateReport() {
+  const teacher = document.getElementById('teacherName').value.trim();
+  const students = parseStudents(document.getElementById('studentsText').value);
+  const baseAmount = parseFloat(document.getElementById('baseAmount').value);
+  if (!baseAmount || baseAmount <= 0) { alert("Summani to'g'ri kiriting!"); return; }
+  const perDay = baseAmount / 12;
+  let totalSumma = 0, totalDays = 0;
+  students.forEach(s => {
+    s.amount = Math.round(perDay * s.days);
+    totalSumma += s.amount;
+    totalDays += s.days;
+  });
+  reportData = {
+    teacher, students, baseAmount, perDay, totalSumma, totalDays,
+    markaz: localStorage.getItem('aok_markaz') || '', date: new Date()
+  };
+  const html = buildReportHTML(reportData);
+  document.getElementById('reportPreview').innerHTML = html;
+  document.getElementById('exportPreview').innerHTML = html;
+  document.getElementById('resultStatus').textContent =
+    '✅ Tayyor!  |  Maosh: ' + fmt(totalSumma) + '  |  ' + students.length + " ta o'quvchi  |  " + teacher;
+  document.getElementById('fileMeta').textContent =
+    students.length + " ta o'quvchi • Jami: " + fmt(totalSumma) + " so'm";
+  goStep(4);
+}
+
+function buildReportHTML(d) {
+  const dateStr = d.date.toLocaleDateString('uz-UZ') + ' ' +
+    d.date.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
+  let html = '';
+  if (d.markaz) {
+    html += '<div style="text-align:center;font-size:14px;font-weight:700;color:#333;">' +
+            escapeHtml(d.markaz) + '</div>';
+  }
+  html += '<div class="rp-title">MAOSH HISOBOTI</div>' +
+    '<div class="rp-sub">O\'qituvchi: <b>' + escapeHtml(d.teacher) + '</b></div>' +
+    '<div class="rp-sub">Sana: ' + dateStr + '</div>' +
+    '<table class="rp-stat-table">' +
+    '<tr><th>KO\'RSATKICH</th><th>QIYMAT</th></tr>' +
+    '<tr><td class="label">12 kun uchun summa (QANCHADAN)</td>' +
+    '<td class="rp-right"><b>' + fmt(d.baseAmount) + '</b> so\'m</td></tr>' +
+    '<tr><td class="label">1 kun uchun summa</td>' +
+    '<td class="rp-right">' + fmt(d.perDay) + ' so\'m</td></tr>' +
+    '<tr><td class="label">Jami o\'quvchilar</td>' +
+    '<td class="rp-right">' + d.students.length + ' ta</td></tr>' +
+    '<tr class="rp-total-row"><td>JAMI YIG\'ILADIGAN SUMMA</td>' +
+    '<td class="rp-right">' + fmt(d.totalSumma) + ' so\'m</td></tr>' +
+    '</table>' +
+    '<div class="rp-section-title">O\'QUVCHILAR DAVOMATI</div>' +
+    '<table class="rp-main-table">' +
+    '<tr><th class="rp-center">#</th><th>O\'quvchi FIO</th>' +
+    '<th class="rp-center">Kelgan kunlari</th>' +
+    '<th class="rp-right">Hisoblandi (so\'m)</th></tr>';
+  d.students.forEach((s, i) => {
+    html += '<tr><td class="rp-center">' + (i+1) + '</td>' +
+      '<td>' + escapeHtml(s.name) + '</td>' +
+      '<td class="rp-center">' + s.days + ' kun</td>' +
+      '<td class="rp-right">' + fmt(s.amount) + '</td></tr>';
+  });
+  html += '<tr class="rp-total-row"><td></td><td><b>JAMI:</b></td>' +
+    '<td class="rp-center"><b>' + d.totalDays + ' kun</b></td>' +
+    '<td class="rp-right"><b>' + fmt(d.totalSumma) + '</b></td></tr>' +
+    '</table>' +
+    '<div style="text-align:right;font-size:11px;color:#888;margin-top:14px;">' +
+    'Hisobot yaratilgan: ' + dateStr + '</div>';
+  return html;
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+async function downloadPDF() {
+  if (!reportData) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p', 'mm', 'a4');
+  const d = reportData;
+  const pageW = doc.internal.pageSize.getWidth();
+  let y = 18;
+  if (d.markaz) {
+    doc.setFontSize(12); doc.setTextColor(51,51,51); doc.setFont(undefined,'bold');
+    doc.text(d.markaz, pageW/2, y, {align:'center'}); y += 8;
+  }
+  doc.setFontSize(18); doc.setTextColor(26,82,118); doc.setFont(undefined,'bold');
+  doc.text('MAOSH HISOBOTI', pageW/2, y, {align:'center'}); y += 8;
+  doc.setFontSize(11); doc.setTextColor(85,85,85); doc.setFont(undefined,'normal');
+  doc.text("O'qituvchi: " + d.teacher, pageW/2, y, {align:'center'}); y += 6;
+  const dateStr = d.date.toLocaleDateString('uz-UZ') + ' ' +
+    d.date.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
+  doc.text('Sana: ' + dateStr, pageW/2, y, {align:'center'}); y += 8;
+  doc.autoTable({
+    startY: y,
+    head: [["KO'RSATKICH", 'QIYMAT']],
+    body: [
+      ['12 kun uchun summa (QANCHADAN)', fmt(d.baseAmount) + " so'm"],
+      ['1 kun uchun summa', fmt(d.perDay) + " so'm"],
+      ["Jami o'quvchilar", d.students.length + ' ta'],
+      ["JAMI YIG'ILADIGAN SUMMA", fmt(d.totalSumma) + " so'm"],
+    ],
+    theme: 'grid',
+    headStyles: { fillColor:[26,82,118], textColor:255, fontStyle:'bold' },
+    columnStyles: { 1:{halign:'right'} },
+    bodyStyles: { fontSize:10 },
+    didParseCell: function(data) {
+      if (data.row.index === 3) {
+        data.cell.styles.fillColor = [212,237,218];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+  const bodyRows = d.students.map((s,i) => [i+1, s.name, s.days+' kun', fmt(s.amount)]);
+  bodyRows.push(['', 'JAMI:', d.totalDays+' kun', fmt(d.totalSumma)]);
+  doc.autoTable({
+    startY: doc.lastAutoTable.finalY + 10,
+    head: [['#', "O'quvchi FIO", 'Kelgan kunlari', 'Hisoblandi (som)']],
+    body: bodyRows,
+    theme: 'grid',
+    headStyles: { fillColor:[26,82,118], textColor:255, fontStyle:'bold' },
+    columnStyles: { 0:{halign:'center',cellWidth:14}, 2:{halign:'center'}, 3:{halign:'right'} },
+    bodyStyles: { fontSize:9 },
+    alternateRowStyles: { fillColor:[245,249,252] },
+    didParseCell: function(data) {
+      if (data.row.index === bodyRows.length - 1) {
+        data.cell.styles.fillColor = [212,237,218];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    }
+  });
+  doc.setFontSize(8); doc.setTextColor(136,136,136);
+  doc.text('Hisobot yaratilgan: ' + dateStr, pageW-12,
+    doc.internal.pageSize.getHeight()-8, {align:'right'});
+  doc.save('maosh_' + safeFileName(d.teacher) + '.pdf');
+}
+
+async function downloadJPG() {
+  if (!reportData) return;
+  try {
+    const canvas = await html2canvas(document.getElementById('exportPreview'), {
+      scale: 2, backgroundColor: '#ffffff', logging: false
+    });
+    const link = document.createElement('a');
+    link.download = 'maosh_' + safeFileName(reportData.teacher) + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+  } catch (e) {
+    alert('JPG yaratishda xato: ' + e.message);
+  }
+}
+
+function safeFileName(name) {
+  return name.replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '_');
+}
+
+function newReport() {
+  document.getElementById('teacherName').value = '';
+  document.getElementById('studentsText').value = '';
+  document.getElementById('baseAmount').value = '100000';
+  document.getElementById('studentCounter').textContent = "0 ta o'quvchi";
+  document.getElementById('studentCounter').classList.remove('ok');
+  reportData = null;
+  goStep(0);
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
