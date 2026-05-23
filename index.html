@@ -10,7 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root {
   --bg:#0f1923; --sidebar:#162130; --card:#1c2d3f; --card-hover:#243a50;
@@ -634,8 +634,8 @@ function escapeHtml(s) {
   return div.innerHTML;
 }
 
-async function downloadPDF() {
-  if (!reportData) return;
+// PDF hujjatini yaratish (saqlamaydi — faqat doc qaytaradi)
+function buildPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p', 'mm', 'a4');
   const d = reportData;
@@ -693,15 +693,45 @@ async function downloadPDF() {
   doc.setFontSize(8); doc.setTextColor(136,136,136);
   doc.text('Hisobot yaratilgan: ' + dateStr, pageW-12,
     doc.internal.pageSize.getHeight()-8, {align:'right'});
-  doc.save('maosh_' + safeFileName(d.teacher) + '.pdf');
+  return doc;
 }
 
+// PDF yuklab olish
+async function downloadPDF() {
+  if (!reportData) return;
+  const doc = buildPDF();
+  doc.save('maosh_' + safeFileName(reportData.teacher) + '.pdf');
+}
+
+// JPG yuklab olish — PDF dan rasmga aylantirish (aniq, muammosiz)
 async function downloadJPG() {
   if (!reportData) return;
   try {
-    const canvas = await html2canvas(document.getElementById('exportPreview'), {
-      scale: 2, backgroundColor: '#ffffff', logging: false
-    });
+    // 1. PDF ni yaratamiz
+    const doc = buildPDF();
+    // 2. PDF ni baytlar massiviga aylantiramiz
+    const pdfBytes = doc.output('arraybuffer');
+    // 3. pdf.js bilan PDF ni ochamiz
+    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    // 4. Birinchi sahifani yuqori sifatda rasmga aylantiramiz
+    const page = await pdf.getPage(1);
+    const scale = 3; // yuqori sifat
+    const viewport = page.getViewport({ scale: scale });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    // Oq fon
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // PDF sahifasini chizamiz
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    // 5. JPG sifatida yuklab olamiz
     const link = document.createElement('a');
     link.download = 'maosh_' + safeFileName(reportData.teacher) + '.jpg';
     link.href = canvas.toDataURL('image/jpeg', 0.95);
