@@ -415,6 +415,53 @@ textarea {
   .book-item { flex-wrap:wrap; }
   .book-actions { width:100%; justify-content:space-between; }
 }
+
+/* ===== SELECT ===== */
+.select-input {
+  width:100%; background:var(--input-bg);
+  border:1.5px solid var(--border); border-radius:8px;
+  padding:12px 14px; color:var(--text);
+  font-size:15px; font-family:inherit; cursor:pointer;
+}
+.select-input:focus { outline:none; border-color:var(--accent); }
+
+/* ===== TO'LOV TURI ===== */
+.pay-type-row { display:flex; gap:10px; margin-top:6px; }
+.pay-type-btn {
+  flex:1; background:var(--input-bg);
+  border:1.5px solid var(--border); border-radius:8px;
+  padding:12px; font-size:14px; font-weight:700;
+  color:var(--text-dim); cursor:pointer; font-family:inherit;
+  transition:all .15s;
+}
+.pay-type-btn.active {
+  background:var(--accent); color:#0f1923; border-color:var(--accent);
+}
+
+/* ===== O'QITUVCHI KARTOCHKA ===== */
+.teacher-item {
+  background:var(--input-bg); border:1px solid var(--border);
+  border-radius:10px; padding:14px; margin-bottom:10px;
+}
+.teacher-head {
+  display:flex; justify-content:space-between; align-items:flex-start;
+  gap:10px; flex-wrap:wrap;
+}
+.teacher-name {
+  font-weight:700; color:var(--text); font-size:15px;
+}
+.teacher-debt {
+  font-size:13px; font-weight:700; color:var(--danger);
+}
+.teacher-debt.zero { color:var(--success); }
+.teacher-books {
+  font-size:12px; color:var(--text-dim); margin-top:6px;
+  line-height:1.6;
+}
+.teacher-actions {
+  display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;
+}
+.teacher-actions .btn { padding:7px 12px; font-size:13px; }
 </style>
 </head>
 <body>
@@ -679,6 +726,7 @@ Ozodbek 4</div>
       <!-- Amal tugmalari -->
       <div class="action-row">
         <button class="btn btn-primary" onclick="openBookDialog()">📕 Kitob qo'shish</button>
+        <button class="btn btn-warning" onclick="openTeacherDialog()">👤 O'qituvchi qo'shish</button>
         <button class="btn btn-ghost" onclick="loadLibrary()">🔄 Yangilash</button>
       </div>
 
@@ -686,6 +734,14 @@ Ozodbek 4</div>
       <div class="card">
         <div class="card-title">📚 Kitoblar javoni</div>
         <div id="booksList" style="margin-top:12px;">
+          <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
+        </div>
+      </div>
+
+      <!-- O'qituvchilar / Qarzdorlar -->
+      <div class="card">
+        <div class="card-title">👥 O'qituvchilar (qarzdorlar)</div>
+        <div id="teachersList" style="margin-top:12px;">
           <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
         </div>
       </div>
@@ -725,6 +781,81 @@ Ozodbek 4</div>
         <div class="modal-footer">
           <button class="btn btn-ghost" onclick="closeBookDialog()">Bekor</button>
           <button class="btn btn-primary" id="bookSaveBtn" onclick="saveBook()">💾 Saqlash</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- O'QITUVCHI DIALOGI -->
+    <div class="modal-overlay" id="teacherModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span id="teacherModalTitle">👤 O'qituvchi qo'shish</span>
+          <button class="modal-close" onclick="closeTeacherDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label>O'qituvchi ismi:</label>
+          <input type="text" id="teacherInput" placeholder="Masalan: Durdona Adilova">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeTeacherDialog()">Bekor</button>
+          <button class="btn btn-primary" id="teacherSaveBtn" onclick="saveTeacher()">💾 Saqlash</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KITOB BERISH DIALOGI -->
+    <div class="modal-overlay" id="giveBookModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span>📖 Kitob berish</span>
+          <button class="modal-close" onclick="closeGiveBookDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="giveBookTeacher" style="font-size:14px;font-weight:700;
+               color:var(--accent);margin-bottom:12px;"></div>
+          <label>Kitobni tanlang:</label>
+          <select id="giveBookSelect" class="select-input"></select>
+          <label>Nechta:</label>
+          <input type="number" id="giveBookQty" value="1" min="1">
+          <div id="giveBookInfo" style="font-size:13px;color:var(--text-dim);
+               margin-top:10px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeGiveBookDialog()">Bekor</button>
+          <button class="btn btn-primary" id="giveBookBtn" onclick="confirmGiveBook()">
+            📖 Berish
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TO'LANDI DIALOGI -->
+    <div class="modal-overlay" id="payDebtModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span>💰 Qarz to'landi</span>
+          <button class="modal-close" onclick="closePayDebtDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="payDebtTeacher" style="font-size:14px;font-weight:700;
+               color:var(--accent);margin-bottom:6px;"></div>
+          <div id="payDebtTotal" style="font-size:13px;color:var(--text-dim);
+               margin-bottom:12px;"></div>
+          <label>To'lanayotgan summa:</label>
+          <input type="number" id="payDebtAmount" placeholder="0">
+          <label>To'lov turi:</label>
+          <div class="pay-type-row">
+            <button class="pay-type-btn active" data-pt="Naqt"
+                    onclick="selectPayType('Naqt')">💵 Naqt</button>
+            <button class="pay-type-btn" data-pt="Click"
+                    onclick="selectPayType('Click')">📱 Click</button>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closePayDebtDialog()">Bekor</button>
+          <button class="btn btn-primary" id="payDebtBtn" onclick="confirmPayDebt()">
+            💰 To'lash
+          </button>
         </div>
       </div>
     </div>
@@ -1168,6 +1299,9 @@ function showSalaryHistory() {
           'onclick="downloadHistoryPDF(' + idx + ')">📥 PDF</button>' +
           '<button class="btn btn-warning" style="padding:7px 14px;font-size:13px;" ' +
           'onclick="downloadHistoryJPG(' + idx + ')">🖼️ JPG</button>' +
+          '<button class="btn" style="padding:7px 14px;font-size:13px;' +
+          'background:var(--danger);color:#fff;" ' +
+          'onclick="deleteHistory(' + idx + ')">🗑️ O\'chirish</button>' +
           '</div>' +
           '</div>';
       });
@@ -1177,6 +1311,54 @@ function showSalaryHistory() {
       listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
         '⚠️ Server bilan aloqa yo\'q. Internet ulanishini tekshiring.</div>';
     });
+}
+
+// Maosh hisobotini o'chirish — Arxivga ko'chirib, keyin o'chirish
+function deleteHistory(idx) {
+  const row = window._historyData[idx];
+  if (!row) return;
+  if (!confirm('Bu hisobotni o\'chirasizmi?\n\n' +
+    '👨‍🏫 ' + row.teacher + '\n' +
+    '💰 ' + fmt(row.totalSumma) + ' so\'m\n\n' +
+    'O\'chirilgan hisobot Arxivga tushadi.')) return;
+
+  const desc = 'Maosh: ' + (row.teacher || '') +
+    (row.month ? ' (' + row.month + ')' : '') +
+    ' — ' + (row.studentCount || 0) + ' o\'quvchi';
+
+  // 1. Arxivga yozish
+  fetch(SHEETS_API, {
+    method: 'POST',
+    body: buildArchiveParams('Maosh', 'O\'chirildi', desc,
+      parseFloat(row.totalSumma) || 0)
+  })
+    .then(r => r.json())
+    .then(() => {
+      // 2. Maosh dan o'chirish
+      const delParams = new URLSearchParams({ action: 'delete_salary', id: row.id });
+      return fetch(SHEETS_API, { method: 'POST', body: delParams });
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') {
+        showSalaryHistory(); // ro'yxatni yangilash
+      } else {
+        alert('⚠️ Xato: ' + (res.message || ''));
+      }
+    })
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+// Arxiv parametrlarini tuzish (action nomi to'qnashmasligi uchun)
+function buildArchiveParams(module, actionName, description, amount) {
+  const p = new URLSearchParams();
+  p.set('action', 'save_archive');
+  p.set('module', module);
+  p.set('actionName', actionName);
+  p.set('description', description);
+  p.set('amount', amount);
+  p.set('date', new Date().toISOString());
+  return p;
 }
 
 // Tarixdagi hisobotni reportData formatiga tiklash
@@ -1272,7 +1454,12 @@ function updateCounter() {
   }
 }
 
-function fmt(num) { return Math.round(num).toLocaleString('en-US'); }
+function fmt(num) {
+  // Matn, bo'sh yoki noto'g'ri qiymatlarni xavfsiz raqamga aylantirish
+  let n = parseFloat(num);
+  if (isNaN(n)) n = 0;
+  return Math.round(n).toLocaleString('en-US');
+}
 
 function generateReport() {
   const teacher = document.getElementById('teacherName').value.trim();
@@ -1547,6 +1734,9 @@ function loadLibrary() {
       list.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
         '⚠️ Server bilan aloqa yo\'q</div>';
     });
+  // O'qituvchilar / qarzdorlarni ham yuklash
+  loadLibraryDebts();
+  loadLibraryCash();
 }
 
 // Kitoblar ro'yxatini chizish
@@ -1582,10 +1772,37 @@ function renderBooks() {
 }
 
 // Statistikani yangilash
+let libCash = [];  // kassa yozuvlari
+
 function updateLibStats() {
+  // Jami kitoblar
   const totalBooks = libBooks.reduce((s, b) => s + (parseInt(b.count) || 0), 0);
   document.getElementById('libStatBooks').textContent = totalBooks + ' ta';
-  // Qarz va kassa — keyingi qismlarda (qarzdorlar/kassa)
+  // Jami qarz (barcha o'qituvchilar qarzi yig'indisi)
+  const totalDebt = libDebts.reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
+  document.getElementById('libStatDebt').textContent = fmt(Math.max(0, totalDebt));
+  // Kassa — naqt va click
+  let cashNaqt = 0, cashClick = 0;
+  libCash.forEach(c => {
+    if (String(c.module) !== 'Kutubxona') return;
+    const amt = parseFloat(c.amount) || 0;
+    const sign = (String(c.type) === 'chiqim') ? -1 : 1;
+    if (String(c.payType) === 'Click') cashClick += amt * sign;
+    else cashNaqt += amt * sign;
+  });
+  document.getElementById('libStatCashNaqt').textContent = fmt(cashNaqt);
+  document.getElementById('libStatCashClick').textContent = fmt(cashClick);
+}
+
+// Kassani yuklash
+function loadLibraryCash() {
+  return fetch(SHEETS_API + '?action=list_cash')
+    .then(r => r.json())
+    .then(res => {
+      libCash = (res.status === 'ok') ? (res.rows || []) : [];
+      updateLibStats();
+    })
+    .catch(() => { libCash = []; });
 }
 
 // ---- KITOB DIALOGI ----
@@ -1730,6 +1947,317 @@ function deleteBook(i) {
       }
     })
     .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+// ============================================================
+//  KUTUBXONA — O'QITUVCHILAR / QARZDORLAR
+// ============================================================
+// Qarzdorlar sheet: har yozuv = bitta kitob berish/to'lov amali
+//   item: kitob nomi (yoki "TO'LOV")
+//   amount: qarz summasi (+) yoki to'lov (-)
+// O'qituvchilar — Qarzdorlar dan o'qituvchi bo'yicha guruhlanadi
+
+let libDebts = [];        // barcha qarz yozuvlari
+let editingTeacherName = null;
+
+// loadLibrary ni kengaytiramiz — qarzdorlarni ham yuklaymiz
+function loadLibraryDebts() {
+  return fetch(SHEETS_API + '?action=list_debts')
+    .then(r => r.json())
+    .then(res => {
+      libDebts = (res.status === 'ok') ? (res.rows || []) : [];
+      renderTeachers();
+      updateLibStats();
+    })
+    .catch(() => {
+      libDebts = [];
+      const el = document.getElementById('teachersList');
+      if (el) el.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+}
+
+// O'qituvchilarni qarz yozuvlaridan guruhlab chiqarish
+function getTeacherGroups() {
+  const groups = {};
+  libDebts.forEach(d => {
+    const name = String(d.person || '').trim();
+    if (!name) return;
+    if (!groups[name]) groups[name] = { name: name, debt: 0, items: [] };
+    const amt = parseFloat(d.amount) || 0;
+    groups[name].debt += amt;
+    groups[name].items.push(d);
+  });
+  return Object.values(groups);
+}
+
+// O'qituvchilar ro'yxatini chizish
+function renderTeachers() {
+  const el = document.getElementById('teachersList');
+  const groups = getTeacherGroups();
+  if (!groups.length) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">' +
+      '📭 Hali o\'qituvchi qo\'shilmagan</div>';
+    return;
+  }
+  let html = '';
+  groups.forEach(g => {
+    const debtClass = g.debt > 0 ? '' : 'zero';
+    const debtText = g.debt > 0 ? ('Qarz: ' + fmt(g.debt)) : 'Qarzi yo\'q ✅';
+    // Kitoblar ro'yxati (faqat qarz qoldiqlari)
+    let booksInfo = '';
+    g.items.forEach(it => {
+      const amt = parseFloat(it.amount) || 0;
+      if (it.item === "TO'LOV") {
+        booksInfo += '<div>💰 To\'lov: ' + fmt(-amt) + '</div>';
+      } else if (amt > 0) {
+        booksInfo += '<div>📖 ' + escapeHtml(String(it.item)) +
+          ' — ' + fmt(amt) + '</div>';
+      } else {
+        booksInfo += '<div>↩️ ' + escapeHtml(String(it.item)) +
+          ' (qaytarildi)</div>';
+      }
+    });
+    html += '<div class="teacher-item">' +
+      '<div class="teacher-head">' +
+        '<div class="teacher-name">👤 ' + escapeHtml(g.name) + '</div>' +
+        '<div class="teacher-debt ' + debtClass + '">' + debtText + '</div>' +
+      '</div>' +
+      '<div class="teacher-books">' + (booksInfo || 'Amal yo\'q') + '</div>' +
+      '<div class="teacher-actions">' +
+        '<button class="btn btn-warning" onclick="openGiveBook(\'' +
+          encodeURIComponent(g.name) + '\')">📖 Kitob berish</button>' +
+        '<button class="btn btn-primary" onclick="openPayDebt(\'' +
+          encodeURIComponent(g.name) + '\')">💰 To\'landi</button>' +
+        '<button class="icon-btn edit" onclick="editTeacher(\'' +
+          encodeURIComponent(g.name) + '\')">✏️</button>' +
+        '<button class="icon-btn del" onclick="deleteTeacher(\'' +
+          encodeURIComponent(g.name) + '\')">🗑️</button>' +
+      '</div>' +
+    '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ---- O'QITUVCHI QO'SHISH / EDIT ----
+function openTeacherDialog() {
+  editingTeacherName = null;
+  document.getElementById('teacherModalTitle').textContent = "👤 O'qituvchi qo'shish";
+  document.getElementById('teacherInput').value = '';
+  document.getElementById('teacherModal').classList.add('open');
+}
+
+function editTeacher(encName) {
+  const name = decodeURIComponent(encName);
+  editingTeacherName = name;
+  document.getElementById('teacherModalTitle').textContent = "✏️ O'qituvchi nomini o'zgartirish";
+  document.getElementById('teacherInput').value = name;
+  document.getElementById('teacherModal').classList.add('open');
+}
+
+function closeTeacherDialog() {
+  document.getElementById('teacherModal').classList.remove('open');
+}
+
+function saveTeacher() {
+  const name = document.getElementById('teacherInput').value.trim();
+  if (!name) { alert("O'qituvchi ismini kiriting!"); return; }
+  const btn = document.getElementById('teacherSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  if (editingTeacherName) {
+    // Edit — bu o'qituvchining barcha qarz yozuvlarида ismni yangilash
+    const items = libDebts.filter(d =>
+      String(d.person).trim() === editingTeacherName);
+    if (!items.length) {
+      closeTeacherDialog(); btn.disabled = false; btn.textContent = '💾 Saqlash';
+      return;
+    }
+    let done = 0;
+    items.forEach(it => {
+      const params = new URLSearchParams({
+        action: 'update_debt', id: it.id, person: name
+      });
+      fetch(SHEETS_API, { method: 'POST', body: params })
+        .then(() => {
+          done++;
+          if (done === items.length) {
+            btn.disabled = false; btn.textContent = '💾 Saqlash';
+            closeTeacherDialog();
+            loadLibraryDebts();
+          }
+        });
+    });
+  } else {
+    // Yangi o'qituvchi — bo'sh "ro'yxatga olish" yozuvi (0 summa)
+    const params = new URLSearchParams({
+      action: 'save_debt', person: name,
+      item: 'Ro\'yxatga olindi', amount: 0,
+      date: new Date().toISOString(), note: ''
+    });
+    fetch(SHEETS_API, { method: 'POST', body: params })
+      .then(r => r.json())
+      .then(() => {
+        btn.disabled = false; btn.textContent = '💾 Saqlash';
+        closeTeacherDialog();
+        loadLibraryDebts();
+      })
+      .catch(() => {
+        btn.disabled = false; btn.textContent = '💾 Saqlash';
+        alert('⚠️ Server bilan aloqa yo\'q');
+      });
+  }
+}
+
+function deleteTeacher(encName) {
+  const name = decodeURIComponent(encName);
+  if (!confirm('"' + name + '" o\'qituvchisini va uning barcha qarz yozuvlarini o\'chirasizmi?')) return;
+  const items = libDebts.filter(d => String(d.person).trim() === name);
+  if (!items.length) return;
+  let done = 0;
+  items.forEach(it => {
+    const params = new URLSearchParams({ action: 'delete_debt', id: it.id });
+    fetch(SHEETS_API, { method: 'POST', body: params })
+      .then(() => {
+        done++;
+        if (done === items.length) loadLibraryDebts();
+      });
+  });
+}
+
+// ---- KITOB BERISH ----
+let giveBookTeacherName = '';
+
+function openGiveBook(encName) {
+  giveBookTeacherName = decodeURIComponent(encName);
+  document.getElementById('giveBookTeacher').textContent =
+    '👤 ' + giveBookTeacherName;
+  // Kitoblar ro'yxatini select ga to'ldirish
+  const sel = document.getElementById('giveBookSelect');
+  sel.innerHTML = '';
+  const available = libBooks.filter(b => (parseInt(b.count) || 0) > 0);
+  if (!available.length) {
+    sel.innerHTML = '<option value="">— Javonда kitob yo\'q —</option>';
+  } else {
+    available.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.id;
+      opt.textContent = b.name + ' (' + b.count + ' ta, ' + fmt(b.price) + " so'm)";
+      sel.appendChild(opt);
+    });
+  }
+  document.getElementById('giveBookQty').value = '1';
+  document.getElementById('giveBookInfo').textContent = '';
+  document.getElementById('giveBookModal').classList.add('open');
+}
+
+function closeGiveBookDialog() {
+  document.getElementById('giveBookModal').classList.remove('open');
+}
+
+function confirmGiveBook() {
+  const bookId = document.getElementById('giveBookSelect').value;
+  const qty = parseInt(document.getElementById('giveBookQty').value) || 0;
+  if (!bookId) { alert('Kitob tanlang!'); return; }
+  if (qty < 1) { alert('Nechta — kamida 1!'); return; }
+  const book = libBooks.find(b => b.id === bookId);
+  if (!book) { alert('Kitob topilmadi'); return; }
+  const have = parseInt(book.count) || 0;
+  if (qty > have) { alert('Javonда faqat ' + have + ' ta bor!'); return; }
+
+  const btn = document.getElementById('giveBookBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  const price = parseFloat(book.price) || 0;
+  const total = price * qty;
+  const itemText = book.name + ' x' + qty;
+
+  // 1. Qarzdorlarga yozish (+summa)
+  const p1 = new URLSearchParams({
+    action: 'save_debt', person: giveBookTeacherName,
+    item: itemText, amount: total,
+    date: new Date().toISOString(), note: ''
+  });
+  // 2. Kitob sonini kamaytirish
+  const p2 = new URLSearchParams({
+    action: 'update_book', id: bookId, count: (have - qty)
+  });
+
+  Promise.all([
+    fetch(SHEETS_API, { method: 'POST', body: p1 }).then(r => r.json()),
+    fetch(SHEETS_API, { method: 'POST', body: p2 }).then(r => r.json())
+  ]).then(() => {
+    btn.disabled = false; btn.textContent = '📖 Berish';
+    closeGiveBookDialog();
+    loadLibrary();
+  }).catch(() => {
+    btn.disabled = false; btn.textContent = '📖 Berish';
+    alert('⚠️ Server bilan aloqa yo\'q');
+  });
+}
+
+// ---- TO'LANDI ----
+let payDebtTeacherName = '';
+let payDebtType = 'Naqt';
+
+function openPayDebt(encName) {
+  payDebtTeacherName = decodeURIComponent(encName);
+  payDebtType = 'Naqt';
+  const groups = getTeacherGroups();
+  const g = groups.find(x => x.name === payDebtTeacherName);
+  const debt = g ? g.debt : 0;
+  document.getElementById('payDebtTeacher').textContent = '👤 ' + payDebtTeacherName;
+  document.getElementById('payDebtTotal').textContent =
+    'Joriy qarz: ' + fmt(debt) + " so'm";
+  document.getElementById('payDebtAmount').value = debt > 0 ? debt : '';
+  document.querySelectorAll('#payDebtModal .pay-type-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-pt') === 'Naqt');
+  });
+  document.getElementById('payDebtModal').classList.add('open');
+}
+
+function selectPayType(pt) {
+  payDebtType = pt;
+  document.querySelectorAll('#payDebtModal .pay-type-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-pt') === pt);
+  });
+}
+
+function closePayDebtDialog() {
+  document.getElementById('payDebtModal').classList.remove('open');
+}
+
+function confirmPayDebt() {
+  const amount = parseFloat(document.getElementById('payDebtAmount').value) || 0;
+  if (amount <= 0) { alert('To\'lov summasini kiriting!'); return; }
+  const btn = document.getElementById('payDebtBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  // 1. Qarzdorlarga to'lov yozuvi (-summa)
+  const p1 = new URLSearchParams({
+    action: 'save_debt', person: payDebtTeacherName,
+    item: "TO'LOV", amount: -amount,
+    date: new Date().toISOString(), note: payDebtType
+  });
+  // 2. Kassaga tushum
+  const p2 = new URLSearchParams({
+    action: 'save_cash', module: 'Kutubxona', type: 'tushum',
+    amount: amount, payType: payDebtType,
+    note: payDebtTeacherName + ' — qarz to\'lovi',
+    date: new Date().toISOString()
+  });
+
+  Promise.all([
+    fetch(SHEETS_API, { method: 'POST', body: p1 }).then(r => r.json()),
+    fetch(SHEETS_API, { method: 'POST', body: p2 }).then(r => r.json())
+  ]).then(() => {
+    btn.disabled = false; btn.textContent = '💰 To\'lash';
+    closePayDebtDialog();
+    loadLibrary();
+  }).catch(() => {
+    btn.disabled = false; btn.textContent = '💰 To\'lash';
+    alert('⚠️ Server bilan aloqa yo\'q');
+  });
 }
 
 // ============================================================
