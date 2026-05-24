@@ -78,6 +78,15 @@ body {
 }
 .theme-toggle:hover { color:var(--text); }
 .copyright { font-size:10px; color:var(--text-muted); text-align:center; margin-top:8px; }
+.lang-row { display:flex; gap:6px; margin-bottom:10px; }
+.lang-mini {
+  flex:1; background:var(--card-hover); color:var(--text-dim);
+  border:1px solid var(--border); border-radius:6px;
+  padding:6px 0; font-size:12px; font-weight:700;
+  cursor:pointer; font-family:inherit; transition:all .15s;
+}
+.lang-mini:hover { color:var(--text); }
+.lang-mini.active { background:var(--accent); color:#0f1923; border-color:var(--accent); }
 
 /* MAIN */
 .main { flex:1; margin-left:230px; min-height:100vh; }
@@ -231,9 +240,99 @@ textarea {
 .export-only { position:absolute; left:-9999px; top:0; width:760px; }
 .lang-btn { background:var(--card-hover); color:var(--text); }
 .lang-btn.active { background:var(--accent); color:#0f1923; }
+
+/* ===== PAROL EKRANI ===== */
+.lock-screen {
+  position:fixed; inset:0; z-index:99999;
+  background:var(--bg);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px;
+}
+.lock-screen.hidden { display:none; }
+.lock-box {
+  width:100%; max-width:340px; text-align:center;
+}
+.lock-logo {
+  font-size:42px; font-weight:800; letter-spacing:2px; margin-bottom:18px;
+}
+.lock-logo .a { color:var(--accent); }
+.lock-logo .o { color:#2d64dc; }
+.lock-logo .k { color:var(--warning); }
+.lock-title {
+  font-size:20px; font-weight:700; color:var(--text); margin-bottom:6px;
+}
+.lock-desc {
+  font-size:13px; color:var(--text-dim); margin-bottom:22px;
+}
+.pin-dots {
+  display:flex; justify-content:center; gap:16px; margin-bottom:14px;
+}
+.pin-dot {
+  width:16px; height:16px; border-radius:50%;
+  border:2px solid var(--border); background:transparent;
+  transition:all .15s;
+}
+.pin-dot.filled {
+  background:var(--accent); border-color:var(--accent);
+}
+.pin-error {
+  font-size:13px; color:var(--danger); font-weight:600;
+  min-height:20px; margin-bottom:10px;
+}
+.pin-pad {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+  max-width:280px; margin:0 auto;
+}
+.pin-pad button {
+  aspect-ratio:1; border:1px solid var(--border);
+  background:var(--card); color:var(--text);
+  font-size:24px; font-weight:600; border-radius:50%;
+  cursor:pointer; font-family:inherit; transition:all .1s;
+}
+.pin-pad button:hover { background:var(--card-hover); }
+.pin-pad button:active { transform:scale(.92); }
+.pin-pad .pin-empty, .pin-pad .pin-back {
+  font-size:18px; color:var(--text-dim); background:transparent;
+}
+.lock-hint {
+  font-size:12px; color:var(--text-muted); margin-top:18px; line-height:1.6;
+}
 </style>
 </head>
 <body>
+
+<!-- ===== PAROL EKRANI ===== -->
+<div id="lockScreen" class="lock-screen">
+  <div class="lock-box">
+    <div class="lock-logo">
+      <span class="a">A</span><span class="o">O</span><span class="k">K</span>
+    </div>
+    <div class="lock-title" id="lockTitle">🔐 Parolni kiriting</div>
+    <div class="lock-desc" id="lockDesc">4 xonali parolni tering</div>
+    <div class="pin-dots" id="pinDots">
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+      <span class="pin-dot"></span>
+    </div>
+    <div class="pin-error" id="pinError"></div>
+    <div class="pin-pad">
+      <button onclick="pinPress('1')">1</button>
+      <button onclick="pinPress('2')">2</button>
+      <button onclick="pinPress('3')">3</button>
+      <button onclick="pinPress('4')">4</button>
+      <button onclick="pinPress('5')">5</button>
+      <button onclick="pinPress('6')">6</button>
+      <button onclick="pinPress('7')">7</button>
+      <button onclick="pinPress('8')">8</button>
+      <button onclick="pinPress('9')">9</button>
+      <button class="pin-empty" onclick="pinReset()">✖</button>
+      <button onclick="pinPress('0')">0</button>
+      <button class="pin-back" onclick="pinDelete()">⌫</button>
+    </div>
+    <div class="lock-hint" id="lockHint"></div>
+  </div>
+</div>
 
 <div class="app">
   <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
@@ -268,6 +367,11 @@ textarea {
       </div>
     </nav>
     <div class="sidebar-footer">
+      <div class="lang-row">
+        <button class="lang-mini" data-lang="uz" onclick="setLang('uz')">UZ</button>
+        <button class="lang-mini" data-lang="en" onclick="setLang('en')">EN</button>
+        <button class="lang-mini" data-lang="ru" onclick="setLang('ru')">RU</button>
+      </div>
       <div class="theme-toggle" onclick="toggleTheme()">
         <span id="themeIcon">☀️</span>
         <span id="themeText">Kunduzgi rejim</span>
@@ -489,6 +593,13 @@ Ozodbek 4</div>
         </button>
       </div>
       <div class="card">
+        <div class="card-title" data-i18n="pin_title">🔐 Parol</div>
+        <div class="card-desc" data-i18n="pin_desc">Kirish parolini o'zgartirish</div>
+        <button class="btn btn-ghost" onclick="changePinDialog()">
+          <span data-i18n="pin_change">🔑 Parolni o'zgartirish</span>
+        </button>
+      </div>
+      <div class="card">
         <div class="card-title" data-i18n="about_title">ℹ️ Dastur haqida</div>
         <div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
           AOK Hisobot — v3.0<br>
@@ -534,6 +645,8 @@ const I18N = {
     theme_title: "🎨 Rang sxemasi",
     theme_desc: "Tungi yoki kunduzgi rejim",
     about_title: "ℹ️ Dastur haqida",
+    pin_title: "🔐 Parol", pin_desc: "Kirish parolini o'zgartirish",
+    pin_change: "🔑 Parolni o'zgartirish",
     home_title: "🏠 Bosh Hisobot",
     library_title: "📚 Kutubxona",
     store_title: "🛒 Konstovar",
@@ -560,6 +673,8 @@ const I18N = {
     theme_title: "🎨 Color scheme",
     theme_desc: "Dark or light mode",
     about_title: "ℹ️ About",
+    pin_title: "🔐 Password", pin_desc: "Change login password",
+    pin_change: "🔑 Change password",
     home_title: "🏠 Main Report",
     library_title: "📚 Library",
     store_title: "🛒 Stationery",
@@ -586,6 +701,8 @@ const I18N = {
     theme_title: "🎨 Цветовая схема",
     theme_desc: "Тёмный или светлый режим",
     about_title: "ℹ️ О программе",
+    pin_title: "🔐 Пароль", pin_desc: "Изменить пароль входа",
+    pin_change: "🔑 Изменить пароль",
     home_title: "🏠 Главный отчёт",
     library_title: "📚 Библиотека",
     store_title: "🛒 Канцтовары",
@@ -615,8 +732,8 @@ function applyLang() {
     const val = t(key);
     if (val) el.textContent = val;
   });
-  // Til tugmalari — faolini belgilash
-  document.querySelectorAll('.lang-btn').forEach(btn => {
+  // Til tugmalari — faolini belgilash (sozlamalar + sidebar)
+  document.querySelectorAll('.lang-btn, .lang-mini').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
   });
   // Tema tugmasi matni
@@ -627,7 +744,119 @@ window.addEventListener('DOMContentLoaded', () => {
   if (currentTheme === 'light') document.body.classList.add('light');
   applyLang();
   document.getElementById('markazName').value = localStorage.getItem('aok_markaz') || '';
+  initLock();
 });
+
+// ============================================================
+//  4 XONALI PAROL TIZIMI
+// ============================================================
+let pinInput = '';
+let pinMode = 'check';    // 'check' | 'set' | 'confirm'
+let pinFirstEntry = '';   // 'set' bosqichida birinchi kiritilgan parol
+
+function initLock() {
+  const savedPin = localStorage.getItem('aok_pin');
+  if (savedPin) {
+    // Parol bor — kirishни so'raymiz
+    pinMode = 'check';
+    showLockScreen('🔐 Parolni kiriting', '4 xonali parolni tering', '');
+  } else {
+    // Parol yo'q — birinchi marta, o'rnatamiz
+    pinMode = 'set';
+    showLockScreen('🆕 Parol o\'rnating',
+      'Yangi 4 xonali parol yarating', '⚠️ Parolni eslab qoling! Unutsangiz ma\'lumotlar o\'chadi.');
+  }
+}
+
+function showLockScreen(title, desc, hint) {
+  document.getElementById('lockScreen').classList.remove('hidden');
+  document.getElementById('lockTitle').textContent = title;
+  document.getElementById('lockDesc').textContent = desc;
+  document.getElementById('lockHint').textContent = hint || '';
+  document.getElementById('pinError').textContent = '';
+  pinInput = '';
+  updatePinDots();
+}
+
+function updatePinDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('filled', i < pinInput.length);
+  });
+}
+
+function pinPress(digit) {
+  if (pinInput.length >= 4) return;
+  pinInput += digit;
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+  if (pinInput.length === 4) {
+    setTimeout(pinComplete, 150);
+  }
+}
+
+function pinDelete() {
+  pinInput = pinInput.slice(0, -1);
+  updatePinDots();
+}
+
+function pinReset() {
+  pinInput = '';
+  updatePinDots();
+  document.getElementById('pinError').textContent = '';
+}
+
+function pinComplete() {
+  if (pinMode === 'check') {
+    // Kirish — parolni tekshirish
+    const saved = localStorage.getItem('aok_pin');
+    if (pinInput === saved) {
+      unlockApp();
+    } else {
+      document.getElementById('pinError').textContent = '❌ Noto\'g\'ri parol!';
+      pinInput = '';
+      updatePinDots();
+    }
+  }
+  else if (pinMode === 'set') {
+    // Birinchi marta — parolni eslab, tasdiqlashni so'raymiz
+    pinFirstEntry = pinInput;
+    pinMode = 'confirm';
+    showLockScreen('🔁 Parolni tasdiqlang',
+      'Xuddi shu parolni qayta tering', '');
+  }
+  else if (pinMode === 'confirm') {
+    // Tasdiqlash
+    if (pinInput === pinFirstEntry) {
+      localStorage.setItem('aok_pin', pinInput);
+      unlockApp();
+    } else {
+      document.getElementById('pinError').textContent = '❌ Parollar mos kelmadi!';
+      pinMode = 'set';
+      pinFirstEntry = '';
+      pinInput = '';
+      setTimeout(() => {
+        showLockScreen('🆕 Parol o\'rnating',
+          'Yangi 4 xonali parol yarating',
+          '⚠️ Parolni eslab qoling! Unutsangiz ma\'lumotlar o\'chadi.');
+      }, 800);
+    }
+  }
+}
+
+function unlockApp() {
+  document.getElementById('lockScreen').classList.add('hidden');
+  pinInput = '';
+}
+
+// Sozlamalardan parolni o'zgartirish
+function changePinDialog() {
+  pinMode = 'set';
+  pinFirstEntry = '';
+  pinInput = '';
+  showLockScreen('🔑 Yangi parol', 'Yangi 4 xonali parol yarating',
+    '⚠️ Yangi parolni eslab qoling!');
+}
 
 function navigate(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
