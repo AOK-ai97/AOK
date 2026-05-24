@@ -237,6 +237,22 @@ textarea {
   .rp-stat-table td, .rp-main-table td,
   .rp-stat-table th, .rp-main-table th { padding:6px 8px; font-size:11px; }
 }
+
+/* YOTIQ (landscape) — telefon yon aylanганда */
+@media (orientation:landscape) and (max-height:500px) {
+  .page { padding:14px 18px 30px; }
+  .page-title { font-size:20px; }
+  .page-sub { font-size:12px; }
+  .card { padding:14px; }
+  .stat-grid { grid-template-columns:repeat(4,1fr); }
+  .modal { max-height:94vh; }
+  .modal-body { padding:14px 18px; }
+  .modal-header { padding:12px 18px; }
+  .modal-footer { padding:12px 18px; }
+}
+
+/* Modal — har doim ekrانга sиg'sин (aylanганда ham) */
+.modal-overlay { overflow-y:auto; }
 .export-only { position:absolute; left:-9999px; top:0; width:760px; }
 .lang-btn { background:var(--card-hover); color:var(--text); }
 .lang-btn.active { background:var(--accent); color:#0f1923; }
@@ -246,7 +262,7 @@ textarea {
   position:fixed; inset:0; z-index:99999;
   background:var(--bg);
   display:flex; align-items:center; justify-content:center;
-  padding:20px;
+  padding:20px; overflow-y:auto;
 }
 .lock-screen.hidden { display:none; }
 .lock-box {
@@ -296,6 +312,27 @@ textarea {
 }
 .lock-hint {
   font-size:12px; color:var(--text-muted); margin-top:18px; line-height:1.6;
+}
+
+/* Parol ekrani — YOTIQ (gorizontal) holat: logo chapda, raqamlar o'ngda */
+@media (orientation:landscape) and (max-height:520px) {
+  .lock-box {
+    max-width:680px; display:flex; align-items:center;
+    gap:30px; text-align:center;
+  }
+  .lock-left {
+    flex:1; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .lock-right { flex:1; }
+  .lock-logo { font-size:34px; margin-bottom:10px; }
+  .lock-title { font-size:17px; }
+  .lock-desc { margin-bottom:10px; }
+  .pin-dots { margin-bottom:8px; }
+  .pin-error { min-height:16px; margin-bottom:6px; }
+  .pin-pad { gap:8px; max-width:230px; }
+  .pin-pad button { font-size:19px; }
+  .lock-hint { margin-top:10px; }
 }
 
 /* ===== STATISTIKA GRID ===== */
@@ -469,33 +506,37 @@ textarea {
 <!-- ===== PAROL EKRANI ===== -->
 <div id="lockScreen" class="lock-screen">
   <div class="lock-box">
-    <div class="lock-logo">
-      <span class="a">A</span><span class="o">O</span><span class="k">K</span>
+    <div class="lock-left">
+      <div class="lock-logo">
+        <span class="a">A</span><span class="o">O</span><span class="k">K</span>
+      </div>
+      <div class="lock-title" id="lockTitle">🔐 Parolni kiriting</div>
+      <div class="lock-desc" id="lockDesc">4 xonali parolni tering</div>
+      <div class="pin-dots" id="pinDots">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+      <div class="pin-error" id="pinError"></div>
     </div>
-    <div class="lock-title" id="lockTitle">🔐 Parolni kiriting</div>
-    <div class="lock-desc" id="lockDesc">4 xonali parolni tering</div>
-    <div class="pin-dots" id="pinDots">
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
-      <span class="pin-dot"></span>
+    <div class="lock-right">
+      <div class="pin-pad">
+        <button onclick="pinPress('1')">1</button>
+        <button onclick="pinPress('2')">2</button>
+        <button onclick="pinPress('3')">3</button>
+        <button onclick="pinPress('4')">4</button>
+        <button onclick="pinPress('5')">5</button>
+        <button onclick="pinPress('6')">6</button>
+        <button onclick="pinPress('7')">7</button>
+        <button onclick="pinPress('8')">8</button>
+        <button onclick="pinPress('9')">9</button>
+        <button class="pin-empty" onclick="pinReset()">✖</button>
+        <button onclick="pinPress('0')">0</button>
+        <button class="pin-back" onclick="pinDelete()">⌫</button>
+      </div>
+      <div class="lock-hint" id="lockHint"></div>
     </div>
-    <div class="pin-error" id="pinError"></div>
-    <div class="pin-pad">
-      <button onclick="pinPress('1')">1</button>
-      <button onclick="pinPress('2')">2</button>
-      <button onclick="pinPress('3')">3</button>
-      <button onclick="pinPress('4')">4</button>
-      <button onclick="pinPress('5')">5</button>
-      <button onclick="pinPress('6')">6</button>
-      <button onclick="pinPress('7')">7</button>
-      <button onclick="pinPress('8')">8</button>
-      <button onclick="pinPress('9')">9</button>
-      <button class="pin-empty" onclick="pinReset()">✖</button>
-      <button onclick="pinPress('0')">0</button>
-      <button class="pin-back" onclick="pinDelete()">⌫</button>
-    </div>
-    <div class="lock-hint" id="lockHint"></div>
   </div>
 </div>
 
