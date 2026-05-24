@@ -297,6 +297,124 @@ textarea {
 .lock-hint {
   font-size:12px; color:var(--text-muted); margin-top:18px; line-height:1.6;
 }
+
+/* ===== STATISTIKA GRID ===== */
+.stat-grid {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:12px; margin-bottom:18px;
+}
+.stat-card {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:12px; padding:16px;
+}
+.stat-label { font-size:12px; color:var(--text-dim); margin-bottom:6px; }
+.stat-value { font-size:22px; font-weight:800; color:var(--accent); }
+
+/* ===== AMAL TUGMALARI ===== */
+.action-row {
+  display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap;
+}
+
+/* ===== MODAL (DIALOG) ===== */
+.modal-overlay {
+  display:none; position:fixed; inset:0; z-index:5000;
+  background:rgba(0,0,0,.6); align-items:center; justify-content:center;
+  padding:20px;
+}
+.modal-overlay.open { display:flex; animation:fadeIn .2s ease; }
+.modal {
+  background:var(--card); border:1px solid var(--border);
+  border-radius:16px; width:100%; max-width:440px;
+  max-height:90vh; overflow-y:auto;
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+  animation:modalPop .25s ease;
+}
+@keyframes modalPop {
+  from { opacity:0; transform:scale(.94) translateY(10px); }
+  to { opacity:1; transform:scale(1) translateY(0); }
+}
+.modal-header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 20px; border-bottom:1px solid var(--border);
+  font-size:17px; font-weight:700; color:var(--accent);
+}
+.modal-close {
+  background:var(--card-hover); border:none; color:var(--text);
+  width:32px; height:32px; border-radius:50%; cursor:pointer;
+  font-size:16px; transition:background .15s;
+}
+.modal-close:hover { background:var(--danger); color:#fff; }
+.modal-body { padding:20px; }
+.modal-body label { margin-top:12px; }
+.modal-body label:first-child { margin-top:0; }
+.modal-footer {
+  display:flex; justify-content:flex-end; gap:10px;
+  padding:16px 20px; border-top:1px solid var(--border);
+}
+
+/* ===== RASM TANLASH ===== */
+.img-picker {
+  display:flex; gap:12px; align-items:center; margin-top:6px;
+}
+.img-preview {
+  width:90px; height:90px; border-radius:10px;
+  border:2px dashed var(--border); background:var(--input-bg);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden; flex-shrink:0;
+}
+.img-preview img { width:100%; height:100%; object-fit:cover; }
+.img-preview span { font-size:11px; color:var(--text-muted); text-align:center; }
+
+/* ===== KITOB KARTOCHKA ===== */
+.book-item {
+  display:flex; align-items:center; gap:14px;
+  background:var(--input-bg); border:1px solid var(--border);
+  border-radius:10px; padding:12px 14px; margin-bottom:10px;
+}
+.book-img {
+  width:56px; height:56px; border-radius:8px; flex-shrink:0;
+  background:var(--card-hover); overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.book-img img { width:100%; height:100%; object-fit:cover; }
+.book-img .noimg {
+  font-size:18px; font-weight:800;
+}
+.book-img .noimg .a { color:var(--accent); }
+.book-img .noimg .o { color:#2d64dc; }
+.book-img .noimg .k { color:var(--warning); }
+.book-info { flex:1; min-width:0; }
+.book-name {
+  font-weight:700; color:var(--text); font-size:15px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.book-price { font-size:13px; color:var(--text-dim); margin-top:2px; }
+.book-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.count-btn {
+  width:34px; height:34px; border:none; border-radius:8px;
+  font-size:18px; font-weight:700; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+}
+.count-minus { background:var(--danger); color:#fff; }
+.count-plus { background:var(--accent); color:#0f1923; }
+.count-num {
+  min-width:40px; text-align:center; font-weight:800;
+  font-size:16px; color:var(--text);
+}
+.icon-btn {
+  width:34px; height:34px; border:none; border-radius:8px;
+  cursor:pointer; font-size:15px;
+  display:flex; align-items:center; justify-content:center;
+}
+.icon-btn.edit { background:var(--warning); color:#333; }
+.icon-btn.del { background:var(--danger); color:#fff; }
+
+@media (max-width:768px) {
+  .stat-grid { grid-template-columns:repeat(2,1fr); }
+  .stat-value { font-size:18px; }
+  .book-item { flex-wrap:wrap; }
+  .book-actions { width:100%; justify-content:space-between; }
+}
 </style>
 </head>
 <body>
@@ -535,13 +653,80 @@ Ozodbek 4</div>
 
     <!-- KUTUBXONA -->
     <div class="page" id="page-library">
-      <div class="page-title" data-i18n="library_title">📚 Kutubxona</div>
+      <div class="page-title">📚 Kutubxona</div>
       <div class="page-sub">Kitoblar, qarzdorlar, kassa</div>
-      <div class="card"><div class="coming-soon">
-        <div class="icon">🚧</div>
-        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
-        <div class="desc">Kitoblar boshqaruvi — keyingi yangilanishda</div>
-      </div></div>
+
+      <!-- Statistika -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">📚 Jami kitoblar</div>
+          <div class="stat-value" id="libStatBooks">0 ta</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">💳 Qarz</div>
+          <div class="stat-value" style="color:var(--danger)" id="libStatDebt">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">💵 Kassa naqt</div>
+          <div class="stat-value" style="color:var(--success)" id="libStatCashNaqt">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">📱 Kassa click</div>
+          <div class="stat-value" style="color:var(--warning)" id="libStatCashClick">0</div>
+        </div>
+      </div>
+
+      <!-- Amal tugmalari -->
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="openBookDialog()">📕 Kitob qo'shish</button>
+        <button class="btn btn-ghost" onclick="loadLibrary()">🔄 Yangilash</button>
+      </div>
+
+      <!-- Kitoblar javoni -->
+      <div class="card">
+        <div class="card-title">📚 Kitoblar javoni</div>
+        <div id="booksList" style="margin-top:12px;">
+          <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KITOB DIALOGI -->
+    <div class="modal-overlay" id="bookModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span id="bookModalTitle">📕 Kitob qo'shish</span>
+          <button class="modal-close" onclick="closeBookDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label>Kitob nomi:</label>
+          <input type="text" id="bookName" placeholder="Masalan: Matematika 5-sinf">
+          <label>Soni:</label>
+          <input type="number" id="bookCount" value="1" min="0">
+          <label>Narxi (so'm):</label>
+          <input type="number" id="bookPrice" placeholder="0">
+          <label>Rasm (ixtiyoriy):</label>
+          <div class="img-picker">
+            <div class="img-preview" id="bookImgPreview">
+              <span id="bookImgPlaceholder">🖼️ Rasm yo'q</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px;"
+                      onclick="document.getElementById('bookImgInput').click()">
+                📷 Rasm tanlash
+              </button>
+              <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px;"
+                      onclick="clearBookImage()">🗑️ Rasmni o'chirish</button>
+            </div>
+            <input type="file" id="bookImgInput" accept="image/*"
+                   style="display:none" onchange="onBookImageSelected(event)">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeBookDialog()">Bekor</button>
+          <button class="btn btn-primary" id="bookSaveBtn" onclick="saveBook()">💾 Saqlash</button>
+        </div>
+      </div>
     </div>
 
     <!-- KONSTOVAR -->
@@ -865,6 +1050,8 @@ function navigate(page) {
   document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
   closeSidebar();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Kutubxona ochilganда — ma'lumotlarni yuklash
+  if (page === 'library') loadLibrary();
 }
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -1331,6 +1518,218 @@ function newReport() {
   document.getElementById('studentCounter').classList.remove('ok');
   reportData = null;
   goStep(0);
+}
+
+// ============================================================
+//  KUTUBXONA — KITOBLAR MODULI
+// ============================================================
+let libBooks = [];        // kitoblar ro'yxati
+let editingBookId = null; // hozir tahrirlanayotgan kitob (null = yangi)
+let bookImageData = '';   // tanlangan rasm (base64)
+
+// Sahifa ochilganda kutubxonani yuklash
+function loadLibrary() {
+  const list = document.getElementById('booksList');
+  list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>';
+  fetch(SHEETS_API + '?action=list_books')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') {
+        libBooks = res.rows || [];
+        renderBooks();
+        updateLibStats();
+      } else {
+        list.innerHTML = '<div style="color:var(--danger);font-size:14px;">⚠️ ' +
+          (res.message || 'Xato') + '</div>';
+      }
+    })
+    .catch(() => {
+      list.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+}
+
+// Kitoblar ro'yxatini chizish
+function renderBooks() {
+  const list = document.getElementById('booksList');
+  if (!libBooks.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">' +
+      '📭 Hali kitob qo\'shilmagan</div>';
+    return;
+  }
+  let html = '';
+  libBooks.forEach((b, i) => {
+    const imgHtml = b.image
+      ? '<img src="' + b.image + '" alt="">'
+      : '<span class="noimg"><span class="a">A</span>' +
+        '<span class="o">O</span><span class="k">K</span></span>';
+    html += '<div class="book-item">' +
+      '<div class="book-img">' + imgHtml + '</div>' +
+      '<div class="book-info">' +
+        '<div class="book-name">' + escapeHtml(String(b.name)) + '</div>' +
+        '<div class="book-price">' + fmt(b.price) + " so'm</div>" +
+      '</div>' +
+      '<div class="book-actions">' +
+        '<button class="count-btn count-minus" onclick="changeBookCount(' + i + ',-1)">−</button>' +
+        '<span class="count-num">' + (b.count || 0) + '</span>' +
+        '<button class="count-btn count-plus" onclick="changeBookCount(' + i + ',1)">+</button>' +
+        '<button class="icon-btn edit" onclick="editBook(' + i + ')">✏️</button>' +
+        '<button class="icon-btn del" onclick="deleteBook(' + i + ')">🗑️</button>' +
+      '</div>' +
+    '</div>';
+  });
+  list.innerHTML = html;
+}
+
+// Statistikani yangilash
+function updateLibStats() {
+  const totalBooks = libBooks.reduce((s, b) => s + (parseInt(b.count) || 0), 0);
+  document.getElementById('libStatBooks').textContent = totalBooks + ' ta';
+  // Qarz va kassa — keyingi qismlarda (qarzdorlar/kassa)
+}
+
+// ---- KITOB DIALOGI ----
+function openBookDialog() {
+  editingBookId = null;
+  bookImageData = '';
+  document.getElementById('bookModalTitle').textContent = "📕 Kitob qo'shish";
+  document.getElementById('bookName').value = '';
+  document.getElementById('bookCount').value = '1';
+  document.getElementById('bookPrice').value = '';
+  updateBookImgPreview();
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function editBook(i) {
+  const b = libBooks[i];
+  if (!b) return;
+  editingBookId = b.id;
+  bookImageData = b.image || '';
+  document.getElementById('bookModalTitle').textContent = "✏️ Kitobni tahrirlash";
+  document.getElementById('bookName').value = b.name || '';
+  document.getElementById('bookCount').value = b.count || 0;
+  document.getElementById('bookPrice').value = b.price || '';
+  updateBookImgPreview();
+  document.getElementById('bookModal').classList.add('open');
+}
+
+function closeBookDialog() {
+  document.getElementById('bookModal').classList.remove('open');
+}
+
+// Rasm tanlash — kichraytirib base64 ga
+function onBookImageSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      // Rasmni 200px ga kichraytirish (Sheets uchun)
+      const max = 200;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > max) { h = h * max / w; w = max; } }
+      else { if (h > max) { w = w * max / h; h = max; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      bookImageData = canvas.toDataURL('image/jpeg', 0.6);
+      updateBookImgPreview();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearBookImage() {
+  bookImageData = '';
+  document.getElementById('bookImgInput').value = '';
+  updateBookImgPreview();
+}
+
+function updateBookImgPreview() {
+  const prev = document.getElementById('bookImgPreview');
+  if (bookImageData) {
+    prev.innerHTML = '<img src="' + bookImageData + '" alt="">';
+  } else {
+    prev.innerHTML = '<span id="bookImgPlaceholder">🖼️ Rasm yo\'q</span>';
+  }
+}
+
+// Kitobni saqlash (yangi yoki tahrirlangan)
+function saveBook() {
+  const name = document.getElementById('bookName').value.trim();
+  const count = parseInt(document.getElementById('bookCount').value) || 0;
+  const price = parseFloat(document.getElementById('bookPrice').value) || 0;
+  if (!name) { alert('Kitob nomini kiriting!'); return; }
+
+  const btn = document.getElementById('bookSaveBtn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saqlanmoqda...';
+
+  const params = new URLSearchParams();
+  params.set('name', name);
+  params.set('count', count);
+  params.set('price', price);
+  params.set('image', bookImageData || '');
+
+  if (editingBookId) {
+    params.set('action', 'update_book');
+    params.set('id', editingBookId);
+  } else {
+    params.set('action', 'save_book');
+  }
+
+  fetch(SHEETS_API, { method: 'POST', body: params })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false;
+      btn.textContent = '💾 Saqlash';
+      if (res.status === 'ok') {
+        closeBookDialog();
+        loadLibrary();
+      } else {
+        alert('⚠️ Xato: ' + (res.message || ''));
+      }
+    })
+    .catch(() => {
+      btn.disabled = false;
+      btn.textContent = '💾 Saqlash';
+      alert('⚠️ Server bilan aloqa yo\'q');
+    });
+}
+
+// Sonni o'zgartirish (+/-)
+function changeBookCount(i, delta) {
+  const b = libBooks[i];
+  if (!b) return;
+  const newCount = Math.max(0, (parseInt(b.count) || 0) + delta);
+  b.count = newCount;          // darhol ekranda
+  renderBooks();
+  updateLibStats();
+  // Serverga yuborish
+  const params = new URLSearchParams({
+    action: 'update_book', id: b.id, count: newCount
+  });
+  fetch(SHEETS_API, { method: 'POST', body: params }).catch(() => {});
+}
+
+// Kitobni o'chirish
+function deleteBook(i) {
+  const b = libBooks[i];
+  if (!b) return;
+  if (!confirm('"' + b.name + '" kitobini o\'chirasizmi?')) return;
+  const params = new URLSearchParams({ action: 'delete_book', id: b.id });
+  fetch(SHEETS_API, { method: 'POST', body: params })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') {
+        loadLibrary();
+      } else {
+        alert('⚠️ Xato: ' + (res.message || ''));
+      }
+    })
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
 // ============================================================
