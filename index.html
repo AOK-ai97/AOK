@@ -229,6 +229,8 @@ textarea {
   .rp-stat-table th, .rp-main-table th { padding:6px 8px; font-size:11px; }
 }
 .export-only { position:absolute; left:-9999px; top:0; width:760px; }
+.lang-btn { background:var(--card-hover); color:var(--text); }
+.lang-btn.active { background:var(--accent); color:#0f1923; }
 </style>
 </head>
 <body>
@@ -243,22 +245,26 @@ textarea {
     </div>
     <nav class="nav">
       <div class="nav-item" data-page="home" onclick="navigate('home')">
-        <span class="ic">🏠</span> Bosh sahifa <span class="nav-soon">tez kunda</span>
+        <span class="ic">🏠</span> <span data-i18n="nav_home">Bosh sahifa</span>
+        <span class="nav-soon" data-i18n="soon">tez kunda</span>
       </div>
       <div class="nav-item active" data-page="salary" onclick="navigate('salary')">
-        <span class="ic">💼</span> Maosh
+        <span class="ic">💼</span> <span data-i18n="nav_salary">Maosh</span>
       </div>
       <div class="nav-item" data-page="library" onclick="navigate('library')">
-        <span class="ic">📚</span> Kutubxona <span class="nav-soon">tez kunda</span>
+        <span class="ic">📚</span> <span data-i18n="nav_library">Kutubxona</span>
+        <span class="nav-soon" data-i18n="soon">tez kunda</span>
       </div>
       <div class="nav-item" data-page="store" onclick="navigate('store')">
-        <span class="ic">🛒</span> Konstovar <span class="nav-soon">tez kunda</span>
+        <span class="ic">🛒</span> <span data-i18n="nav_store">Konstovar</span>
+        <span class="nav-soon" data-i18n="soon">tez kunda</span>
       </div>
       <div class="nav-item" data-page="archive" onclick="navigate('archive')">
-        <span class="ic">🗃️</span> Arxiv <span class="nav-soon">tez kunda</span>
+        <span class="ic">🗃️</span> <span data-i18n="nav_archive">Arxiv</span>
+        <span class="nav-soon" data-i18n="soon">tez kunda</span>
       </div>
       <div class="nav-item" data-page="settings" onclick="navigate('settings')">
-        <span class="ic">⚙️</span> Sozlamalar
+        <span class="ic">⚙️</span> <span data-i18n="nav_settings">Sozlamalar</span>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -282,11 +288,11 @@ textarea {
     <div class="page active" id="page-salary">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
         <div>
-          <div class="page-title">💼 Maosh Hisoboti</div>
-          <div class="page-sub">O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash</div>
+          <div class="page-title" data-i18n="salary_title">💼 Maosh Hisoboti</div>
+          <div class="page-sub" data-i18n="salary_sub">O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash</div>
         </div>
         <button class="btn btn-ghost" style="padding:10px 18px;" onclick="showSalaryHistory()">
-          📜 Tarix
+          <span data-i18n="history_btn">📜 Tarix</span>
         </button>
       </div>
       <div class="stepper">
@@ -328,7 +334,13 @@ Ozodbek 4</div>
           <div class="card-title">👨‍🏫 O'QITUVCHI</div>
           <div class="card-desc">O'qituvchining ism-familiyasini kiriting</div>
           <label>O'qituvchi:</label>
-          <input type="text" id="teacherName" placeholder="Masalan: Fotima Berdiyeva"
+          <input type="text" id="teacherName" placeholder="Masalan: Fotima Berdiyeva">
+        </div>
+        <div class="card accent">
+          <div class="card-title">📅 QAYSI OY</div>
+          <div class="card-desc">Hisobot qaysi oy uchun ekanini yozing</div>
+          <label>Oy:</label>
+          <input type="text" id="monthName" placeholder="Masalan: May 2026"
                  onkeydown="if(event.key==='Enter')goStep(2)">
         </div>
         <div class="btn-row">
@@ -408,71 +420,79 @@ Ozodbek 4</div>
 
     <!-- BOSH -->
     <div class="page" id="page-home">
-      <div class="page-title">🏠 Bosh Hisobot</div>
+      <div class="page-title" data-i18n="home_title">🏠 Bosh Hisobot</div>
       <div class="page-sub">HiBot Excel faylidan to'lovlar hisobotini yaratish</div>
       <div class="card"><div class="coming-soon">
         <div class="icon">🚧</div>
-        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
         <div class="desc">Excel yuklash, xarajatlar, PDF hisobot — keyingi yangilanishda</div>
       </div></div>
     </div>
 
     <!-- KUTUBXONA -->
     <div class="page" id="page-library">
-      <div class="page-title">📚 Kutubxona</div>
+      <div class="page-title" data-i18n="library_title">📚 Kutubxona</div>
       <div class="page-sub">Kitoblar, qarzdorlar, kassa</div>
       <div class="card"><div class="coming-soon">
         <div class="icon">🚧</div>
-        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
         <div class="desc">Kitoblar boshqaruvi — keyingi yangilanishda</div>
       </div></div>
     </div>
 
     <!-- KONSTOVAR -->
     <div class="page" id="page-store">
-      <div class="page-title">🛒 Konstovar</div>
+      <div class="page-title" data-i18n="store_title">🛒 Konstovar</div>
       <div class="page-sub">Maxsulotlar, sotish, kassa</div>
       <div class="card"><div class="coming-soon">
         <div class="icon">🚧</div>
-        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
         <div class="desc">Maxsulotlar boshqaruvi — keyingi yangilanishda</div>
       </div></div>
     </div>
 
     <!-- ARXIV -->
     <div class="page" id="page-archive">
-      <div class="page-title">🗃️ Arxiv</div>
+      <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
       <div class="page-sub">Barcha hisobotlar tarixi</div>
       <div class="card"><div class="coming-soon">
         <div class="icon">🚧</div>
-        <div class="title">Tez kunda qo'shiladi</div>
+        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
         <div class="desc">Arxiv — keyingi yangilanishda</div>
       </div></div>
     </div>
 
     <!-- SOZLAMALAR -->
     <div class="page" id="page-settings">
-      <div class="page-title">⚙️ Sozlamalar</div>
-      <div class="page-sub">Dastur sozlamalari</div>
+      <div class="page-title" data-i18n="settings_title">⚙️ Sozlamalar</div>
+      <div class="page-sub" data-i18n="settings_sub">Dastur sozlamalari</div>
       <div class="card">
-        <div class="card-title">🏫 O'quv markaz nomi</div>
-        <div class="card-desc">Bu nom har bir hisobotda chiqadi</div>
-        <label>Markaz nomi:</label>
-        <input type="text" id="markazName" placeholder="Masalan: OFEDU" onchange="saveSettings()">
+        <div class="card-title" data-i18n="markaz_title">🏫 O'quv markaz nomi</div>
+        <div class="card-desc" data-i18n="markaz_desc">Bu nom har bir hisobotda chiqadi</div>
+        <label data-i18n="markaz_label">Markaz nomi:</label>
+        <input type="text" id="markazName" placeholder="OFEDU" onchange="saveSettings()">
       </div>
       <div class="card">
-        <div class="card-title">🎨 Rang sxemasi</div>
-        <div class="card-desc">Tungi yoki kunduzgi rejim</div>
+        <div class="card-title" data-i18n="lang_title">🌐 Til / Language / Язык</div>
+        <div class="card-desc" data-i18n="lang_desc">Dastur tilini tanlang</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn lang-btn" data-lang="uz" onclick="setLang('uz')">🇺🇿 O'zbekcha</button>
+          <button class="btn lang-btn" data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
+          <button class="btn lang-btn" data-lang="ru" onclick="setLang('ru')">🇷🇺 Русский</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title" data-i18n="theme_title">🎨 Rang sxemasi</div>
+        <div class="card-desc" data-i18n="theme_desc">Tungi yoki kunduzgi rejim</div>
         <button class="btn btn-ghost" onclick="toggleTheme()">
           <span id="themeBtn">☀️ Kunduzgi rejimga o'tish</span>
         </button>
       </div>
       <div class="card">
-        <div class="card-title">ℹ️ Dastur haqida</div>
+        <div class="card-title" data-i18n="about_title">ℹ️ Dastur haqida</div>
         <div style="font-size:13px;color:var(--text-dim);line-height:1.8;">
-          AOK Hisobot Dasturi — sayt versiyasi v3.0<br>
-          O'quv markaz uchun hisobot tizimi<br>
-          📱 Telefonga o'rnatish mumkin (PWA)
+          AOK Hisobot — v3.0<br>
+          📱 PWA — telefon/planshet
         </div>
       </div>
     </div>
@@ -492,9 +512,120 @@ let currentTheme = localStorage.getItem('aok_theme') || 'dark';
 // ============================================================
 const SHEETS_API = 'https://script.google.com/macros/s/AKfycbxB1om_dk8WlUjDkesF0RRNL5OTuFzFMFQ4-SOuwYT1Kv-Y6OaeQ1WPAuOQTtx9zkQD/exec';
 
+// ============================================================
+//  TIL TIZIMI — UZ / EN / RU
+// ============================================================
+let currentLang = localStorage.getItem('aok_lang') || 'uz';
+
+const I18N = {
+  uz: {
+    nav_home: "Bosh sahifa", nav_salary: "Maosh", nav_library: "Kutubxona",
+    nav_store: "Konstovar", nav_archive: "Arxiv", nav_settings: "Sozlamalar",
+    soon: "tez kunda",
+    salary_title: "💼 Maosh Hisoboti",
+    salary_sub: "O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash",
+    history_btn: "📜 Tarix",
+    settings_title: "⚙️ Sozlamalar", settings_sub: "Dastur sozlamalari",
+    markaz_title: "🏫 O'quv markaz nomi",
+    markaz_desc: "Bu nom har bir hisobotda chiqadi",
+    markaz_label: "Markaz nomi:",
+    lang_title: "🌐 Til / Language / Язык",
+    lang_desc: "Dastur tilini tanlang",
+    theme_title: "🎨 Rang sxemasi",
+    theme_desc: "Tungi yoki kunduzgi rejim",
+    about_title: "ℹ️ Dastur haqida",
+    home_title: "🏠 Bosh Hisobot",
+    library_title: "📚 Kutubxona",
+    store_title: "🛒 Konstovar",
+    archive_title: "🗃️ Arxiv",
+    soon_title: "Tez kunda qo'shiladi",
+    theme_day: "☀️ Kunduzgi rejimga o'tish",
+    theme_night: "🌙 Tungi rejimga o'tish",
+    theme_day_s: "Kunduzgi rejim",
+    theme_night_s: "Tungi rejim",
+  },
+  en: {
+    nav_home: "Home", nav_salary: "Salary", nav_library: "Library",
+    nav_store: "Stationery", nav_archive: "Archive", nav_settings: "Settings",
+    soon: "soon",
+    salary_title: "💼 Salary Report",
+    salary_sub: "Calculate teacher salary based on student attendance",
+    history_btn: "📜 History",
+    settings_title: "⚙️ Settings", settings_sub: "Application settings",
+    markaz_title: "🏫 Education center name",
+    markaz_desc: "This name appears on every report",
+    markaz_label: "Center name:",
+    lang_title: "🌐 Language / Til / Язык",
+    lang_desc: "Choose application language",
+    theme_title: "🎨 Color scheme",
+    theme_desc: "Dark or light mode",
+    about_title: "ℹ️ About",
+    home_title: "🏠 Main Report",
+    library_title: "📚 Library",
+    store_title: "🛒 Stationery",
+    archive_title: "🗃️ Archive",
+    soon_title: "Coming soon",
+    theme_day: "☀️ Switch to light mode",
+    theme_night: "🌙 Switch to dark mode",
+    theme_day_s: "Light mode",
+    theme_night_s: "Dark mode",
+  },
+  ru: {
+    nav_home: "Главная", nav_salary: "Зарплата", nav_library: "Библиотека",
+    nav_store: "Канцтовары", nav_archive: "Архив", nav_settings: "Настройки",
+    soon: "скоро",
+    salary_title: "💼 Отчёт по зарплате",
+    salary_sub: "Расчёт зарплаты учителя по посещаемости учеников",
+    history_btn: "📜 История",
+    settings_title: "⚙️ Настройки", settings_sub: "Настройки приложения",
+    markaz_title: "🏫 Название учебного центра",
+    markaz_desc: "Это название появляется в каждом отчёте",
+    markaz_label: "Название центра:",
+    lang_title: "🌐 Язык / Til / Language",
+    lang_desc: "Выберите язык приложения",
+    theme_title: "🎨 Цветовая схема",
+    theme_desc: "Тёмный или светлый режим",
+    about_title: "ℹ️ О программе",
+    home_title: "🏠 Главный отчёт",
+    library_title: "📚 Библиотека",
+    store_title: "🛒 Канцтовары",
+    archive_title: "🗃️ Архив",
+    soon_title: "Скоро добавится",
+    theme_day: "☀️ Переключить на светлый режим",
+    theme_night: "🌙 Переключить на тёмный режим",
+    theme_day_s: "Светлый режим",
+    theme_night_s: "Тёмный режим",
+  }
+};
+
+function t(key) {
+  return (I18N[currentLang] && I18N[currentLang][key]) || I18N.uz[key] || key;
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('aok_lang', lang);
+  applyLang();
+}
+
+function applyLang() {
+  // data-i18n belgili barcha elementlar
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const val = t(key);
+    if (val) el.textContent = val;
+  });
+  // Til tugmalari — faolini belgilash
+  document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === currentLang);
+  });
+  // Tema tugmasi matni
+  updateThemeUI();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   if (currentTheme === 'light') document.body.classList.add('light');
-  updateThemeUI();
+  applyLang();
   document.getElementById('markazName').value = localStorage.getItem('aok_markaz') || '';
 });
 
@@ -523,9 +654,10 @@ function toggleTheme() {
 function updateThemeUI() {
   const isLight = currentTheme === 'light';
   document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
-  document.getElementById('themeText').textContent = isLight ? 'Tungi rejim' : 'Kunduzgi rejim';
+  document.getElementById('themeText').textContent =
+    isLight ? t('theme_night_s') : t('theme_day_s');
   const btn = document.getElementById('themeBtn');
-  if (btn) btn.textContent = isLight ? "🌙 Tungi rejimga o'tish" : "☀️ Kunduzgi rejimga o'tish";
+  if (btn) btn.textContent = isLight ? t('theme_night') : t('theme_day');
 }
 function saveSettings() {
   localStorage.setItem('aok_markaz', document.getElementById('markazName').value.trim());
@@ -535,7 +667,10 @@ function goStep(step) {
   if (step === 2 && currentStep === 1) {
     const name = document.getElementById('teacherName').value.trim();
     if (!name) { alert("O'qituvchi ismini kiriting!"); return; }
-    document.getElementById('teacherLabel').textContent = "O'qituvchi: " + name;
+    const month = document.getElementById('monthName').value.trim();
+    if (!month) { alert("Qaysi oy ekanini kiriting!"); return; }
+    document.getElementById('teacherLabel').textContent =
+      "O'qituvchi: " + name + "  •  " + month;
   }
   if (step === 3 && currentStep === 2) {
     const students = parseStudents(document.getElementById('studentsText').value);
@@ -568,6 +703,7 @@ function goStep(step) {
 // ============================================================
 function showSalaryHistory() {
   goStep(5);
+  window._historyData = [];
   const listEl = document.getElementById('historyList');
   listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ Server dan yuklanmoqda...</div>';
   fetch(SHEETS_API + '?action=list_salary')
@@ -594,14 +730,29 @@ function showSalaryHistory() {
           dateStr = dt.toLocaleDateString('uz-UZ') + ' ' +
             dt.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
         } catch (e) {}
+        // Bu hisobotni global ro'yxatga saqlaymiz (ko'chirish uchun)
+        const idx = window._historyData.length;
+        window._historyData.push(row);
+        const monthBadge = row.month
+          ? '<span style="background:var(--accent);color:#0f1923;padding:2px 8px;' +
+            'border-radius:10px;font-size:11px;font-weight:700;">📅 ' +
+            escapeHtml(String(row.month)) + '</span> '
+          : '';
         html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
           'border-radius:8px;padding:12px 14px;margin-bottom:8px;">' +
           '<div style="font-weight:700;color:var(--text);font-size:14px;">👨‍🏫 ' +
           escapeHtml(String(row.teacher)) + '</div>' +
-          '<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">' +
-          '📅 ' + dateStr + '  •  👥 ' + row.studentCount + " ta o'quvchi</div>" +
-          '<div style="font-size:13px;color:var(--success);font-weight:700;margin-top:4px;">' +
+          '<div style="margin-top:5px;">' + monthBadge +
+          '<span style="font-size:12px;color:var(--text-dim);">📆 ' + dateStr +
+          '  •  👥 ' + row.studentCount + " ta o'quvchi</span></div>" +
+          '<div style="font-size:13px;color:var(--success);font-weight:700;margin-top:5px;">' +
           '💰 Jami: ' + fmt(row.totalSumma) + " so'm  (QANCHADAN: " + fmt(row.baseAmount) + ')</div>' +
+          '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">' +
+          '<button class="btn btn-primary" style="padding:7px 14px;font-size:13px;" ' +
+          'onclick="downloadHistoryPDF(' + idx + ')">📥 PDF</button>' +
+          '<button class="btn btn-warning" style="padding:7px 14px;font-size:13px;" ' +
+          'onclick="downloadHistoryJPG(' + idx + ')">🖼️ JPG</button>' +
+          '</div>' +
           '</div>';
       });
       listEl.innerHTML = html;
@@ -610,6 +761,69 @@ function showSalaryHistory() {
       listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
         '⚠️ Server bilan aloqa yo\'q. Internet ulanishini tekshiring.</div>';
     });
+}
+
+// Tarixdagi hisobotni reportData formatiga tiklash
+function historyRowToReport(row) {
+  let students = [];
+  try { students = JSON.parse(row.studentsJson || '[]'); } catch (e) {}
+  const baseAmount = parseFloat(row.baseAmount) || 0;
+  return {
+    teacher: String(row.teacher || ''),
+    month: String(row.month || ''),
+    students: students,
+    baseAmount: baseAmount,
+    perDay: baseAmount / 12,
+    totalSumma: parseFloat(row.totalSumma) || 0,
+    totalDays: students.reduce((s, x) => s + (x.days || 0), 0),
+    markaz: localStorage.getItem('aok_markaz') || '',
+    date: row.date ? new Date(row.date) : new Date()
+  };
+}
+
+// Tarixdan PDF ko'chirib olish
+function downloadHistoryPDF(idx) {
+  const row = window._historyData[idx];
+  if (!row) return;
+  const saved = reportData;
+  reportData = historyRowToReport(row);
+  const doc = buildPDF();
+  doc.save('maosh_' + safeFileName(reportData.teacher) + '.pdf');
+  reportData = saved;
+}
+
+// Tarixdan JPG ko'chirib olish
+async function downloadHistoryJPG(idx) {
+  const row = window._historyData[idx];
+  if (!row) return;
+  const saved = reportData;
+  reportData = historyRowToReport(row);
+  try {
+    const doc = buildPDF();
+    const pdfBytes = doc.output('arraybuffer');
+    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 3 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    const link = document.createElement('a');
+    link.download = 'maosh_' + safeFileName(reportData.teacher) + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+  } catch (e) {
+    alert('JPG xato: ' + e.message);
+  }
+  reportData = saved;
 }
 
 function parseStudents(text) {
@@ -646,6 +860,7 @@ function fmt(num) { return Math.round(num).toLocaleString('en-US'); }
 
 function generateReport() {
   const teacher = document.getElementById('teacherName').value.trim();
+  const month = document.getElementById('monthName').value.trim();
   const students = parseStudents(document.getElementById('studentsText').value);
   const baseAmount = parseFloat(document.getElementById('baseAmount').value);
   if (!baseAmount || baseAmount <= 0) { alert("Summani to'g'ri kiriting!"); return; }
@@ -657,7 +872,7 @@ function generateReport() {
     totalDays += s.days;
   });
   reportData = {
-    teacher, students, baseAmount, perDay, totalSumma, totalDays,
+    teacher, month, students, baseAmount, perDay, totalSumma, totalDays,
     markaz: localStorage.getItem('aok_markaz') || '', date: new Date()
   };
   const html = buildReportHTML(reportData);
@@ -684,6 +899,7 @@ function saveSalaryToSheets(d) {
   const params = new URLSearchParams({
     action: 'save_salary',
     date: d.date.toISOString(),
+    month: d.month || '',
     teacher: d.teacher,
     studentCount: d.students.length,
     baseAmount: d.baseAmount,
@@ -724,6 +940,7 @@ function buildReportHTML(d) {
   }
   html += '<div class="rp-title">MAOSH HISOBOTI</div>' +
     '<div class="rp-sub">O\'qituvchi: <b>' + escapeHtml(d.teacher) + '</b></div>' +
+    (d.month ? '<div class="rp-sub">Oy: <b>' + escapeHtml(d.month) + '</b></div>' : '') +
     '<div class="rp-sub">Sana: ' + dateStr + '</div>' +
     '<table class="rp-stat-table">' +
     '<tr><th>KO\'RSATKICH</th><th>QIYMAT</th></tr>' +
@@ -777,6 +994,9 @@ function buildPDF() {
   doc.text('MAOSH HISOBOTI', pageW/2, y, {align:'center'}); y += 8;
   doc.setFontSize(11); doc.setTextColor(85,85,85); doc.setFont(undefined,'normal');
   doc.text("O'qituvchi: " + d.teacher, pageW/2, y, {align:'center'}); y += 6;
+  if (d.month) {
+    doc.text('Oy: ' + d.month, pageW/2, y, {align:'center'}); y += 6;
+  }
   const dateStr = d.date.toLocaleDateString('uz-UZ') + ' ' +
     d.date.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
   doc.text('Sana: ' + dateStr, pageW/2, y, {align:'center'}); y += 8;
@@ -875,6 +1095,7 @@ function safeFileName(name) {
 
 function newReport() {
   document.getElementById('teacherName').value = '';
+  document.getElementById('monthName').value = '';
   document.getElementById('studentsText').value = '';
   document.getElementById('baseAmount').value = '100000';
   document.getElementById('studentCounter').textContent = "0 ta o'quvchi";
@@ -883,9 +1104,65 @@ function newReport() {
   goStep(0);
 }
 
+// ============================================================
+//  PWA — AVTOMATIK YANGILANISH
+// ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // Yangi versiya topilganda
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' &&
+              navigator.serviceWorker.controller) {
+            // Yangi versiya tayyor — avtomatik yangilash
+            showUpdateBanner();
+          }
+        });
+      });
+      // Har 60 soniyada yangilanish bor-yo'qligini tekshirish
+      setInterval(() => reg.update(), 60000);
+    }).catch(() => {});
+
+    // Yangi service worker faollashganda — sahifani yangilash
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  });
+}
+
+// Yangilanish banneri
+function showUpdateBanner() {
+  // Agar allaqachon ko'rsatilgan bo'lsa — qaytamiz
+  if (document.getElementById('updateBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText =
+    'position:fixed;bottom:0;left:0;right:0;background:var(--accent);' +
+    'color:#0f1923;padding:14px 20px;display:flex;align-items:center;' +
+    'justify-content:space-between;gap:12px;z-index:9999;font-weight:700;' +
+    'box-shadow:0 -2px 12px rgba(0,0,0,.3);flex-wrap:wrap;';
+  banner.innerHTML =
+    '<span>🎉 Yangi versiya tayyor!</span>' +
+    '<button onclick="applyUpdate()" style="background:#0f1923;color:#fff;' +
+    'border:none;border-radius:8px;padding:8px 18px;font-weight:700;' +
+    'cursor:pointer;font-size:14px;">🔄 Yangilash</button>';
+  document.body.appendChild(banner);
+  // 3 soniyadan keyin avtomatik yangilash (B variant — butunlay avtomatik)
+  setTimeout(() => applyUpdate(), 3000);
+}
+
+function applyUpdate() {
+  navigator.serviceWorker.getRegistration().then((reg) => {
+    if (reg && reg.waiting) {
+      reg.waiting.postMessage('skipWaiting');
+    } else {
+      window.location.reload();
+    }
   });
 }
 </script>
