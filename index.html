@@ -26,6 +26,14 @@ body.light {
   --border:#cbd5e1; --danger:#ef4444; --warning:#f59e0b;
   --success:#10b981; --input-bg:#f8fafc;
 }
+body.warm {
+  /* Ko'z rejimi — issiq, ko'k nur kam, ko'zni charchatmaydi */
+  --bg:#2b2620; --sidebar:#332d24; --card:#3a332a; --card-hover:#473e32;
+  --accent:#e8b563; --accent2:#d9a04f; --accent-dark:#c08a3a;
+  --text:#f0e6d6; --text-dim:#b5a890; --text-muted:#7d7460;
+  --border:#4a4135; --danger:#e08866; --warning:#e8c563;
+  --success:#a8c878; --input-bg:#251f18;
+}
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
   font-family:'Segoe UI','Trebuchet MS',system-ui,sans-serif;
@@ -1054,10 +1062,10 @@ const I18N = {
     store_title: "🛒 Konstovar",
     archive_title: "🗃️ Arxiv",
     soon_title: "Tez kunda qo'shiladi",
-    theme_day: "☀️ Kunduzgi rejimga o'tish",
-    theme_night: "🌙 Tungi rejimga o'tish",
-    theme_day_s: "Kunduzgi rejim",
-    theme_night_s: "Tungi rejim",
+    theme_dark_s: "Tungi rejim", theme_light_s: "Kunduzgi rejim", theme_warm_s: "Ko'z rejimi",
+    theme_to_light: "☀️ Kunduzgi rejimga o'tish",
+    theme_to_warm: "🌅 Ko'z rejimiga o'tish",
+    theme_to_dark: "🌙 Tungi rejimga o'tish",
   },
   en: {
     nav_home: "Home", nav_salary: "Salary", nav_library: "Library",
@@ -1082,10 +1090,10 @@ const I18N = {
     store_title: "🛒 Stationery",
     archive_title: "🗃️ Archive",
     soon_title: "Coming soon",
-    theme_day: "☀️ Switch to light mode",
-    theme_night: "🌙 Switch to dark mode",
-    theme_day_s: "Light mode",
-    theme_night_s: "Dark mode",
+    theme_dark_s: "Dark mode", theme_light_s: "Light mode", theme_warm_s: "Eye-care mode",
+    theme_to_light: "☀️ Switch to light mode",
+    theme_to_warm: "🌅 Switch to eye-care mode",
+    theme_to_dark: "🌙 Switch to dark mode",
   },
   ru: {
     nav_home: "Главная", nav_salary: "Зарплата", nav_library: "Библиотека",
@@ -1110,10 +1118,10 @@ const I18N = {
     store_title: "🛒 Канцтовары",
     archive_title: "🗃️ Архив",
     soon_title: "Скоро добавится",
-    theme_day: "☀️ Переключить на светлый режим",
-    theme_night: "🌙 Переключить на тёмный режим",
-    theme_day_s: "Светлый режим",
-    theme_night_s: "Тёмный режим",
+    theme_dark_s: "Тёмный режим", theme_light_s: "Светлый режим", theme_warm_s: "Режим для глаз",
+    theme_to_light: "☀️ Переключить на светлый режим",
+    theme_to_warm: "🌅 Переключить на режим для глаз",
+    theme_to_dark: "🌙 Переключить на тёмный режим",
   }
 };
 
@@ -1143,11 +1151,19 @@ function applyLang() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (currentTheme === 'light') document.body.classList.add('light');
+  applyTheme(currentTheme);
   applyLang();
   document.getElementById('markazName').value = localStorage.getItem('aok_markaz') || '';
   initLock();
 });
+
+// Tanlangan temani qo'llash
+function applyTheme(theme) {
+  document.body.classList.remove('light', 'warm');
+  if (theme === 'light') document.body.classList.add('light');
+  else if (theme === 'warm') document.body.classList.add('warm');
+  currentTheme = theme;
+}
 
 // ============================================================
 //  4 XONALI PAROL TIZIMI
@@ -1279,18 +1295,28 @@ function closeSidebar() {
   document.getElementById('overlay').classList.remove('show');
 }
 function toggleTheme() {
-  document.body.classList.toggle('light');
-  currentTheme = document.body.classList.contains('light') ? 'light' : 'dark';
-  localStorage.setItem('aok_theme', currentTheme);
+  // dark → light → warm → dark
+  const order = ['dark', 'light', 'warm'];
+  const idx = order.indexOf(currentTheme);
+  const next = order[(idx + 1) % order.length];
+  applyTheme(next);
+  localStorage.setItem('aok_theme', next);
   updateThemeUI();
 }
 function updateThemeUI() {
-  const isLight = currentTheme === 'light';
-  document.getElementById('themeIcon').textContent = isLight ? '🌙' : '☀️';
-  document.getElementById('themeText').textContent =
-    isLight ? t('theme_night_s') : t('theme_day_s');
+  // Har rejim uchun icon va matn
+  const info = {
+    dark:  { icon: '🌙', name: t('theme_dark_s'),  next: t('theme_to_light') },
+    light: { icon: '☀️', name: t('theme_light_s'), next: t('theme_to_warm') },
+    warm:  { icon: '🌅', name: t('theme_warm_s'),  next: t('theme_to_dark') }
+  };
+  const cur = info[currentTheme] || info.dark;
+  const ic = document.getElementById('themeIcon');
+  const tx = document.getElementById('themeText');
+  if (ic) ic.textContent = cur.icon;
+  if (tx) tx.textContent = cur.name;
   const btn = document.getElementById('themeBtn');
-  if (btn) btn.textContent = isLight ? t('theme_night') : t('theme_day');
+  if (btn) btn.textContent = cur.next;
 }
 function saveSettings() {
   localStorage.setItem('aok_markaz', document.getElementById('markazName').value.trim());
@@ -2289,25 +2315,61 @@ function confirmGiveBook() {
 // Qaytarilganda: kitob javonga qaytadi (soni oshadi), qarz kamayadi.
 let returnBookTeacherName = '';
 
+// O'qituvchining olgan kitoblarini NOMI bo'yicha yig'ish
+function getTeacherBookSummary(teacherName) {
+  const taken = {};   // bookName => { qty, amount }
+  const returned = {}; // bookName => qty
+  libDebts.forEach(d => {
+    if (String(d.person).trim() !== teacherName) return;
+    const itemStr = String(d.item);
+    const amt = parseFloat(d.amount) || 0;
+    if (itemStr === "TO'LOV" || itemStr === "Ro'yxatga olindi") return;
+    // Qaytarish yozuvi: "BOOKNAME (qaytarildi xN)"
+    const retMatch = itemStr.match(/^(.*) \(qaytarildi x(\d+)\)$/);
+    if (retMatch) {
+      const nm = retMatch[1];
+      returned[nm] = (returned[nm] || 0) + parseInt(retMatch[2]);
+      return;
+    }
+    // Berish yozuvi: "BOOKNAME xN"
+    const giveMatch = itemStr.match(/^(.*) x(\d+)$/);
+    if (giveMatch && amt > 0) {
+      const nm = giveMatch[1];
+      const q = parseInt(giveMatch[2]);
+      if (!taken[nm]) taken[nm] = { qty: 0, amount: 0 };
+      taken[nm].qty += q;
+      taken[nm].amount += amt;
+    }
+  });
+  // Mavjud (qaytarish mumkin) qoldiq
+  const result = [];
+  for (const nm in taken) {
+    const available = taken[nm].qty - (returned[nm] || 0);
+    if (available > 0) {
+      result.push({
+        name: nm,
+        available: available,
+        perBook: taken[nm].qty > 0 ? (taken[nm].amount / taken[nm].qty) : 0
+      });
+    }
+  }
+  return result;
+}
+
 function openReturnBook(encName) {
   returnBookTeacherName = decodeURIComponent(encName);
   document.getElementById('returnBookTeacher').textContent =
     '👤 ' + returnBookTeacherName;
-  // Bu o'qituvchi olgan kitoblar (qarz yozuvlaridan, faqat kitob berish)
-  const items = libDebts.filter(d =>
-    String(d.person).trim() === returnBookTeacherName &&
-    String(d.item) !== "TO'LOV" &&
-    String(d.item) !== "Ro'yxatga olindi" &&
-    (parseFloat(d.amount) || 0) > 0);
+  const summary = getTeacherBookSummary(returnBookTeacherName);
   const sel = document.getElementById('returnBookSelect');
   sel.innerHTML = '';
-  if (!items.length) {
+  if (!summary.length) {
     sel.innerHTML = '<option value="">— Olingan kitob yo\'q —</option>';
   } else {
-    items.forEach(it => {
+    summary.forEach(s => {
       const opt = document.createElement('option');
-      opt.value = it.id;
-      opt.textContent = it.item + ' — ' + fmt(it.amount) + " so'm";
+      opt.value = s.name;
+      opt.textContent = s.name + ' — jami ' + s.available + ' ta';
       sel.appendChild(opt);
     });
   }
@@ -2322,38 +2384,28 @@ function closeReturnBookDialog() {
 }
 
 function confirmReturnBook() {
-  const debtId = document.getElementById('returnBookSelect').value;
+  const bookName = document.getElementById('returnBookSelect').value;
   const qty = parseInt(document.getElementById('returnBookQty').value) || 0;
-  if (!debtId) { alert('Qaytariladigan kitobni tanlang!'); return; }
+  if (!bookName) { alert('Qaytariladigan kitobni tanlang!'); return; }
   if (qty < 1) { alert('Nechta — kamida 1!'); return; }
 
-  // Tanlangan qarz yozuvi
-  const debtItem = libDebts.find(d => d.id === debtId);
-  if (!debtItem) { alert('Yozuv topilmadi'); return; }
-
-  // Kitob nomi va nechta olинганини aniqlash ("Round up 1 x2")
-  const itemStr = String(debtItem.item);
-  const match = itemStr.match(/^(.*) x(\d+)$/);
-  const bookName = match ? match[1] : itemStr;
-  const takenQty = match ? parseInt(match[2]) : 1;
-  if (qty > takenQty) {
-    alert('Bu yozuvда faqat ' + takenQty + ' ta olingan!');
+  // Bu kitobdan nechta qaytarish mumkin
+  const summary = getTeacherBookSummary(returnBookTeacherName);
+  const info = summary.find(s => s.name === bookName);
+  if (!info) { alert('Kitob topilmadi'); return; }
+  if (qty > info.available) {
+    alert('Bu o\'qituvchida "' + bookName + '" dan faqat ' +
+      info.available + ' ta bor!');
     return;
   }
 
-  // Kitob narxi (qarzdan hisoblanadi)
-  const totalAmount = parseFloat(debtItem.amount) || 0;
-  const perBook = takenQty > 0 ? (totalAmount / takenQty) : 0;
-  const returnAmount = perBook * qty;
-
-  // Javondagi kitobni topish (nom bo'yicha)
+  const returnAmount = info.perBook * qty;
   const book = libBooks.find(b => String(b.name) === bookName);
 
   const btn = document.getElementById('returnBookBtn');
   btn.disabled = true; btn.textContent = '⏳...';
 
   const tasks = [];
-
   // 1. Qarzdorlarga manfiy yozuv (qaytarildi)
   const p1 = new URLSearchParams({
     action: 'save_debt', person: returnBookTeacherName,
@@ -2363,7 +2415,7 @@ function confirmReturnBook() {
   });
   tasks.push(fetch(SHEETS_API, { method: 'POST', body: p1 }).then(r => r.json()));
 
-  // 2. Javondagi kitob sonини oshirish (agar kitob mavjud bo'lsa)
+  // 2. Javondagi kitob sonini oshirish
   if (book) {
     const newCount = (parseInt(book.count) || 0) + qty;
     const p2 = new URLSearchParams({
