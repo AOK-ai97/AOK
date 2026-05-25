@@ -812,6 +812,7 @@ Ozodbek 4</div>
                 onclick="openUseCashDialog()" data-i18n="lib_use_cash">💸 Tushum ishlatildi</button>
         <button class="btn" style="background:var(--accent2);color:#fff;"
                 onclick="openLibReport()" data-i18n="lib_report">📊 Kutubxona hisoboti</button>
+        <button class="btn btn-ghost" onclick="showLibHistory()" data-i18n="lib_report_hist">📜 Hisobotlar tarixi</button>
         <button class="btn btn-ghost" onclick="loadLibrary()" data-i18n="refresh">🔄 Yangilash</button>
       </div>
 
@@ -1047,6 +1048,25 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- KUTUBXONA HISOBOTLARI TARIXI -->
+    <div class="modal-overlay" id="libHistModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span data-i18n="lr_hist_title">📜 Hisobotlar tarixi</span>
+          <button class="modal-close" onclick="closeLibHistory()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="libHistList">
+            <div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeLibHistory()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" onclick="showLibHistory()" data-i18n="refresh">🔄 Yangilash</button>
+        </div>
+      </div>
+    </div>
+
     <!-- KONSTOVAR -->
     <div class="page" id="page-store">
       <div class="page-title" data-i18n="store_title">🛒 Konstovar</div>
@@ -1230,6 +1250,11 @@ const I18N = {
     lr_col_type:"Turi", lr_col_amount:"Summa",
     lr_total_debt:"Jami qarz", lr_total_books:"Jami kitoblar",
     lr_total_value:"Umumiy qiymat", lr_total:"JAMI",
+    lib_report_hist:"📜 Hisobotlar tarixi",
+    lr_hist_title:"📜 Hisobotlar tarixi", lr_no_history:"Hali hisobot yo'q",
+    lr_saved:"✅ Hisobot saqlandi! Tarixdan ko'chirib oling.",
+    lr_del_confirm:"Bu hisobotni o'chirasizmi? (Arxivga tushadi)",
+    lr_arch_del:"Hisobot o'chirildi",
   },
   en: {
     nav_home:"Home", nav_salary:"Salary", nav_library:"Library",
@@ -1329,6 +1354,11 @@ const I18N = {
     lr_col_type:"Type", lr_col_amount:"Amount",
     lr_total_debt:"Total debt", lr_total_books:"Total books",
     lr_total_value:"Total value", lr_total:"TOTAL",
+    lib_report_hist:"📜 Report history",
+    lr_hist_title:"📜 Report history", lr_no_history:"No reports yet",
+    lr_saved:"✅ Report saved! Download it from history.",
+    lr_del_confirm:"Delete this report? (It will go to Archive)",
+    lr_arch_del:"Report deleted",
   },
   ru: {
     nav_home:"Главная", nav_salary:"Зарплата", nav_library:"Библиотека",
@@ -1428,6 +1458,11 @@ const I18N = {
     lr_col_type:"Тип", lr_col_amount:"Сумма",
     lr_total_debt:"Всего долг", lr_total_books:"Всего книг",
     lr_total_value:"Общая стоимость", lr_total:"ИТОГО",
+    lib_report_hist:"📜 История отчётов",
+    lr_hist_title:"📜 История отчётов", lr_no_history:"Отчётов пока нет",
+    lr_saved:"✅ Отчёт сохранён! Скачайте из истории.",
+    lr_del_confirm:"Удалить этот отчёт? (Перейдёт в Архив)",
+    lr_arch_del:"Отчёт удалён",
   }
 };
 
@@ -2931,14 +2966,103 @@ function lrToggleAll() {
   document.getElementById('lrCash').checked = on;
 }
 
-function generateLibReport() {
-  const showDebts = document.getElementById('lrDebts').checked;
-  const showBooks = document.getElementById('lrBooks').checked;
-  const showCash = document.getElementById('lrCash').checked;
-  if (!showDebts && !showBooks && !showCash) {
-    alert(t('lr_err_select')); return;
+// Hisobot ma'lumotini yig'ish (snapshot)
+function buildLibReportData(showDebts, showBooks, showCash) {
+  const data = { showDebts, showBooks, showCash };
+  if (showDebts) {
+    data.debts = getTeacherGroups()
+      .filter(g => g.debt > 0)
+      .map(g => ({ name: g.name, debt: g.debt }));
+    data.totalDebt = data.debts.reduce((s,d)=>s+d.debt,0);
+  }
+  if (showBooks) {
+    data.books = libBooks.map(b => ({
+      name: String(b.name),
+      count: parseInt(b.count) || 0,
+      price: parseFloat(b.price) || 0
+    }));
+    data.totalBooks = data.books.reduce((s,b)=>s+b.count,0);
+    data.totalValue = data.books.reduce((s,b)=>s+b.count*b.price,0);
+  }
+  if (showCash) {
+    const bal = getLibCashBalance();
+    data.cash = { naqt: bal.naqt, click: bal.click, total: bal.naqt+bal.click };
+  }
+  return data;
+}
+
+// Kutubxona hisoboti — chiroyli HTML namuna (Maosh kabi)
+function buildLibReportHTML(d, dateStr) {
+  const markaz = localStorage.getItem('aok_markaz') || '';
+  let html = '';
+  if (markaz) {
+    html += '<div style="text-align:center;font-size:14px;font-weight:700;color:#333;">' +
+      escapeHtml(markaz) + '</div>';
+  }
+  html += '<div class="rp-title">' + t('lr_pdf_title') + '</div>' +
+    '<div class="rp-sub">' + dateStr + '</div>';
+
+  // Qarzdorlar
+  if (d.showDebts) {
+    html += '<div class="rp-section-title" style="color:#cc0000">' +
+      t('lr_debts').replace(/^\S+\s/,'') + '</div>';
+    html += '<table class="rp-main-table"><tr>' +
+      '<th>' + t('lr_col_teacher') + '</th><th>' + t('lr_col_debt') + '</th></tr>';
+    if (d.debts && d.debts.length) {
+      d.debts.forEach(x => {
+        html += '<tr><td>' + escapeHtml(x.name) + '</td>' +
+          '<td class="rp-right">' + fmt(x.debt) + " so'm</td></tr>";
+      });
+      html += '<tr class="rp-total-row"><td>' + t('lr_total_debt') + '</td>' +
+        '<td class="rp-right">' + fmt(d.totalDebt) + " so'm</td></tr>";
+    } else {
+      html += '<tr><td colspan="2" class="rp-center">' + t('lr_no_debts') + '</td></tr>';
+    }
+    html += '</table>';
   }
 
+  // Kitoblar
+  if (d.showBooks) {
+    html += '<div class="rp-section-title">' +
+      t('lr_books_h') + '</div>';
+    html += '<table class="rp-main-table"><tr>' +
+      '<th>' + t('lr_col_book') + '</th><th>' + t('lr_col_count') + '</th>' +
+      '<th>' + t('lr_col_price') + '</th><th>' + t('lr_col_sum') + '</th></tr>';
+    if (d.books && d.books.length) {
+      d.books.forEach(b => {
+        html += '<tr><td>' + escapeHtml(b.name) + '</td>' +
+          '<td class="rp-center">' + b.count + '</td>' +
+          '<td class="rp-right">' + fmt(b.price) + '</td>' +
+          '<td class="rp-right">' + fmt(b.count*b.price) + '</td></tr>';
+      });
+      html += '<tr class="rp-total-row"><td colspan="3">' + t('lr_total_books') +
+        ': ' + d.totalBooks + ' ' + t('units') + '</td>' +
+        '<td class="rp-right">' + fmt(d.totalValue) + '</td></tr>';
+    } else {
+      html += '<tr><td colspan="4" class="rp-center">' + t('lr_no_books') + '</td></tr>';
+    }
+    html += '</table>';
+  }
+
+  // Kassa
+  if (d.showCash && d.cash) {
+    html += '<div class="rp-section-title" style="color:#108565">' +
+      t('lr_cash_h') + '</div>';
+    html += '<table class="rp-main-table"><tr>' +
+      '<th>' + t('lr_col_type') + '</th><th>' + t('lr_col_amount') + '</th></tr>' +
+      '<tr><td>' + t('pt_cash').replace(/^\S+\s/,'') + '</td>' +
+      '<td class="rp-right">' + fmt(d.cash.naqt) + " so'm</td></tr>" +
+      '<tr><td>' + t('pt_click').replace(/^\S+\s/,'') + '</td>' +
+      '<td class="rp-right">' + fmt(d.cash.click) + " so'm</td></tr>" +
+      '<tr class="rp-total-row"><td>' + t('lr_total') + '</td>' +
+      '<td class="rp-right">' + fmt(d.cash.total) + " so'm</td></tr>" +
+      '</table>';
+  }
+  return html;
+}
+
+// Kutubxona hisoboti — PDF (emoji'siz, toza)
+function buildLibReportPDF(d, dateStr) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const pageW = doc.internal.pageSize.getWidth();
@@ -2949,90 +3073,249 @@ function generateLibReport() {
     doc.setFontSize(12); doc.setTextColor(51,51,51); doc.setFont(undefined,'bold');
     doc.text(markaz, pageW/2, y, { align:'center' }); y += 7;
   }
-  doc.setFontSize(17); doc.setTextColor(8,145,178); doc.setFont(undefined,'bold');
+  doc.setFontSize(17); doc.setTextColor(26,82,118); doc.setFont(undefined,'bold');
   doc.text(t('lr_pdf_title'), pageW/2, y, { align:'center' }); y += 7;
   doc.setFontSize(10); doc.setTextColor(85,85,85); doc.setFont(undefined,'normal');
-  const dateStr = new Date().toLocaleDateString('uz-UZ') + ' ' +
-    new Date().toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
   doc.text(dateStr, pageW/2, y, { align:'center' }); y += 10;
 
-  // ---- QARZDORLAR ----
-  if (showDebts) {
-    const groups = getTeacherGroups().filter(g => g.debt > 0);
+  // Qarzdorlar
+  if (d.showDebts) {
     doc.setFontSize(13); doc.setTextColor(204,0,0); doc.setFont(undefined,'bold');
-    doc.text('💳 ' + t('lr_debts'), 14, y); y += 2;
-    const debtRows = groups.map(g => [g.name, fmt(g.debt) + " so'm"]);
-    if (!debtRows.length) debtRows.push([t('lr_no_debts'), '']);
+    doc.text(t('lr_debts').replace(/^\S+\s/,''), 14, y); y += 2;
+    const rows = (d.debts||[]).map(x => [x.name, fmt(x.debt) + " so'm"]);
+    if (!rows.length) rows.push([t('lr_no_debts'), '']);
+    else rows.push([t('lr_total_debt'), fmt(d.totalDebt) + " so'm"]);
     doc.autoTable({
       startY: y + 2,
       head: [[t('lr_col_teacher'), t('lr_col_debt')]],
-      body: debtRows,
-      theme: 'grid',
-      headStyles: { fillColor:[204,0,0], textColor:255, fontSize:9 },
-      bodyStyles: { fontSize:9 },
-      margin: { left:14, right:14 }
+      body: rows, theme:'grid',
+      headStyles:{ fillColor:[204,0,0], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell: function(data){
+        if (data.row.index === rows.length-1 && rows.length>1)
+          data.cell.styles.fontStyle = 'bold';
+      },
+      margin:{ left:14, right:14 }
     });
-    y = doc.lastAutoTable.finalY + 4;
-    const totalDebt = groups.reduce((s,g)=>s+g.debt,0);
-    doc.setFontSize(10); doc.setTextColor(204,0,0); doc.setFont(undefined,'bold');
-    doc.text(t('lr_total_debt') + ': ' + fmt(totalDebt) + " so'm", 14, y);
-    y += 10;
+    y = doc.lastAutoTable.finalY + 8;
   }
-
-  // ---- KITOBLAR ----
-  if (showBooks) {
-    if (y > 240) { doc.addPage(); y = 16; }
+  // Kitoblar
+  if (d.showBooks) {
+    if (y > 230) { doc.addPage(); y = 16; }
     doc.setFontSize(13); doc.setTextColor(26,82,118); doc.setFont(undefined,'bold');
-    doc.text('📚 ' + t('lr_books_h'), 14, y); y += 2;
-    const bookRows = libBooks.map(b => {
-      const cnt = parseInt(b.count) || 0;
-      const pr = parseFloat(b.price) || 0;
-      return [String(b.name), cnt + '', fmt(pr), fmt(cnt*pr)];
-    });
-    if (!bookRows.length) bookRows.push([t('lr_no_books'),'','','']);
+    doc.text(t('lr_books_h'), 14, y); y += 2;
+    const rows = (d.books||[]).map(b =>
+      [b.name, b.count+'', fmt(b.price), fmt(b.count*b.price)]);
+    if (!rows.length) rows.push([t('lr_no_books'),'','','']);
+    else rows.push([t('lr_total_books')+': '+d.totalBooks, '', '', fmt(d.totalValue)]);
     doc.autoTable({
       startY: y + 2,
       head: [[t('lr_col_book'), t('lr_col_count'), t('lr_col_price'), t('lr_col_sum')]],
-      body: bookRows,
-      theme: 'grid',
-      headStyles: { fillColor:[26,82,118], textColor:255, fontSize:9 },
-      bodyStyles: { fontSize:9 },
-      margin: { left:14, right:14 }
+      body: rows, theme:'grid',
+      headStyles:{ fillColor:[26,82,118], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell: function(data){
+        if (data.row.index === rows.length-1 && rows.length>1)
+          data.cell.styles.fontStyle = 'bold';
+      },
+      margin:{ left:14, right:14 }
     });
-    y = doc.lastAutoTable.finalY + 4;
-    const totalBooks = libBooks.reduce((s,b)=>s+(parseInt(b.count)||0),0);
-    const totalValue = libBooks.reduce((s,b)=>
-      s+((parseInt(b.count)||0)*(parseFloat(b.price)||0)),0);
-    doc.setFontSize(10); doc.setTextColor(26,82,118); doc.setFont(undefined,'bold');
-    doc.text(t('lr_total_books') + ': ' + totalBooks + ' ' + t('units') +
-      '  |  ' + t('lr_total_value') + ': ' + fmt(totalValue) + " so'm", 14, y);
-    y += 10;
+    y = doc.lastAutoTable.finalY + 8;
   }
-
-  // ---- KASSA ----
-  if (showCash) {
-    if (y > 250) { doc.addPage(); y = 16; }
-    const bal = getLibCashBalance();
+  // Kassa
+  if (d.showCash && d.cash) {
+    if (y > 240) { doc.addPage(); y = 16; }
     doc.setFontSize(13); doc.setTextColor(16,133,101); doc.setFont(undefined,'bold');
-    doc.text('💰 ' + t('lr_cash_h'), 14, y); y += 2;
+    doc.text(t('lr_cash_h'), 14, y); y += 2;
     doc.autoTable({
       startY: y + 2,
       head: [[t('lr_col_type'), t('lr_col_amount')]],
       body: [
-        [t('pt_cash').replace('💵 ',''), fmt(bal.naqt) + " so'm"],
-        [t('pt_click').replace('📱 ',''), fmt(bal.click) + " so'm"],
-        [t('lr_total'), fmt(bal.naqt + bal.click) + " so'm"]
+        [t('pt_cash').replace(/^\S+\s/,''), fmt(d.cash.naqt) + " so'm"],
+        [t('pt_click').replace(/^\S+\s/,''), fmt(d.cash.click) + " so'm"],
+        [t('lr_total'), fmt(d.cash.total) + " so'm"]
       ],
-      theme: 'grid',
-      headStyles: { fillColor:[16,133,101], textColor:255, fontSize:9 },
-      bodyStyles: { fontSize:9 },
-      margin: { left:14, right:14 }
+      theme:'grid',
+      headStyles:{ fillColor:[16,133,101], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell: function(data){
+        if (data.row.index === 2) data.cell.styles.fontStyle = 'bold';
+      },
+      margin:{ left:14, right:14 }
     });
-    y = doc.lastAutoTable.finalY + 6;
   }
+  return doc;
+}
 
-  doc.save('kutubxona_hisoboti_' + new Date().toISOString().slice(0,10) + '.pdf');
-  closeLibReport();
+function generateLibReport() {
+  const showDebts = document.getElementById('lrDebts').checked;
+  const showBooks = document.getElementById('lrBooks').checked;
+  const showCash = document.getElementById('lrCash').checked;
+  if (!showDebts && !showBooks && !showCash) {
+    alert(t('lr_err_select')); return;
+  }
+  const btn = document.getElementById('libReportBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  const data = buildLibReportData(showDebts, showBooks, showCash);
+  const params = new URLSearchParams({
+    action: 'save_lib_report',
+    date: new Date().toISOString(),
+    totalDebt: data.totalDebt || 0,
+    totalBooks: data.totalBooks || 0,
+    totalCash: (data.cash ? data.cash.total : 0),
+    dataJson: JSON.stringify(data)
+  });
+  fetch(SHEETS_API, { method:'POST', body:params })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = t('lr_generate');
+      if (res.status === 'ok') {
+        closeLibReport();
+        alert(t('lr_saved'));
+        showLibHistory();
+      } else {
+        alert('⚠️ ' + (res.message || ''));
+      }
+    })
+    .catch(() => {
+      btn.disabled = false; btn.textContent = t('lr_generate');
+      alert('⚠️ Server bilan aloqa yo\'q');
+    });
+}
+
+// ============================================================
+//  KUTUBXONA HISOBOTI — TARIX
+// ============================================================
+let _libHistData = [];
+
+function showLibHistory() {
+  document.getElementById('libHistModal').classList.add('open');
+  const listEl = document.getElementById('libHistList');
+  listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>';
+  _libHistData = [];
+  fetch(SHEETS_API + '?action=list_lib_reports')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== 'ok') {
+        listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">⚠️ ' +
+          (res.message||'') + '</div>'; return;
+      }
+      if (!res.rows || !res.rows.length) {
+        listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">📭 ' +
+          t('lr_no_history') + '</div>'; return;
+      }
+      const rows = res.rows.slice().reverse();
+      let html = '';
+      rows.forEach(row => {
+        const idx = _libHistData.length;
+        _libHistData.push(row);
+        let ds = row.date;
+        try {
+          const dt = new Date(row.date);
+          ds = dt.toLocaleDateString('uz-UZ') + ' ' +
+            dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+        } catch(e){}
+        html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+          'border-radius:8px;padding:12px;margin-bottom:8px;">' +
+          '<div style="font-weight:700;font-size:13px;">📅 ' + ds + '</div>' +
+          '<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">' +
+          '💳 ' + fmt(row.totalDebt) + "  •  📚 " + row.totalBooks +
+          '  •  💰 ' + fmt(row.totalCash) + '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">' +
+          '<button class="btn btn-primary" style="padding:6px 12px;font-size:12px;" ' +
+          'onclick="dlLibHistPDF(' + idx + ')">📥 PDF</button>' +
+          '<button class="btn btn-warning" style="padding:6px 12px;font-size:12px;" ' +
+          'onclick="dlLibHistJPG(' + idx + ')">🖼️ JPG</button>' +
+          '<button class="btn" style="padding:6px 12px;font-size:12px;' +
+          'background:var(--danger);color:#fff;" ' +
+          'onclick="delLibHist(' + idx + ')">🗑️</button>' +
+          '</div></div>';
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(() => {
+      listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+}
+
+function closeLibHistory() {
+  document.getElementById('libHistModal').classList.remove('open');
+}
+
+function libHistRowDate(row) {
+  try {
+    const dt = new Date(row.date);
+    return dt.toLocaleDateString('uz-UZ') + ' ' +
+      dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return String(row.date); }
+}
+
+function dlLibHistPDF(idx) {
+  const row = _libHistData[idx];
+  if (!row) return;
+  let data = {};
+  try { data = JSON.parse(row.dataJson || '{}'); } catch(e){}
+  const doc = buildLibReportPDF(data, libHistRowDate(row));
+  doc.save('kutubxona_hisoboti_' +
+    new Date(row.date).toISOString().slice(0,10) + '.pdf');
+}
+
+async function dlLibHistJPG(idx) {
+  const row = _libHistData[idx];
+  if (!row) return;
+  let data = {};
+  try { data = JSON.parse(row.dataJson || '{}'); } catch(e){}
+  try {
+    const doc = buildLibReportPDF(data, libHistRowDate(row));
+    const pdfBytes = doc.output('arraybuffer');
+    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 3 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    const link = document.createElement('a');
+    link.download = 'kutubxona_hisoboti_' +
+      new Date(row.date).toISOString().slice(0,10) + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+  } catch(e) {
+    alert('JPG xato: ' + e.message);
+  }
+}
+
+function delLibHist(idx) {
+  const row = _libHistData[idx];
+  if (!row) return;
+  if (!confirm(t('lr_del_confirm'))) return;
+  // Arxivga ko'chirib, keyin o'chirish
+  fetch(SHEETS_API, {
+    method:'POST',
+    body: buildArchiveParams('Kutubxona', t('lr_arch_del'),
+      'Kutubxona hisoboti — ' + libHistRowDate(row),
+      parseFloat(row.totalCash) || 0)
+  })
+    .then(r => r.json())
+    .then(() => {
+      const p = new URLSearchParams({ action:'delete_lib_report', id:row.id });
+      return fetch(SHEETS_API, { method:'POST', body:p });
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') showLibHistory();
+      else alert('⚠️ ' + (res.message||''));
+    })
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
 // ============================================================
