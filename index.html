@@ -227,12 +227,18 @@ textarea {
 .coming-soon .desc { font-size:14px; color:var(--text-dim); }
 
 /* RESPONSIVE */
-@media (max-width:768px) {
+/* Planshet va telefon (1024px gacha) — hamburger menyu */
+@media (max-width:1024px) {
   .sidebar { transform:translateX(-100%); }
   .sidebar.open { transform:translateX(0); }
   .main { margin-left:0; }
   .mobile-bar { display:flex; }
   .overlay.show { display:block; }
+  .page { max-width:none; }
+}
+
+/* Telefon (768px gacha) — kichikroq matn/padding */
+@media (max-width:768px) {
   .page { padding:20px 14px 40px; }
   .page-title { font-size:22px; }
   .card { padding:16px; }
@@ -246,12 +252,12 @@ textarea {
   .rp-stat-table th, .rp-main-table th { padding:6px 8px; font-size:11px; }
 }
 
-/* PLANSHET — o'rta ekran (769px - 1200px) */
-@media (min-width:769px) and (max-width:1200px) {
-  .page { max-width:none; padding:28px 32px 50px; }
+/* Planshet (769px - 1024px) — kontent ekranni to'ldiradi */
+@media (min-width:769px) and (max-width:1024px) {
+  .page { padding:26px 28px 50px; }
 }
 
-/* YOTIQ (landscape) — telefon yon aylanганда */
+/* YOTIQ (landscape) — telefon yon aylanганда (past ekran) */
 @media (orientation:landscape) and (max-height:500px) {
   .page { padding:14px 18px 30px; }
   .page-title { font-size:20px; }
@@ -819,32 +825,32 @@ Ozodbek 4</div>
           <button class="modal-close" onclick="closeBookDialog()">✕</button>
         </div>
         <div class="modal-body">
-          <label>Kitob nomi:</label>
-          <input type="text" id="bookName" placeholder="Masalan: Matematika 5-sinf">
-          <label>Soni:</label>
+          <label data-i18n="d_book_name">Kitob nomi:</label>
+          <input type="text" id="bookName" data-i18n-ph="d_book_name_ph" placeholder="Masalan: Matematika 5-sinf">
+          <label data-i18n="d_count">Soni:</label>
           <input type="number" id="bookCount" value="1" min="0">
-          <label>Narxi (so'm):</label>
+          <label data-i18n="d_price">Narxi (so'm):</label>
           <input type="number" id="bookPrice" placeholder="0">
-          <label>Rasm (ixtiyoriy):</label>
+          <label data-i18n="d_image">Rasm (ixtiyoriy):</label>
           <div class="img-picker">
             <div class="img-preview" id="bookImgPreview">
-              <span id="bookImgPlaceholder">🖼️ Rasm yo'q</span>
+              <span id="bookImgPlaceholder" data-i18n="d_no_image">🖼️ Rasm yo'q</span>
             </div>
             <div style="display:flex;flex-direction:column;gap:8px;">
               <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px;"
                       onclick="document.getElementById('bookImgInput').click()">
-                📷 Rasm tanlash
+                <span data-i18n="d_pick_image">📷 Rasm tanlash</span>
               </button>
               <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px;"
-                      onclick="clearBookImage()">🗑️ Rasmni o'chirish</button>
+                      onclick="clearBookImage()"><span data-i18n="d_clear_image">🗑️ Rasmni o'chirish</span></button>
             </div>
             <input type="file" id="bookImgInput" accept="image/*"
                    style="display:none" onchange="onBookImageSelected(event)">
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeBookDialog()">Bekor</button>
-          <button class="btn btn-primary" id="bookSaveBtn" onclick="saveBook()">💾 Saqlash</button>
+          <button class="btn btn-ghost" onclick="closeBookDialog()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" id="bookSaveBtn" onclick="saveBook()" data-i18n="save">💾 Saqlash</button>
         </div>
       </div>
     </div>
@@ -857,12 +863,12 @@ Ozodbek 4</div>
           <button class="modal-close" onclick="closeTeacherDialog()">✕</button>
         </div>
         <div class="modal-body">
-          <label>O'qituvchi ismi:</label>
-          <input type="text" id="teacherInput" placeholder="Masalan: Durdona Adilova">
+          <label data-i18n="d_teacher_name">O'qituvchi ismi:</label>
+          <input type="text" id="teacherInput" data-i18n-ph="d_teacher_ph" placeholder="Masalan: Durdona Adilova">
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeTeacherDialog()">Bekor</button>
-          <button class="btn btn-primary" id="teacherSaveBtn" onclick="saveTeacher()">💾 Saqlash</button>
+          <button class="btn btn-ghost" onclick="closeTeacherDialog()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" id="teacherSaveBtn" onclick="saveTeacher()" data-i18n="save">💾 Saqlash</button>
         </div>
       </div>
     </div>
@@ -871,23 +877,23 @@ Ozodbek 4</div>
     <div class="modal-overlay" id="giveBookModal">
       <div class="modal">
         <div class="modal-header">
-          <span>📖 Kitob berish</span>
+          <span data-i18n="d_give_title">📖 Kitob berish</span>
           <button class="modal-close" onclick="closeGiveBookDialog()">✕</button>
         </div>
         <div class="modal-body">
           <div id="giveBookTeacher" style="font-size:14px;font-weight:700;
                color:var(--accent);margin-bottom:12px;"></div>
-          <label>Kitobni tanlang:</label>
+          <label data-i18n="d_select_book">Kitobni tanlang:</label>
           <select id="giveBookSelect" class="select-input"></select>
-          <label>Nechta:</label>
+          <label data-i18n="d_howmany">Nechta:</label>
           <input type="number" id="giveBookQty" value="1" min="1">
           <div id="giveBookInfo" style="font-size:13px;color:var(--text-dim);
                margin-top:10px;"></div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeGiveBookDialog()">Bekor</button>
+          <button class="btn btn-ghost" onclick="closeGiveBookDialog()" data-i18n="cancel">Bekor</button>
           <button class="btn btn-primary" id="giveBookBtn" onclick="confirmGiveBook()">
-            📖 Berish
+            <span data-i18n="d_give_btn">📖 Berish</span>
           </button>
         </div>
       </div>
@@ -897,23 +903,23 @@ Ozodbek 4</div>
     <div class="modal-overlay" id="returnBookModal">
       <div class="modal">
         <div class="modal-header">
-          <span>↩️ Kitob qaytarish</span>
+          <span data-i18n="d_return_title">↩️ Kitob qaytarish</span>
           <button class="modal-close" onclick="closeReturnBookDialog()">✕</button>
         </div>
         <div class="modal-body">
           <div id="returnBookTeacher" style="font-size:14px;font-weight:700;
                color:var(--accent);margin-bottom:12px;"></div>
-          <label>Qaysi kitob qaytarilmoqda:</label>
+          <label data-i18n="d_return_which">Qaysi kitob qaytarilmoqda:</label>
           <select id="returnBookSelect" class="select-input"></select>
-          <label>Nechta:</label>
+          <label data-i18n="d_howmany">Nechta:</label>
           <input type="number" id="returnBookQty" value="1" min="1">
           <div id="returnBookInfo" style="font-size:13px;color:var(--text-dim);
                margin-top:10px;"></div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closeReturnBookDialog()">Bekor</button>
+          <button class="btn btn-ghost" onclick="closeReturnBookDialog()" data-i18n="cancel">Bekor</button>
           <button class="btn btn-primary" id="returnBookBtn" onclick="confirmReturnBook()">
-            ↩️ Qaytarish
+            <span data-i18n="d_return_btn">↩️ Qaytarish</span>
           </button>
         </div>
       </div>
@@ -923,7 +929,7 @@ Ozodbek 4</div>
     <div class="modal-overlay" id="payDebtModal">
       <div class="modal">
         <div class="modal-header">
-          <span>💰 Qarz to'landi</span>
+          <span data-i18n="d_pay_title">💰 Qarz to'landi</span>
           <button class="modal-close" onclick="closePayDebtDialog()">✕</button>
         </div>
         <div class="modal-body">
@@ -931,24 +937,24 @@ Ozodbek 4</div>
                color:var(--accent);margin-bottom:6px;"></div>
           <div id="payDebtTotal" style="font-size:13px;color:var(--text-dim);
                margin-bottom:12px;"></div>
-          <label>To'lanayotgan summa:</label>
+          <label data-i18n="d_pay_amount">To'lanayotgan summa:</label>
           <div class="amount-with-magnet">
             <input type="number" id="payDebtAmount" placeholder="0">
             <button class="magnet-btn" onclick="fillFullDebt()"
                     title="Barcha qarzni yozish">🧲</button>
           </div>
-          <label>To'lov turi:</label>
+          <label data-i18n="d_pay_type">To'lov turi:</label>
           <div class="pay-type-row">
             <button class="pay-type-btn active" data-pt="Naqt"
-                    onclick="selectPayType('Naqt')">💵 Naqt</button>
+                    onclick="selectPayType('Naqt')"><span data-i18n="pt_cash">💵 Naqt</span></button>
             <button class="pay-type-btn" data-pt="Click"
-                    onclick="selectPayType('Click')">📱 Click</button>
+                    onclick="selectPayType('Click')"><span data-i18n="pt_click">📱 Click</span></button>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-ghost" onclick="closePayDebtDialog()">Bekor</button>
+          <button class="btn btn-ghost" onclick="closePayDebtDialog()" data-i18n="cancel">Bekor</button>
           <button class="btn btn-primary" id="payDebtBtn" onclick="confirmPayDebt()">
-            💰 To'lash
+            <span data-i18n="d_pay_btn">💰 To'lash</span>
           </button>
         </div>
       </div>
@@ -1109,6 +1115,16 @@ const I18N = {
     lk_confirm_t:"🔁 Parolni tasdiqlang", lk_confirm_d:"Xuddi shu parolni qayta tering",
     lk_new_t:"🔑 Yangi parol", lk_new_hint:"⚠️ Yangi parolni eslab qoling!",
     lk_wrong:"❌ Noto'g'ri parol!", lk_nomatch:"❌ Parollar mos kelmadi!",
+    d_book_name:"Kitob nomi:", d_book_name_ph:"Masalan: Matematika 5-sinf",
+    d_count:"Soni:", d_price:"Narxi (so'm):", d_image:"Rasm (ixtiyoriy):",
+    d_no_image:"🖼️ Rasm yo'q", d_pick_image:"📷 Rasm tanlash", d_clear_image:"🗑️ Rasmni o'chirish",
+    d_teacher_name:"O'qituvchi ismi:", d_teacher_ph:"Masalan: Durdona Adilova",
+    d_give_title:"📖 Kitob berish", d_select_book:"Kitobni tanlang:", d_howmany:"Nechta:",
+    d_give_btn:"📖 Berish",
+    d_return_title:"↩️ Kitob qaytarish", d_return_which:"Qaysi kitob qaytarilmoqda:",
+    d_return_btn:"↩️ Qaytarish",
+    d_pay_title:"💰 Qarz to'landi", d_pay_amount:"To'lanayotgan summa:", d_pay_type:"To'lov turi:",
+    d_pay_btn:"💰 To'lash", pt_cash:"💵 Naqt", pt_click:"📱 Click",
   },
   en: {
     nav_home:"Home", nav_salary:"Salary", nav_library:"Library",
@@ -1180,6 +1196,16 @@ const I18N = {
     lk_confirm_t:"🔁 Confirm password", lk_confirm_d:"Re-enter the same PIN",
     lk_new_t:"🔑 New password", lk_new_hint:"⚠️ Remember your new PIN!",
     lk_wrong:"❌ Wrong password!", lk_nomatch:"❌ Passwords do not match!",
+    d_book_name:"Book name:", d_book_name_ph:"e.g. Mathematics grade 5",
+    d_count:"Quantity:", d_price:"Price (so'm):", d_image:"Image (optional):",
+    d_no_image:"🖼️ No image", d_pick_image:"📷 Pick image", d_clear_image:"🗑️ Remove image",
+    d_teacher_name:"Teacher name:", d_teacher_ph:"e.g. Durdona Adilova",
+    d_give_title:"📖 Give book", d_select_book:"Select a book:", d_howmany:"How many:",
+    d_give_btn:"📖 Give",
+    d_return_title:"↩️ Return book", d_return_which:"Which book is returned:",
+    d_return_btn:"↩️ Return",
+    d_pay_title:"💰 Debt paid", d_pay_amount:"Amount being paid:", d_pay_type:"Payment type:",
+    d_pay_btn:"💰 Pay", pt_cash:"💵 Cash", pt_click:"📱 Click",
   },
   ru: {
     nav_home:"Главная", nav_salary:"Зарплата", nav_library:"Библиотека",
@@ -1251,6 +1277,16 @@ const I18N = {
     lk_confirm_t:"🔁 Подтвердите пароль", lk_confirm_d:"Введите тот же PIN ещё раз",
     lk_new_t:"🔑 Новый пароль", lk_new_hint:"⚠️ Запомните новый PIN!",
     lk_wrong:"❌ Неверный пароль!", lk_nomatch:"❌ Пароли не совпадают!",
+    d_book_name:"Название книги:", d_book_name_ph:"напр. Математика 5 класс",
+    d_count:"Количество:", d_price:"Цена (сум):", d_image:"Фото (необязательно):",
+    d_no_image:"🖼️ Нет фото", d_pick_image:"📷 Выбрать фото", d_clear_image:"🗑️ Удалить фото",
+    d_teacher_name:"Имя учителя:", d_teacher_ph:"напр. Дурдона Адилова",
+    d_give_title:"📖 Выдать книгу", d_select_book:"Выберите книгу:", d_howmany:"Сколько:",
+    d_give_btn:"📖 Выдать",
+    d_return_title:"↩️ Возврат книги", d_return_which:"Какая книга возвращается:",
+    d_return_btn:"↩️ Вернуть",
+    d_pay_title:"💰 Долг оплачен", d_pay_amount:"Сумма к оплате:", d_pay_type:"Тип оплаты:",
+    d_pay_btn:"💰 Оплатить", pt_cash:"💵 Наличные", pt_click:"📱 Click",
   }
 };
 
