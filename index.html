@@ -637,17 +637,17 @@ textarea {
 
       <div class="step active" id="step0">
         <div class="card accent">
-          <div class="card-title">🎯 Qanday ishlaydi?</div>
+          <div class="card-title" data-i18n="s_how_title">🎯 Qanday ishlaydi?</div>
           <div class="steps-info">
-            1️⃣ O'qituvchi ismini kiritasiz<br>
-            2️⃣ O'quvchilar ro'yxatini kiritasiz (FIO va kelgan kunlar)<br>
-            3️⃣ Bita o'quvchidan 12 kun uchun qancha summa bo'lishini kiritasiz
-            <div class="formula">Maosh = (Summa ÷ 12) × kelgan kunlari</div>
-            📄 Natija: PDF va JPG hisobot tayyor!
+            <span data-i18n="s_how_1">1️⃣ O'qituvchi ismini kiritasiz</span><br>
+            <span data-i18n="s_how_2">2️⃣ O'quvchilar ro'yxatini kiritasiz (FIO va kelgan kunlar)</span><br>
+            <span data-i18n="s_how_3">3️⃣ Bita o'quvchidan 12 kun uchun qancha summa bo'lishini kiritasiz</span>
+            <div class="formula">Maosh = (Summa ÷ 12) × kun</div>
+            <span data-i18n="s_how_4">📄 Natija: PDF va JPG hisobot tayyor!</span>
           </div>
         </div>
         <div class="card">
-          <div class="card-title" style="color:var(--warning)">📝 Ro'yxat namunasi (erkin format)</div>
+          <div class="card-title" style="color:var(--warning)" data-i18n="s_sample_title">📝 Ro'yxat namunasi (erkin format)</div>
           <div class="namuna-code">Behruz -- 10
 Sarvinoz --10
 Aziza opa - 2
@@ -655,42 +655,42 @@ Aziza opa - 2
 Sardor 11
 Elyor - 7
 Ozodbek 4</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:10px;">
-            ✅ <b>-- , - , : , |</b> belgilarini ishlatishingiz mumkin. Bo'sh qatorlar e'tiborga olinmaydi.
+          <div style="font-size:12px;color:var(--text-muted);margin-top:10px;" data-i18n="s_sample_note">
+            ✅ -- , - , : , | belgilarini ishlatishingiz mumkin. Bo'sh qatorlar e'tiborga olinmaydi.
           </div>
         </div>
-        <button class="btn btn-primary btn-big" style="width:100%" onclick="goStep(1)">🚀 Boshlash</button>
+        <button class="btn btn-primary btn-big" style="width:100%" onclick="goStep(1)" data-i18n="s_start">🚀 Boshlash</button>
       </div>
 
       <div class="step" id="step1">
         <div class="card accent">
-          <div class="card-title">👨‍🏫 O'QITUVCHI</div>
-          <div class="card-desc">O'qituvchining ism-familiyasini kiriting</div>
-          <label>O'qituvchi:</label>
-          <input type="text" id="teacherName" placeholder="Masalan: Fotima Berdiyeva">
+          <div class="card-title" data-i18n="s_teacher_title">👨‍🏫 O'QITUVCHI</div>
+          <div class="card-desc" data-i18n="s_teacher_desc">O'qituvchining ism-familiyasini kiriting</div>
+          <label data-i18n="s_teacher_label">O'qituvchi:</label>
+          <input type="text" id="teacherName" data-i18n-ph="s_teacher_ph" placeholder="Masalan: Fotima Berdiyeva">
         </div>
         <div class="card accent">
-          <div class="card-title">📅 QAYSI OY</div>
-          <div class="card-desc">Hisobot qaysi oy uchun ekanini yozing</div>
-          <label>Oy:</label>
-          <input type="text" id="monthName" placeholder="Masalan: May 2026"
+          <div class="card-title" data-i18n="s_month_title">📅 QAYSI OY</div>
+          <div class="card-desc" data-i18n="s_month_desc">Hisobot qaysi oy uchun ekanini yozing</div>
+          <label data-i18n="s_month_label">Oy:</label>
+          <input type="text" id="monthName" data-i18n-ph="s_month_ph" placeholder="Masalan: May 2026"
                  onkeydown="if(event.key==='Enter')goStep(2)">
         </div>
         <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goStep(0)">⬅️ Orqaga</button>
-          <button class="btn btn-primary" onclick="goStep(2)">Keyingi ➡️</button>
+          <button class="btn btn-ghost" onclick="goStep(0)" data-i18n="back">⬅️ Orqaga</button>
+          <button class="btn btn-primary" onclick="goStep(2)" data-i18n="next">Keyingi ➡️</button>
         </div>
       </div>
 
       <div class="step" id="step2">
         <div class="card accent">
-          <div class="card-title">📋 O'quvchilar Davomati</div>
-          <div class="card-desc" id="teacherLabel">O'quvchilar ro'yxatini kiriting</div>
+          <div class="card-title" data-i18n="s_students_title">📋 O'quvchilar Davomati</div>
+          <div class="card-desc" id="teacherLabel" data-i18n="s_students_desc">O'quvchilar ro'yxatini kiriting</div>
           <div class="namuna">
-            <div class="namuna-title">✅ Namuna formatlar:</div>
+            <div class="namuna-title" data-i18n="s_sample_formats">✅ Namuna formatlar:</div>
             <div class="namuna-code">Behruz -- 10   |   Aziza opa - 2   |   Sardor 11</div>
           </div>
-          <label>O'quvchilar ro'yxati:</label>
+          <label data-i18n="s_students_label">O'quvchilar ro'yxati:</label>
           <textarea id="studentsText" placeholder="Behruz -- 10&#10;Sarvinoz -- 10&#10;Aziza opa - 2&#10;..."
                     oninput="updateCounter()"></textarea>
           <div style="margin-top:10px;text-align:right;">
@@ -698,25 +698,25 @@ Ozodbek 4</div>
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goStep(1)">⬅️ Orqaga</button>
-          <button class="btn btn-primary" onclick="goStep(3)">✅ Keyingi ➡️</button>
+          <button class="btn btn-ghost" onclick="goStep(1)" data-i18n="back">⬅️ Orqaga</button>
+          <button class="btn btn-primary" onclick="goStep(3)" data-i18n="next_ok">✅ Keyingi ➡️</button>
         </div>
       </div>
 
       <div class="step" id="step3">
         <div class="card accent">
-          <div class="card-title">💰 QANCHADAN</div>
-          <div class="card-desc">Bitta o'quvchidan 12 kun uchun qancha to'lov olinadi?</div>
-          <label>Summa (so'm):</label>
+          <div class="card-title" data-i18n="s_amount_title">💰 QANCHADAN</div>
+          <div class="card-desc" data-i18n="s_amount_desc">Bitta o'quvchidan 12 kun uchun qancha to'lov olinadi?</div>
+          <label data-i18n="s_amount_label">Summa (so'm):</label>
           <input type="number" id="baseAmount" value="100000" placeholder="100000"
                  onkeydown="if(event.key==='Enter')generateReport()">
-          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;" data-i18n="s_amount_note">
             💡 Misol: 100000 — bu 12 kun uchun. Boshqa kunlar proportional hisoblanadi.
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goStep(2)">⬅️ Orqaga</button>
-          <button class="btn btn-primary btn-big" onclick="generateReport()">📊 Hisobot tayyorlansin!</button>
+          <button class="btn btn-ghost" onclick="goStep(2)" data-i18n="back">⬅️ Orqaga</button>
+          <button class="btn btn-primary btn-big" onclick="generateReport()" data-i18n="s_generate">📊 Hisobot tayyorlansin!</button>
         </div>
       </div>
 
@@ -724,12 +724,12 @@ Ozodbek 4</div>
         <div class="result-status" id="resultStatus"></div>
         <div style="font-size:12px;font-weight:600;margin-bottom:12px;" id="syncStatus"></div>
         <div class="card success">
-          <div class="file-name">📄 Maosh hisoboti</div>
+          <div class="file-name" data-i18n="s_file_name">📄 Maosh hisoboti</div>
           <div class="file-meta" id="fileMeta"></div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <button class="btn btn-primary" onclick="downloadPDF()">📥 PDF yuklab olish</button>
-            <button class="btn btn-warning" onclick="downloadJPG()">🖼️ JPG yuklab olish</button>
-            <button class="btn btn-ghost" onclick="newReport()">🔄 Yangi hisobot</button>
+            <button class="btn btn-primary" onclick="downloadPDF()" data-i18n="s_dl_pdf">📥 PDF yuklab olish</button>
+            <button class="btn btn-warning" onclick="downloadJPG()" data-i18n="s_dl_jpg">🖼️ JPG yuklab olish</button>
+            <button class="btn btn-ghost" onclick="newReport()" data-i18n="s_new">🔄 Yangi hisobot</button>
           </div>
         </div>
         <div id="reportPreview"></div>
@@ -738,15 +738,15 @@ Ozodbek 4</div>
       <!-- STEP 5: TARIX (Google Sheets) -->
       <div class="step" id="step5">
         <div class="card accent">
-          <div class="card-title">📜 Maosh Tarixi</div>
-          <div class="card-desc">Barcha qurilmalardan saqlangan hisobotlar (Google Sheets)</div>
+          <div class="card-title" data-i18n="s_hist_title">📜 Maosh Tarixi</div>
+          <div class="card-desc" data-i18n="s_hist_desc">Barcha qurilmalardan saqlangan hisobotlar (Google Sheets)</div>
           <div id="historyList" style="margin-top:10px;">
-            <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
+            <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn btn-ghost" onclick="goStep(0)">⬅️ Orqaga</button>
-          <button class="btn btn-primary" onclick="showSalaryHistory()">🔄 Yangilash</button>
+          <button class="btn btn-ghost" onclick="goStep(0)" data-i18n="back">⬅️ Orqaga</button>
+          <button class="btn btn-primary" onclick="showSalaryHistory()" data-i18n="refresh">🔄 Yangilash</button>
         </div>
       </div>
     </div>
@@ -765,48 +765,48 @@ Ozodbek 4</div>
     <!-- KUTUBXONA -->
     <div class="page" id="page-library">
       <div class="page-title">📚 Kutubxona</div>
-      <div class="page-sub">Kitoblar, qarzdorlar, kassa</div>
+      <div class="page-sub" data-i18n="lib_sub">Kitoblar, qarzdorlar, kassa</div>
 
       <!-- Statistika -->
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-label">📚 Jami kitoblar</div>
-          <div class="stat-value" id="libStatBooks">0 ta</div>
+          <div class="stat-label" data-i18n="lib_stat_books">📚 Jami kitoblar</div>
+          <div class="stat-value" id="libStatBooks">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">💳 Qarz</div>
+          <div class="stat-label" data-i18n="lib_stat_debt">💳 Qarz</div>
           <div class="stat-value" style="color:var(--danger)" id="libStatDebt">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">💵 Kassa naqt</div>
+          <div class="stat-label" data-i18n="lib_stat_cash_naqt">💵 Kassa naqt</div>
           <div class="stat-value" style="color:var(--success)" id="libStatCashNaqt">0</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">📱 Kassa click</div>
+          <div class="stat-label" data-i18n="lib_stat_cash_click">📱 Kassa click</div>
           <div class="stat-value" style="color:var(--warning)" id="libStatCashClick">0</div>
         </div>
       </div>
 
       <!-- Amal tugmalari -->
       <div class="action-row">
-        <button class="btn btn-primary" onclick="openBookDialog()">📕 Kitob qo'shish</button>
-        <button class="btn btn-warning" onclick="openTeacherDialog()">👤 O'qituvchi qo'shish</button>
-        <button class="btn btn-ghost" onclick="loadLibrary()">🔄 Yangilash</button>
+        <button class="btn btn-primary" onclick="openBookDialog()" data-i18n="lib_add_book">📕 Kitob qo'shish</button>
+        <button class="btn btn-warning" onclick="openTeacherDialog()" data-i18n="lib_add_teacher">👤 O'qituvchi qo'shish</button>
+        <button class="btn btn-ghost" onclick="loadLibrary()" data-i18n="refresh">🔄 Yangilash</button>
       </div>
 
       <!-- Kitoblar javoni -->
       <div class="card">
-        <div class="card-title">📚 Kitoblar javoni</div>
+        <div class="card-title" data-i18n="lib_shelf">📚 Kitoblar javoni</div>
         <div id="booksList" style="margin-top:12px;">
-          <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
+          <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
         </div>
       </div>
 
       <!-- O'qituvchilar / Qarzdorlar -->
       <div class="card">
-        <div class="card-title">👥 O'qituvchilar (qarzdorlar)</div>
+        <div class="card-title" data-i18n="lib_teachers">👥 O'qituvchilar (qarzdorlar)</div>
         <div id="teachersList" style="margin-top:12px;">
-          <div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>
+          <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
         </div>
       </div>
     </div>
@@ -1040,88 +1040,217 @@ let currentLang = localStorage.getItem('aok_lang') || 'uz';
 
 const I18N = {
   uz: {
-    nav_home: "Bosh sahifa", nav_salary: "Maosh", nav_library: "Kutubxona",
-    nav_store: "Konstovar", nav_archive: "Arxiv", nav_settings: "Sozlamalar",
-    soon: "tez kunda",
-    salary_title: "💼 Maosh Hisoboti",
-    salary_sub: "O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash",
-    history_btn: "📜 Tarix",
-    settings_title: "⚙️ Sozlamalar", settings_sub: "Dastur sozlamalari",
-    markaz_title: "🏫 O'quv markaz nomi",
-    markaz_desc: "Bu nom har bir hisobotda chiqadi",
-    markaz_label: "Markaz nomi:",
-    lang_title: "🌐 Til / Language / Язык",
-    lang_desc: "Dastur tilini tanlang",
-    theme_title: "🎨 Rang sxemasi",
-    theme_desc: "Tungi yoki kunduzgi rejim",
-    about_title: "ℹ️ Dastur haqida",
-    pin_title: "🔐 Parol", pin_desc: "Kirish parolini o'zgartirish",
-    pin_change: "🔑 Parolni o'zgartirish",
-    home_title: "🏠 Bosh Hisobot",
-    library_title: "📚 Kutubxona",
-    store_title: "🛒 Konstovar",
-    archive_title: "🗃️ Arxiv",
-    soon_title: "Tez kunda qo'shiladi",
-    theme_dark_s: "Tungi rejim", theme_light_s: "Kunduzgi rejim", theme_warm_s: "Ko'z rejimi",
-    theme_to_light: "☀️ Kunduzgi rejimga o'tish",
-    theme_to_warm: "🌅 Ko'z rejimiga o'tish",
-    theme_to_dark: "🌙 Tungi rejimga o'tish",
+    nav_home:"Bosh sahifa", nav_salary:"Maosh", nav_library:"Kutubxona",
+    nav_store:"Konstovar", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
+    soon:"tez kunda",
+    back:"⬅️ Orqaga", next:"Keyingi ➡️", next_ok:"✅ Keyingi ➡️",
+    refresh:"🔄 Yangilash", loading:"⏳ Yuklanmoqda...", cancel:"Bekor", save:"💾 Saqlash",
+    salary_title:"💼 Maosh Hisoboti",
+    salary_sub:"O'qituvchining o'quvchilari davomati bo'yicha maosh hisoblash",
+    history_btn:"📜 Tarix",
+    settings_title:"⚙️ Sozlamalar", settings_sub:"Dastur sozlamalari",
+    markaz_title:"🏫 O'quv markaz nomi",
+    markaz_desc:"Bu nom har bir hisobotda chiqadi",
+    markaz_label:"Markaz nomi:",
+    lang_title:"🌐 Til / Language / Язык",
+    lang_desc:"Dastur tilini tanlang",
+    theme_title:"🎨 Rang sxemasi",
+    theme_desc:"Tungi, kunduzgi yoki ko'z rejimi",
+    about_title:"ℹ️ Dastur haqida",
+    pin_title:"🔐 Parol", pin_desc:"Kirish parolini o'zgartirish",
+    pin_change:"🔑 Parolni o'zgartirish",
+    home_title:"🏠 Bosh Hisobot",
+    library_title:"📚 Kutubxona",
+    lib_sub:"Kitoblar, qarzdorlar, kassa",
+    store_title:"🛒 Konstovar",
+    archive_title:"🗃️ Arxiv",
+    soon_title:"Tez kunda qo'shiladi",
+    theme_dark_s:"Tungi rejim", theme_light_s:"Kunduzgi rejim", theme_warm_s:"Ko'z rejimi",
+    theme_to_light:"☀️ Kunduzgi rejimga o'tish",
+    theme_to_warm:"🌅 Ko'z rejimiga o'tish",
+    theme_to_dark:"🌙 Tungi rejimga o'tish",
+    s_how_title:"🎯 Qanday ishlaydi?",
+    s_how_1:"1️⃣ O'qituvchi ismini kiritasiz",
+    s_how_2:"2️⃣ O'quvchilar ro'yxatini kiritasiz (FIO va kelgan kunlar)",
+    s_how_3:"3️⃣ Bita o'quvchidan 12 kun uchun qancha summa bo'lishini kiritasiz",
+    s_how_4:"📄 Natija: PDF va JPG hisobot tayyor!",
+    s_sample_title:"📝 Ro'yxat namunasi (erkin format)",
+    s_sample_note:"✅ -- , - , : , | belgilarini ishlatishingiz mumkin. Bo'sh qatorlar e'tiborga olinmaydi.",
+    s_start:"🚀 Boshlash",
+    s_teacher_title:"👨‍🏫 O'QITUVCHI",
+    s_teacher_desc:"O'qituvchining ism-familiyasini kiriting",
+    s_teacher_label:"O'qituvchi:", s_teacher_ph:"Masalan: Fotima Berdiyeva",
+    s_month_title:"📅 QAYSI OY",
+    s_month_desc:"Hisobot qaysi oy uchun ekanini yozing",
+    s_month_label:"Oy:", s_month_ph:"Masalan: May 2026",
+    s_students_title:"📋 O'quvchilar Davomati",
+    s_students_desc:"O'quvchilar ro'yxatini kiriting",
+    s_sample_formats:"✅ Namuna formatlar:",
+    s_students_label:"O'quvchilar ro'yxati:",
+    s_amount_title:"💰 QANCHADAN",
+    s_amount_desc:"Bitta o'quvchidan 12 kun uchun qancha to'lov olinadi?",
+    s_amount_label:"Summa (so'm):",
+    s_amount_note:"💡 Misol: 100000 — bu 12 kun uchun. Boshqa kunlar proportional hisoblanadi.",
+    s_generate:"📊 Hisobot tayyorlansin!",
+    s_file_name:"📄 Maosh hisoboti",
+    s_dl_pdf:"📥 PDF yuklab olish", s_dl_jpg:"🖼️ JPG yuklab olish",
+    s_new:"🔄 Yangi hisobot",
+    s_hist_title:"📜 Maosh Tarixi",
+    s_hist_desc:"Barcha qurilmalardan saqlangan hisobotlar (Google Sheets)",
+    s_students_count:"ta o'quvchi",
+    lib_stat_books:"📚 Jami kitoblar", lib_stat_debt:"💳 Qarz",
+    lib_stat_cash_naqt:"💵 Kassa naqt", lib_stat_cash_click:"📱 Kassa click",
+    lib_add_book:"📕 Kitob qo'shish", lib_add_teacher:"👤 O'qituvchi qo'shish",
+    lib_shelf:"📚 Kitoblar javoni", lib_teachers:"👥 O'qituvchilar (qarzdorlar)",
+    units:"ta",
+    lk_enter_t:"🔐 Parolni kiriting", lk_enter_d:"4 xonali parolni tering",
+    lk_set_t:"🆕 Parol o'rnating", lk_set_d:"Yangi 4 xonali parol yarating",
+    lk_set_hint:"⚠️ Parolni eslab qoling! Unutsangiz ma'lumotlar o'chadi.",
+    lk_confirm_t:"🔁 Parolni tasdiqlang", lk_confirm_d:"Xuddi shu parolni qayta tering",
+    lk_new_t:"🔑 Yangi parol", lk_new_hint:"⚠️ Yangi parolni eslab qoling!",
+    lk_wrong:"❌ Noto'g'ri parol!", lk_nomatch:"❌ Parollar mos kelmadi!",
   },
   en: {
-    nav_home: "Home", nav_salary: "Salary", nav_library: "Library",
-    nav_store: "Stationery", nav_archive: "Archive", nav_settings: "Settings",
-    soon: "soon",
-    salary_title: "💼 Salary Report",
-    salary_sub: "Calculate teacher salary based on student attendance",
-    history_btn: "📜 History",
-    settings_title: "⚙️ Settings", settings_sub: "Application settings",
-    markaz_title: "🏫 Education center name",
-    markaz_desc: "This name appears on every report",
-    markaz_label: "Center name:",
-    lang_title: "🌐 Language / Til / Язык",
-    lang_desc: "Choose application language",
-    theme_title: "🎨 Color scheme",
-    theme_desc: "Dark or light mode",
-    about_title: "ℹ️ About",
-    pin_title: "🔐 Password", pin_desc: "Change login password",
-    pin_change: "🔑 Change password",
-    home_title: "🏠 Main Report",
-    library_title: "📚 Library",
-    store_title: "🛒 Stationery",
-    archive_title: "🗃️ Archive",
-    soon_title: "Coming soon",
-    theme_dark_s: "Dark mode", theme_light_s: "Light mode", theme_warm_s: "Eye-care mode",
-    theme_to_light: "☀️ Switch to light mode",
-    theme_to_warm: "🌅 Switch to eye-care mode",
-    theme_to_dark: "🌙 Switch to dark mode",
+    nav_home:"Home", nav_salary:"Salary", nav_library:"Library",
+    nav_store:"Stationery", nav_archive:"Archive", nav_settings:"Settings",
+    soon:"soon",
+    back:"⬅️ Back", next:"Next ➡️", next_ok:"✅ Next ➡️",
+    refresh:"🔄 Refresh", loading:"⏳ Loading...", cancel:"Cancel", save:"💾 Save",
+    salary_title:"💼 Salary Report",
+    salary_sub:"Calculate teacher salary based on student attendance",
+    history_btn:"📜 History",
+    settings_title:"⚙️ Settings", settings_sub:"Application settings",
+    markaz_title:"🏫 Education center name",
+    markaz_desc:"This name appears on every report",
+    markaz_label:"Center name:",
+    lang_title:"🌐 Language / Til / Язык",
+    lang_desc:"Choose application language",
+    theme_title:"🎨 Color scheme",
+    theme_desc:"Dark, light or eye-care mode",
+    about_title:"ℹ️ About",
+    pin_title:"🔐 Password", pin_desc:"Change login password",
+    pin_change:"🔑 Change password",
+    home_title:"🏠 Main Report",
+    library_title:"📚 Library",
+    lib_sub:"Books, debtors, cash",
+    store_title:"🛒 Stationery",
+    archive_title:"🗃️ Archive",
+    soon_title:"Coming soon",
+    theme_dark_s:"Dark mode", theme_light_s:"Light mode", theme_warm_s:"Eye-care mode",
+    theme_to_light:"☀️ Switch to light mode",
+    theme_to_warm:"🌅 Switch to eye-care mode",
+    theme_to_dark:"🌙 Switch to dark mode",
+    s_how_title:"🎯 How it works?",
+    s_how_1:"1️⃣ Enter the teacher's name",
+    s_how_2:"2️⃣ Enter the student list (name and days attended)",
+    s_how_3:"3️⃣ Enter the amount per student for 12 days",
+    s_how_4:"📄 Result: PDF and JPG report ready!",
+    s_sample_title:"📝 List sample (free format)",
+    s_sample_note:"✅ You can use -- , - , : , | symbols. Empty lines are ignored.",
+    s_start:"🚀 Start",
+    s_teacher_title:"👨‍🏫 TEACHER",
+    s_teacher_desc:"Enter the teacher's full name",
+    s_teacher_label:"Teacher:", s_teacher_ph:"e.g. Fotima Berdiyeva",
+    s_month_title:"📅 WHICH MONTH",
+    s_month_desc:"Write which month this report is for",
+    s_month_label:"Month:", s_month_ph:"e.g. May 2026",
+    s_students_title:"📋 Student Attendance",
+    s_students_desc:"Enter the student list",
+    s_sample_formats:"✅ Sample formats:",
+    s_students_label:"Student list:",
+    s_amount_title:"💰 AMOUNT PER STUDENT",
+    s_amount_desc:"How much is charged per student for 12 days?",
+    s_amount_label:"Amount (so'm):",
+    s_amount_note:"💡 Example: 100000 — for 12 days. Other days are calculated proportionally.",
+    s_generate:"📊 Generate report!",
+    s_file_name:"📄 Salary report",
+    s_dl_pdf:"📥 Download PDF", s_dl_jpg:"🖼️ Download JPG",
+    s_new:"🔄 New report",
+    s_hist_title:"📜 Salary History",
+    s_hist_desc:"Reports saved from all devices (Google Sheets)",
+    s_students_count:"students",
+    lib_stat_books:"📚 Total books", lib_stat_debt:"💳 Debt",
+    lib_stat_cash_naqt:"💵 Cash", lib_stat_cash_click:"📱 Click",
+    lib_add_book:"📕 Add book", lib_add_teacher:"👤 Add teacher",
+    lib_shelf:"📚 Book shelf", lib_teachers:"👥 Teachers (debtors)",
+    units:"pcs",
+    lk_enter_t:"🔐 Enter password", lk_enter_d:"Type your 4-digit PIN",
+    lk_set_t:"🆕 Set a password", lk_set_d:"Create a new 4-digit PIN",
+    lk_set_hint:"⚠️ Remember your PIN! If forgotten, data will be erased.",
+    lk_confirm_t:"🔁 Confirm password", lk_confirm_d:"Re-enter the same PIN",
+    lk_new_t:"🔑 New password", lk_new_hint:"⚠️ Remember your new PIN!",
+    lk_wrong:"❌ Wrong password!", lk_nomatch:"❌ Passwords do not match!",
   },
   ru: {
-    nav_home: "Главная", nav_salary: "Зарплата", nav_library: "Библиотека",
-    nav_store: "Канцтовары", nav_archive: "Архив", nav_settings: "Настройки",
-    soon: "скоро",
-    salary_title: "💼 Отчёт по зарплате",
-    salary_sub: "Расчёт зарплаты учителя по посещаемости учеников",
-    history_btn: "📜 История",
-    settings_title: "⚙️ Настройки", settings_sub: "Настройки приложения",
-    markaz_title: "🏫 Название учебного центра",
-    markaz_desc: "Это название появляется в каждом отчёте",
-    markaz_label: "Название центра:",
-    lang_title: "🌐 Язык / Til / Language",
-    lang_desc: "Выберите язык приложения",
-    theme_title: "🎨 Цветовая схема",
-    theme_desc: "Тёмный или светлый режим",
-    about_title: "ℹ️ О программе",
-    pin_title: "🔐 Пароль", pin_desc: "Изменить пароль входа",
-    pin_change: "🔑 Изменить пароль",
-    home_title: "🏠 Главный отчёт",
-    library_title: "📚 Библиотека",
-    store_title: "🛒 Канцтовары",
-    archive_title: "🗃️ Архив",
-    soon_title: "Скоро добавится",
-    theme_dark_s: "Тёмный режим", theme_light_s: "Светлый режим", theme_warm_s: "Режим для глаз",
-    theme_to_light: "☀️ Переключить на светлый режим",
-    theme_to_warm: "🌅 Переключить на режим для глаз",
-    theme_to_dark: "🌙 Переключить на тёмный режим",
+    nav_home:"Главная", nav_salary:"Зарплата", nav_library:"Библиотека",
+    nav_store:"Канцтовары", nav_archive:"Архив", nav_settings:"Настройки",
+    soon:"скоро",
+    back:"⬅️ Назад", next:"Далее ➡️", next_ok:"✅ Далее ➡️",
+    refresh:"🔄 Обновить", loading:"⏳ Загрузка...", cancel:"Отмена", save:"💾 Сохранить",
+    salary_title:"💼 Отчёт по зарплате",
+    salary_sub:"Расчёт зарплаты учителя по посещаемости учеников",
+    history_btn:"📜 История",
+    settings_title:"⚙️ Настройки", settings_sub:"Настройки приложения",
+    markaz_title:"🏫 Название учебного центра",
+    markaz_desc:"Это название появляется в каждом отчёте",
+    markaz_label:"Название центра:",
+    lang_title:"🌐 Язык / Til / Language",
+    lang_desc:"Выберите язык приложения",
+    theme_title:"🎨 Цветовая схема",
+    theme_desc:"Тёмный, светлый или режим для глаз",
+    about_title:"ℹ️ О программе",
+    pin_title:"🔐 Пароль", pin_desc:"Изменить пароль входа",
+    pin_change:"🔑 Изменить пароль",
+    home_title:"🏠 Главный отчёт",
+    library_title:"📚 Библиотека",
+    lib_sub:"Книги, должники, касса",
+    store_title:"🛒 Канцтовары",
+    archive_title:"🗃️ Архив",
+    soon_title:"Скоро добавится",
+    theme_dark_s:"Тёмный режим", theme_light_s:"Светлый режим", theme_warm_s:"Режим для глаз",
+    theme_to_light:"☀️ Переключить на светлый режим",
+    theme_to_warm:"🌅 Переключить на режим для глаз",
+    theme_to_dark:"🌙 Переключить на тёмный режим",
+    s_how_title:"🎯 Как это работает?",
+    s_how_1:"1️⃣ Введите имя учителя",
+    s_how_2:"2️⃣ Введите список учеников (ФИО и посещённые дни)",
+    s_how_3:"3️⃣ Введите сумму за 12 дней на одного ученика",
+    s_how_4:"📄 Результат: отчёт PDF и JPG готов!",
+    s_sample_title:"📝 Образец списка (свободный формат)",
+    s_sample_note:"✅ Можно использовать символы -- , - , : , | . Пустые строки игнорируются.",
+    s_start:"🚀 Начать",
+    s_teacher_title:"👨‍🏫 УЧИТЕЛЬ",
+    s_teacher_desc:"Введите ФИО учителя",
+    s_teacher_label:"Учитель:", s_teacher_ph:"напр. Фотима Бердиева",
+    s_month_title:"📅 КАКОЙ МЕСЯЦ",
+    s_month_desc:"Напишите, за какой месяц этот отчёт",
+    s_month_label:"Месяц:", s_month_ph:"напр. Май 2026",
+    s_students_title:"📋 Посещаемость учеников",
+    s_students_desc:"Введите список учеников",
+    s_sample_formats:"✅ Образцы форматов:",
+    s_students_label:"Список учеников:",
+    s_amount_title:"💰 СУММА НА УЧЕНИКА",
+    s_amount_desc:"Сколько берётся с одного ученика за 12 дней?",
+    s_amount_label:"Сумма (сум):",
+    s_amount_note:"💡 Пример: 100000 — за 12 дней. Другие дни считаются пропорционально.",
+    s_generate:"📊 Создать отчёт!",
+    s_file_name:"📄 Отчёт по зарплате",
+    s_dl_pdf:"📥 Скачать PDF", s_dl_jpg:"🖼️ Скачать JPG",
+    s_new:"🔄 Новый отчёт",
+    s_hist_title:"📜 История зарплат",
+    s_hist_desc:"Отчёты, сохранённые со всех устройств (Google Sheets)",
+    s_students_count:"учеников",
+    lib_stat_books:"📚 Всего книг", lib_stat_debt:"💳 Долг",
+    lib_stat_cash_naqt:"💵 Касса нал.", lib_stat_cash_click:"📱 Касса Click",
+    lib_add_book:"📕 Добавить книгу", lib_add_teacher:"👤 Добавить учителя",
+    lib_shelf:"📚 Книжная полка", lib_teachers:"👥 Учителя (должники)",
+    units:"шт",
+    lk_enter_t:"🔐 Введите пароль", lk_enter_d:"Введите 4-значный PIN",
+    lk_set_t:"🆕 Установите пароль", lk_set_d:"Создайте новый 4-значный PIN",
+    lk_set_hint:"⚠️ Запомните PIN! Если забудете, данные удалятся.",
+    lk_confirm_t:"🔁 Подтвердите пароль", lk_confirm_d:"Введите тот же PIN ещё раз",
+    lk_new_t:"🔑 Новый пароль", lk_new_hint:"⚠️ Запомните новый PIN!",
+    lk_wrong:"❌ Неверный пароль!", lk_nomatch:"❌ Пароли не совпадают!",
   }
 };
 
@@ -1136,11 +1265,17 @@ function setLang(lang) {
 }
 
 function applyLang() {
-  // data-i18n belgili barcha elementlar
+  // data-i18n belgili barcha elementlar (matn)
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     const val = t(key);
     if (val) el.textContent = val;
+  });
+  // data-i18n-ph — input placeholder larni tarjima qilish
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    const key = el.getAttribute('data-i18n-ph');
+    const val = t(key);
+    if (val) el.setAttribute('placeholder', val);
   });
   // Til tugmalari — faolini belgilash (sozlamalar + sidebar)
   document.querySelectorAll('.lang-btn, .lang-mini').forEach(btn => {
@@ -1148,6 +1283,15 @@ function applyLang() {
   });
   // Tema tugmasi matni
   updateThemeUI();
+  // Dinamik qismlarni qayta chizish (til o'zgarganda)
+  if (typeof libBooks !== 'undefined' && document.getElementById('booksList')) {
+    if (libBooks.length) renderBooks();
+    if (typeof renderTeachers === 'function') renderTeachers();
+  }
+  // O'quvchilar hisoblagichi
+  if (typeof updateCounter === 'function') {
+    try { updateCounter(); } catch (e) {}
+  }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -1175,14 +1319,11 @@ let pinFirstEntry = '';   // 'set' bosqichida birinchi kiritilgan parol
 function initLock() {
   const savedPin = localStorage.getItem('aok_pin');
   if (savedPin) {
-    // Parol bor — kirishни so'raymiz
     pinMode = 'check';
-    showLockScreen('🔐 Parolni kiriting', '4 xonali parolni tering', '');
+    showLockScreen(t('lk_enter_t'), t('lk_enter_d'), '');
   } else {
-    // Parol yo'q — birinchi marta, o'rnatamiz
     pinMode = 'set';
-    showLockScreen('🆕 Parol o\'rnating',
-      'Yangi 4 xonali parol yarating', '⚠️ Parolni eslab qoling! Unutsangiz ma\'lumotlar o\'chadi.');
+    showLockScreen(t('lk_set_t'), t('lk_set_d'), t('lk_set_hint'));
   }
 }
 
@@ -1231,7 +1372,7 @@ function pinComplete() {
     if (pinInput === saved) {
       unlockApp();
     } else {
-      document.getElementById('pinError').textContent = '❌ Noto\'g\'ri parol!';
+      document.getElementById('pinError').textContent = t('lk_wrong');
       pinInput = '';
       updatePinDots();
     }
@@ -1240,8 +1381,7 @@ function pinComplete() {
     // Birinchi marta — parolni eslab, tasdiqlashni so'raymiz
     pinFirstEntry = pinInput;
     pinMode = 'confirm';
-    showLockScreen('🔁 Parolni tasdiqlang',
-      'Xuddi shu parolni qayta tering', '');
+    showLockScreen(t('lk_confirm_t'), t('lk_confirm_d'), '');
   }
   else if (pinMode === 'confirm') {
     // Tasdiqlash
@@ -1249,14 +1389,12 @@ function pinComplete() {
       localStorage.setItem('aok_pin', pinInput);
       unlockApp();
     } else {
-      document.getElementById('pinError').textContent = '❌ Parollar mos kelmadi!';
+      document.getElementById('pinError').textContent = t('lk_nomatch');
       pinMode = 'set';
       pinFirstEntry = '';
       pinInput = '';
       setTimeout(() => {
-        showLockScreen('🆕 Parol o\'rnating',
-          'Yangi 4 xonali parol yarating',
-          '⚠️ Parolni eslab qoling! Unutsangiz ma\'lumotlar o\'chadi.');
+        showLockScreen(t('lk_set_t'), t('lk_set_d'), t('lk_set_hint'));
       }, 800);
     }
   }
@@ -1272,8 +1410,7 @@ function changePinDialog() {
   pinMode = 'set';
   pinFirstEntry = '';
   pinInput = '';
-  showLockScreen('🔑 Yangi parol', 'Yangi 4 xonali parol yarating',
-    '⚠️ Yangi parolni eslab qoling!');
+  showLockScreen(t('lk_new_t'), t('lk_set_d'), t('lk_new_hint'));
 }
 
 function navigate(page) {
@@ -1558,10 +1695,10 @@ function updateCounter() {
   const count = parseStudents(document.getElementById('studentsText').value).length;
   const counter = document.getElementById('studentCounter');
   if (count > 0) {
-    counter.textContent = '✓ ' + count + " ta o'quvchi tanildi";
+    counter.textContent = '✓ ' + count + ' ' + t('s_students_count');
     counter.classList.add('ok');
   } else {
-    counter.textContent = "0 ta o'quvchi";
+    counter.textContent = '0 ' + t('s_students_count');
     counter.classList.remove('ok');
   }
 }
