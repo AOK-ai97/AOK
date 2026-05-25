@@ -106,7 +106,7 @@ body {
 }
 
 /* PAGE */
-.page { max-width:920px; margin:0 auto; padding:30px 24px 60px; display:none; }
+.page { max-width:1100px; margin:0 auto; padding:30px 28px 60px; display:none; }
 .page.active { display:block; animation:fadeIn .25s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 .page-title { font-size:26px; font-weight:800; color:var(--accent); margin-bottom:4px; }
@@ -236,6 +236,11 @@ textarea {
   #reportPreview { padding:14px; }
   .rp-stat-table td, .rp-main-table td,
   .rp-stat-table th, .rp-main-table th { padding:6px 8px; font-size:11px; }
+}
+
+/* PLANSHET — o'rta ekran (769px - 1200px) */
+@media (min-width:769px) and (max-width:1200px) {
+  .page { max-width:none; padding:28px 32px 50px; }
 }
 
 /* YOTIQ (landscape) — telefon yon aylanганда */
@@ -499,6 +504,16 @@ textarea {
   display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;
 }
 .teacher-actions .btn { padding:7px 12px; font-size:13px; }
+
+/* ===== MAGNITCHA (summa to'ldirish) ===== */
+.amount-with-magnet { display:flex; gap:8px; align-items:stretch; }
+.amount-with-magnet input { flex:1; }
+.magnet-btn {
+  background:var(--warning); border:none; border-radius:8px;
+  width:48px; font-size:20px; cursor:pointer; flex-shrink:0;
+  transition:transform .1s;
+}
+.magnet-btn:active { transform:scale(.9); }
 </style>
 </head>
 <body>
@@ -870,6 +885,32 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- KITOB QAYTARISH DIALOGI -->
+    <div class="modal-overlay" id="returnBookModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span>↩️ Kitob qaytarish</span>
+          <button class="modal-close" onclick="closeReturnBookDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="returnBookTeacher" style="font-size:14px;font-weight:700;
+               color:var(--accent);margin-bottom:12px;"></div>
+          <label>Qaysi kitob qaytarilmoqda:</label>
+          <select id="returnBookSelect" class="select-input"></select>
+          <label>Nechta:</label>
+          <input type="number" id="returnBookQty" value="1" min="1">
+          <div id="returnBookInfo" style="font-size:13px;color:var(--text-dim);
+               margin-top:10px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeReturnBookDialog()">Bekor</button>
+          <button class="btn btn-primary" id="returnBookBtn" onclick="confirmReturnBook()">
+            ↩️ Qaytarish
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- TO'LANDI DIALOGI -->
     <div class="modal-overlay" id="payDebtModal">
       <div class="modal">
@@ -883,7 +924,11 @@ Ozodbek 4</div>
           <div id="payDebtTotal" style="font-size:13px;color:var(--text-dim);
                margin-bottom:12px;"></div>
           <label>To'lanayotgan summa:</label>
-          <input type="number" id="payDebtAmount" placeholder="0">
+          <div class="amount-with-magnet">
+            <input type="number" id="payDebtAmount" placeholder="0">
+            <button class="magnet-btn" onclick="fillFullDebt()"
+                    title="Barcha qarzni yozish">🧲</button>
+          </div>
           <label>To'lov turi:</label>
           <div class="pay-type-row">
             <button class="pay-type-btn active" data-pt="Naqt"
@@ -2068,6 +2113,8 @@ function renderTeachers() {
       '<div class="teacher-actions">' +
         '<button class="btn btn-warning" onclick="openGiveBook(\'' +
           encodeURIComponent(g.name) + '\')">📖 Kitob berish</button>' +
+        '<button class="btn btn-ghost" onclick="openReturnBook(\'' +
+          encodeURIComponent(g.name) + '\')">↩️ Qaytarish</button>' +
         '<button class="btn btn-primary" onclick="openPayDebt(\'' +
           encodeURIComponent(g.name) + '\')">💰 To\'landi</button>' +
         '<button class="icon-btn edit" onclick="editTeacher(\'' +
@@ -2237,6 +2284,104 @@ function confirmGiveBook() {
   });
 }
 
+// ---- KITOB QAYTARISH ----
+// O'qituvchi olgan kitoblar ro'yxatidan tanlanadi.
+// Qaytarilganda: kitob javonga qaytadi (soni oshadi), qarz kamayadi.
+let returnBookTeacherName = '';
+
+function openReturnBook(encName) {
+  returnBookTeacherName = decodeURIComponent(encName);
+  document.getElementById('returnBookTeacher').textContent =
+    '👤 ' + returnBookTeacherName;
+  // Bu o'qituvchi olgan kitoblar (qarz yozuvlaridan, faqat kitob berish)
+  const items = libDebts.filter(d =>
+    String(d.person).trim() === returnBookTeacherName &&
+    String(d.item) !== "TO'LOV" &&
+    String(d.item) !== "Ro'yxatga olindi" &&
+    (parseFloat(d.amount) || 0) > 0);
+  const sel = document.getElementById('returnBookSelect');
+  sel.innerHTML = '';
+  if (!items.length) {
+    sel.innerHTML = '<option value="">— Olingan kitob yo\'q —</option>';
+  } else {
+    items.forEach(it => {
+      const opt = document.createElement('option');
+      opt.value = it.id;
+      opt.textContent = it.item + ' — ' + fmt(it.amount) + " so'm";
+      sel.appendChild(opt);
+    });
+  }
+  document.getElementById('returnBookQty').value = '1';
+  document.getElementById('returnBookInfo').textContent =
+    'Qaytarilgan kitob javonga qo\'shiladi, qarz kamayadi.';
+  document.getElementById('returnBookModal').classList.add('open');
+}
+
+function closeReturnBookDialog() {
+  document.getElementById('returnBookModal').classList.remove('open');
+}
+
+function confirmReturnBook() {
+  const debtId = document.getElementById('returnBookSelect').value;
+  const qty = parseInt(document.getElementById('returnBookQty').value) || 0;
+  if (!debtId) { alert('Qaytariladigan kitobni tanlang!'); return; }
+  if (qty < 1) { alert('Nechta — kamida 1!'); return; }
+
+  // Tanlangan qarz yozuvi
+  const debtItem = libDebts.find(d => d.id === debtId);
+  if (!debtItem) { alert('Yozuv topilmadi'); return; }
+
+  // Kitob nomi va nechta olинганини aniqlash ("Round up 1 x2")
+  const itemStr = String(debtItem.item);
+  const match = itemStr.match(/^(.*) x(\d+)$/);
+  const bookName = match ? match[1] : itemStr;
+  const takenQty = match ? parseInt(match[2]) : 1;
+  if (qty > takenQty) {
+    alert('Bu yozuvда faqat ' + takenQty + ' ta olingan!');
+    return;
+  }
+
+  // Kitob narxi (qarzdan hisoblanadi)
+  const totalAmount = parseFloat(debtItem.amount) || 0;
+  const perBook = takenQty > 0 ? (totalAmount / takenQty) : 0;
+  const returnAmount = perBook * qty;
+
+  // Javondagi kitobni topish (nom bo'yicha)
+  const book = libBooks.find(b => String(b.name) === bookName);
+
+  const btn = document.getElementById('returnBookBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  const tasks = [];
+
+  // 1. Qarzdorlarga manfiy yozuv (qaytarildi)
+  const p1 = new URLSearchParams({
+    action: 'save_debt', person: returnBookTeacherName,
+    item: bookName + ' (qaytarildi x' + qty + ')',
+    amount: -returnAmount,
+    date: new Date().toISOString(), note: 'Qaytarish'
+  });
+  tasks.push(fetch(SHEETS_API, { method: 'POST', body: p1 }).then(r => r.json()));
+
+  // 2. Javondagi kitob sonини oshirish (agar kitob mavjud bo'lsa)
+  if (book) {
+    const newCount = (parseInt(book.count) || 0) + qty;
+    const p2 = new URLSearchParams({
+      action: 'update_book', id: book.id, count: newCount
+    });
+    tasks.push(fetch(SHEETS_API, { method: 'POST', body: p2 }).then(r => r.json()));
+  }
+
+  Promise.all(tasks).then(() => {
+    btn.disabled = false; btn.textContent = '↩️ Qaytarish';
+    closeReturnBookDialog();
+    loadLibrary();
+  }).catch(() => {
+    btn.disabled = false; btn.textContent = '↩️ Qaytarish';
+    alert('⚠️ Server bilan aloqa yo\'q');
+  });
+}
+
 // ---- TO'LANDI ----
 let payDebtTeacherName = '';
 let payDebtType = 'Naqt';
@@ -2262,6 +2407,14 @@ function selectPayType(pt) {
   document.querySelectorAll('#payDebtModal .pay-type-btn').forEach(b => {
     b.classList.toggle('active', b.getAttribute('data-pt') === pt);
   });
+}
+
+// 🧲 Magnitcha — o'qituvchining butun qarzini summa maydoniga yozadi
+function fillFullDebt() {
+  const groups = getTeacherGroups();
+  const g = groups.find(x => x.name === payDebtTeacherName);
+  const debt = g ? g.debt : 0;
+  document.getElementById('payDebtAmount').value = debt > 0 ? debt : 0;
 }
 
 function closePayDebtDialog() {
