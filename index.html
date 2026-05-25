@@ -1070,12 +1070,83 @@ Ozodbek 4</div>
     <!-- KONSTOVAR -->
     <div class="page" id="page-store">
       <div class="page-title" data-i18n="store_title">🛒 Konstovar</div>
-      <div class="page-sub">Maxsulotlar, sotish, kassa</div>
-      <div class="card"><div class="coming-soon">
-        <div class="icon">🚧</div>
-        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
-        <div class="desc">Maxsulotlar boshqaruvi — keyingi yangilanishda</div>
-      </div></div>
+      <div class="page-sub" data-i18n="st_sub">Maxsulotlar, sotish, kassa</div>
+
+      <!-- Statistika -->
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="st_stat_products">📦 Jami maxsulotlar</div>
+          <div class="stat-value" id="stStatProducts">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="st_stat_debt">💳 Qarz</div>
+          <div class="stat-value" style="color:var(--danger)" id="stStatDebt">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="st_stat_cash_naqt">💵 Kassa naqt</div>
+          <div class="stat-value" style="color:var(--success)" id="stStatCashNaqt">0</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label" data-i18n="st_stat_cash_click">📱 Kassa click</div>
+          <div class="stat-value" style="color:var(--warning)" id="stStatCashClick">0</div>
+        </div>
+      </div>
+
+      <!-- Amal tugmalari -->
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="openProductDialog()" data-i18n="st_add_product">📦 Maxsulot qo'shish</button>
+        <button class="btn" style="background:var(--success);color:#fff;"
+                onclick="openSellDialog()" data-i18n="st_sell">🛒 Sotish</button>
+        <button class="btn" style="background:var(--warning);color:#333;"
+                onclick="openStoreUseCashDialog()" data-i18n="st_use_cash">💸 Tushum ishlatildi</button>
+        <button class="btn btn-ghost" onclick="loadStore()" data-i18n="refresh">🔄 Yangilash</button>
+      </div>
+
+      <!-- Maxsulotlar javoni -->
+      <div class="card">
+        <div class="card-title" data-i18n="st_shelf">📦 Maxsulotlar</div>
+        <div id="productsList" style="margin-top:12px;">
+          <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAXSULOT DIALOGI -->
+    <div class="modal-overlay" id="productModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span id="productModalTitle">📦 Maxsulot qo'shish</span>
+          <button class="modal-close" onclick="closeProductDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label data-i18n="d_prod_name">Maxsulot nomi:</label>
+          <input type="text" id="productName" data-i18n-ph="d_prod_name_ph" placeholder="Masalan: Daftar 48 varaq">
+          <label data-i18n="d_count">Soni:</label>
+          <input type="number" id="productCount" value="1" min="0">
+          <label data-i18n="d_price">Narxi (so'm):</label>
+          <input type="number" id="productPrice" placeholder="0">
+          <label data-i18n="d_image">Rasm (ixtiyoriy):</label>
+          <div class="img-picker">
+            <div class="img-preview" id="productImgPreview">
+              <span data-i18n="d_no_image">🖼️ Rasm yo'q</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px;"
+                      onclick="document.getElementById('productImgInput').click()">
+                <span data-i18n="d_pick_image">📷 Rasm tanlash</span>
+              </button>
+              <button class="btn btn-ghost" style="padding:8px 14px;font-size:13px;"
+                      onclick="clearProductImage()"><span data-i18n="d_clear_image">🗑️ Rasmni o'chirish</span></button>
+            </div>
+            <input type="file" id="productImgInput" accept="image/*"
+                   style="display:none" onchange="onProductImageSelected(event)">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeProductDialog()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" id="productSaveBtn" onclick="saveProduct()" data-i18n="save">💾 Saqlash</button>
+        </div>
+      </div>
     </div>
 
     <!-- ARXIV -->
@@ -1175,7 +1246,15 @@ const I18N = {
     home_title:"🏠 Bosh Hisobot",
     library_title:"📚 Kutubxona",
     lib_sub:"Kitoblar, qarzdorlar, kassa",
-    store_title:"🛒 Konstovar",
+    store_title:"🛒 Konstovar", st_sub:"Maxsulotlar, sotish, kassa",
+    st_stat_products:"📦 Jami maxsulotlar", st_stat_debt:"💳 Qarz",
+    st_stat_cash_naqt:"💵 Kassa naqt", st_stat_cash_click:"📱 Kassa click",
+    st_add_product:"📦 Maxsulot qo'shish", st_edit_product:"Maxsulotni tahrirlash",
+    st_sell:"🛒 Sotish", st_use_cash:"💸 Tushum ishlatildi",
+    st_shelf:"📦 Maxsulotlar", st_no_products:"Hali maxsulot qo'shilmagan",
+    st_err_name:"Maxsulot nomini kiriting!",
+    st_del_confirm:"maxsulotini o'chirasizmi?",
+    d_prod_name:"Maxsulot nomi:", d_prod_name_ph:"Masalan: Daftar 48 varaq",
     archive_title:"🗃️ Arxiv",
     soon_title:"Tez kunda qo'shiladi",
     theme_dark_s:"Tungi rejim", theme_light_s:"Kunduzgi rejim", theme_warm_s:"Ko'z rejimi",
@@ -1279,7 +1358,15 @@ const I18N = {
     home_title:"🏠 Main Report",
     library_title:"📚 Library",
     lib_sub:"Books, debtors, cash",
-    store_title:"🛒 Stationery",
+    store_title:"🛒 Stationery", st_sub:"Products, sales, cash",
+    st_stat_products:"📦 Total products", st_stat_debt:"💳 Debt",
+    st_stat_cash_naqt:"💵 Cash", st_stat_cash_click:"📱 Click",
+    st_add_product:"📦 Add product", st_edit_product:"Edit product",
+    st_sell:"🛒 Sell", st_use_cash:"💸 Use income",
+    st_shelf:"📦 Products", st_no_products:"No products added yet",
+    st_err_name:"Enter the product name!",
+    st_del_confirm:"delete this product?",
+    d_prod_name:"Product name:", d_prod_name_ph:"e.g. Notebook 48 pages",
     archive_title:"🗃️ Archive",
     soon_title:"Coming soon",
     theme_dark_s:"Dark mode", theme_light_s:"Light mode", theme_warm_s:"Eye-care mode",
@@ -1383,7 +1470,15 @@ const I18N = {
     home_title:"🏠 Главный отчёт",
     library_title:"📚 Библиотека",
     lib_sub:"Книги, должники, касса",
-    store_title:"🛒 Канцтовары",
+    store_title:"🛒 Канцтовары", st_sub:"Товары, продажи, касса",
+    st_stat_products:"📦 Всего товаров", st_stat_debt:"💳 Долг",
+    st_stat_cash_naqt:"💵 Касса нал.", st_stat_cash_click:"📱 Касса Click",
+    st_add_product:"📦 Добавить товар", st_edit_product:"Изменить товар",
+    st_sell:"🛒 Продать", st_use_cash:"💸 Использовать доход",
+    st_shelf:"📦 Товары", st_no_products:"Товары пока не добавлены",
+    st_err_name:"Введите название товара!",
+    st_del_confirm:"удалить этот товар?",
+    d_prod_name:"Название товара:", d_prod_name_ph:"напр. Тетрадь 48 листов",
     archive_title:"🗃️ Архив",
     soon_title:"Скоро добавится",
     theme_dark_s:"Тёмный режим", theme_light_s:"Светлый режим", theme_warm_s:"Режим для глаз",
@@ -1499,6 +1594,10 @@ function applyLang() {
   if (typeof libBooks !== 'undefined' && document.getElementById('booksList')) {
     if (libBooks.length) renderBooks();
     if (typeof renderTeachers === 'function') renderTeachers();
+  }
+  if (typeof stProducts !== 'undefined' && stProducts.length &&
+      typeof renderProducts === 'function') {
+    renderProducts();
   }
   // O'quvchilar hisoblagichi
   if (typeof updateCounter === 'function') {
@@ -1634,6 +1733,7 @@ function navigate(page) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
   // Kutubxona ochilganда — ma'lumotlarni yuklash
   if (page === 'library') loadLibrary();
+  if (page === 'store') loadStore();
 }
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
@@ -3317,6 +3417,232 @@ function delLibHist(idx) {
     })
     .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
+
+// ============================================================
+//  KONSTOVAR — MAXSULOTLAR MODULI
+// ============================================================
+let stProducts = [];
+let editingProductId = null;
+let productImageData = '';
+let stDebts = [];
+let stCash = [];
+
+function loadStore() {
+  const list = document.getElementById('productsList');
+  list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ Yuklanmoqda...</div>';
+  fetch(SHEETS_API + '?action=list_products')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') {
+        stProducts = res.rows || [];
+        renderProducts();
+        updateStoreStats();
+      } else {
+        list.innerHTML = '<div style="color:var(--danger);font-size:14px;">⚠️ ' +
+          (res.message || 'Xato') + '</div>';
+      }
+    })
+    .catch(() => {
+      list.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+  loadStoreCash();
+}
+
+function renderProducts() {
+  const list = document.getElementById('productsList');
+  if (!stProducts.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">' +
+      '📭 ' + t('st_no_products') + '</div>';
+    return;
+  }
+  let html = '';
+  stProducts.forEach((p, i) => {
+    const imgHtml = p.image
+      ? '<img src="' + p.image + '" alt="">'
+      : '<span class="noimg"><span class="a">A</span>' +
+        '<span class="o">O</span><span class="k">K</span></span>';
+    html += '<div class="book-item">' +
+      '<div class="book-img">' + imgHtml + '</div>' +
+      '<div class="book-info">' +
+        '<div class="book-name">' + escapeHtml(String(p.name)) + '</div>' +
+        '<div class="book-price">' + fmt(p.price) + " so'm</div>" +
+      '</div>' +
+      '<div class="book-actions">' +
+        '<button class="count-btn count-minus" onclick="changeProductCount(' + i + ',-1)">−</button>' +
+        '<span class="count-num">' + (p.count || 0) + '</span>' +
+        '<button class="count-btn count-plus" onclick="changeProductCount(' + i + ',1)">+</button>' +
+        '<button class="icon-btn edit" onclick="editProduct(' + i + ')">✏️</button>' +
+        '<button class="icon-btn del" onclick="deleteProduct(' + i + ')">🗑️</button>' +
+      '</div>' +
+    '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function updateStoreStats() {
+  const totalProducts = stProducts.reduce((s,p) => s + (parseInt(p.count)||0), 0);
+  document.getElementById('stStatProducts').textContent = totalProducts + ' ' + t('units');
+  // Qarz
+  const totalDebt = stDebts.reduce((s,d) => s + (parseFloat(d.amount)||0), 0);
+  document.getElementById('stStatDebt').textContent = fmt(Math.max(0,totalDebt));
+  // Kassa
+  let naqt = 0, click = 0;
+  stCash.forEach(c => {
+    if (String(c.module) !== 'Konstovar') return;
+    const amt = parseFloat(c.amount) || 0;
+    const sign = (String(c.type) === 'chiqim') ? -1 : 1;
+    if (String(c.payType) === 'Click') click += amt * sign;
+    else naqt += amt * sign;
+  });
+  document.getElementById('stStatCashNaqt').textContent = fmt(naqt);
+  document.getElementById('stStatCashClick').textContent = fmt(click);
+}
+
+function loadStoreCash() {
+  fetch(SHEETS_API + '?action=list_cash')
+    .then(r => r.json())
+    .then(res => {
+      stCash = (res.status === 'ok') ? (res.rows || []) : [];
+      updateStoreStats();
+    })
+    .catch(() => { stCash = []; });
+}
+
+// ---- MAXSULOT DIALOGI ----
+function openProductDialog() {
+  editingProductId = null;
+  productImageData = '';
+  document.getElementById('productModalTitle').textContent = t('st_add_product');
+  document.getElementById('productName').value = '';
+  document.getElementById('productCount').value = '1';
+  document.getElementById('productPrice').value = '';
+  updateProductImgPreview();
+  document.getElementById('productModal').classList.add('open');
+}
+
+function editProduct(i) {
+  const p = stProducts[i];
+  if (!p) return;
+  editingProductId = p.id;
+  productImageData = p.image || '';
+  document.getElementById('productModalTitle').textContent = '✏️ ' + t('st_edit_product');
+  document.getElementById('productName').value = p.name || '';
+  document.getElementById('productCount').value = p.count || 0;
+  document.getElementById('productPrice').value = p.price || '';
+  updateProductImgPreview();
+  document.getElementById('productModal').classList.add('open');
+}
+
+function closeProductDialog() {
+  document.getElementById('productModal').classList.remove('open');
+}
+
+function onProductImageSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      const max = 200;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > max) { h = h*max/w; w = max; } }
+      else { if (h > max) { w = w*max/h; h = max; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      productImageData = canvas.toDataURL('image/jpeg', 0.6);
+      updateProductImgPreview();
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearProductImage() {
+  productImageData = '';
+  document.getElementById('productImgInput').value = '';
+  updateProductImgPreview();
+}
+
+function updateProductImgPreview() {
+  const prev = document.getElementById('productImgPreview');
+  if (productImageData) {
+    prev.innerHTML = '<img src="' + productImageData + '" alt="">';
+  } else {
+    prev.innerHTML = '<span>' + t('d_no_image') + '</span>';
+  }
+}
+
+function saveProduct() {
+  const name = document.getElementById('productName').value.trim();
+  const count = parseInt(document.getElementById('productCount').value) || 0;
+  const price = parseFloat(document.getElementById('productPrice').value) || 0;
+  if (!name) { alert(t('st_err_name')); return; }
+
+  const btn = document.getElementById('productSaveBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+
+  const params = new URLSearchParams();
+  params.set('name', name);
+  params.set('count', count);
+  params.set('price', price);
+  params.set('image', productImageData || '');
+  if (editingProductId) {
+    params.set('action', 'update_product');
+    params.set('id', editingProductId);
+  } else {
+    params.set('action', 'save_product');
+  }
+
+  fetch(SHEETS_API, { method:'POST', body:params })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = t('save');
+      if (res.status === 'ok') {
+        closeProductDialog();
+        loadStore();
+      } else {
+        alert('⚠️ ' + (res.message || ''));
+      }
+    })
+    .catch(() => {
+      btn.disabled = false; btn.textContent = t('save');
+      alert('⚠️ Server bilan aloqa yo\'q');
+    });
+}
+
+function changeProductCount(i, delta) {
+  const p = stProducts[i];
+  if (!p) return;
+  const newCount = Math.max(0, (parseInt(p.count)||0) + delta);
+  p.count = newCount;
+  renderProducts();
+  updateStoreStats();
+  const params = new URLSearchParams({
+    action:'update_product', id:p.id, count:newCount
+  });
+  fetch(SHEETS_API, { method:'POST', body:params }).catch(() => {});
+}
+
+function deleteProduct(i) {
+  const p = stProducts[i];
+  if (!p) return;
+  if (!confirm('"' + p.name + '" ' + t('st_del_confirm'))) return;
+  const params = new URLSearchParams({ action:'delete_product', id:p.id });
+  fetch(SHEETS_API, { method:'POST', body:params })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') loadStore();
+      else alert('⚠️ ' + (res.message || ''));
+    })
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+// Sotish va Tushum — 2 va 3-qismda qo'shiladi (vaqtincha)
+function openSellDialog() { alert(t('soon_title')); }
+function openStoreUseCashDialog() { alert(t('soon_title')); }
 
 // ============================================================
 //  PWA — AVTOMATIK YANGILANISH
