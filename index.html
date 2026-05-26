@@ -11,6 +11,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg:#0f1923; --sidebar:#162130; --card:#1c2d3f; --card-hover:#243a50;
@@ -771,12 +772,39 @@ Ozodbek 4</div>
     <!-- BOSH -->
     <div class="page" id="page-home">
       <div class="page-title" data-i18n="home_title">🏠 Bosh Hisobot</div>
-      <div class="page-sub">HiBot Excel faylidan to'lovlar hisobotini yaratish</div>
-      <div class="card"><div class="coming-soon">
-        <div class="icon">🚧</div>
-        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
-        <div class="desc">Excel yuklash, xarajatlar, PDF hisobot — keyingi yangilanishda</div>
-      </div></div>
+      <div class="page-sub" data-i18n="bh_sub">HiBot Excel faylidan to'lovlar hisoboti</div>
+
+      <!-- Excel yuklash -->
+      <div class="card">
+        <div class="card-title" data-i18n="bh_excel">📂 Excel fayl</div>
+        <div style="font-size:13px;color:var(--text-dim);margin:6px 0 12px;"
+             data-i18n="bh_excel_hint">HiBot tizimidan yuklab olingan Excel faylni tanlang</div>
+        <button class="btn btn-primary" onclick="document.getElementById('bhExcelInput').click()">
+          <span data-i18n="bh_pick">📂 Excel tanlash</span>
+        </button>
+        <input type="file" id="bhExcelInput" accept=".xlsx,.xls"
+               style="display:none" onchange="onBhExcelSelected(event)">
+        <div id="bhExcelInfo" style="font-size:13px;margin-top:10px;color:var(--success);"></div>
+      </div>
+
+      <!-- Sana tanlash -->
+      <div class="card" id="bhDateCard" style="display:none;">
+        <div class="card-title" data-i18n="bh_date">📅 Sana tanlash</div>
+        <div style="font-size:13px;color:var(--text-dim);margin:6px 0 12px;"
+             data-i18n="bh_date_hint">Qaysi kunning hisobotini ko'rmoqchisiz?</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input type="date" id="bhDate" class="select-input" style="max-width:200px;">
+          <button class="btn" style="background:var(--warning);color:#333;"
+                  onclick="bhSetToday()" data-i18n="bh_today">🧲 Bugun</button>
+        </div>
+        <button class="btn btn-primary" style="margin-top:14px;width:100%;"
+                onclick="bhGenerate()">
+          <span data-i18n="bh_show">⚡ To'lovlarni ko'rsatish</span>
+        </button>
+      </div>
+
+      <!-- Natija -->
+      <div id="bhResult"></div>
     </div>
 
     <!-- KUTUBXONA -->
@@ -1431,7 +1459,16 @@ const I18N = {
     about_title:"ℹ️ Dastur haqida",
     pin_title:"🔐 Parol", pin_desc:"Kirish parolini o'zgartirish",
     pin_change:"🔑 Parolni o'zgartirish",
-    home_title:"🏠 Bosh Hisobot",
+    home_title:"🏠 Bosh Hisobot", bh_sub:"HiBot Excel faylidan to'lovlar hisoboti",
+    bh_excel:"📂 Excel fayl", bh_excel_hint:"HiBot tizimidan yuklab olingan Excel faylni tanlang",
+    bh_pick:"📂 Excel tanlash", bh_rows:"qator",
+    bh_date:"📅 Sana tanlash", bh_date_hint:"Qaysi kunning hisobotini ko'rmoqchisiz?",
+    bh_today:"🧲 Bugun", bh_show:"⚡ To'lovlarni ko'rsatish",
+    bh_count:"To'lovlar", bh_total:"Jami summa", bh_subtotal:"Jami",
+    bh_no_payments:"Bu sanada to'lov topilmadi",
+    bh_part2_soon:"Xarajatlar va PDF hisobot — 2-qismda qo'shiladi",
+    bh_err_empty:"Excel fayl bo'sh!", bh_err_read:"Excel o'qishda xato",
+    bh_err_date:"Sanani tanlang!", bh_err_noexcel:"Avval Excel faylni yuklang!",
     library_title:"📚 Kutubxona",
     lib_sub:"Kitoblar, qarzdorlar, kassa",
     store_title:"🛒 Konstovar", st_sub:"Maxsulotlar, sotish, kassa",
@@ -1563,7 +1600,16 @@ const I18N = {
     about_title:"ℹ️ About",
     pin_title:"🔐 Password", pin_desc:"Change login password",
     pin_change:"🔑 Change password",
-    home_title:"🏠 Main Report",
+    home_title:"🏠 Main Report", bh_sub:"Payments report from HiBot Excel file",
+    bh_excel:"📂 Excel file", bh_excel_hint:"Select the Excel file downloaded from HiBot",
+    bh_pick:"📂 Select Excel", bh_rows:"rows",
+    bh_date:"📅 Select date", bh_date_hint:"Which day's report do you want?",
+    bh_today:"🧲 Today", bh_show:"⚡ Show payments",
+    bh_count:"Payments", bh_total:"Total amount", bh_subtotal:"Total",
+    bh_no_payments:"No payments found for this date",
+    bh_part2_soon:"Expenses and PDF report — coming in part 2",
+    bh_err_empty:"Excel file is empty!", bh_err_read:"Error reading Excel",
+    bh_err_date:"Select a date!", bh_err_noexcel:"Upload the Excel file first!",
     library_title:"📚 Library",
     lib_sub:"Books, debtors, cash",
     store_title:"🛒 Stationery", st_sub:"Products, sales, cash",
@@ -1695,7 +1741,16 @@ const I18N = {
     about_title:"ℹ️ О программе",
     pin_title:"🔐 Пароль", pin_desc:"Изменить пароль входа",
     pin_change:"🔑 Изменить пароль",
-    home_title:"🏠 Главный отчёт",
+    home_title:"🏠 Главный отчёт", bh_sub:"Отчёт о платежах из Excel HiBot",
+    bh_excel:"📂 Excel файл", bh_excel_hint:"Выберите Excel файл, скачанный из HiBot",
+    bh_pick:"📂 Выбрать Excel", bh_rows:"строк",
+    bh_date:"📅 Выбор даты", bh_date_hint:"Отчёт за какой день вы хотите?",
+    bh_today:"🧲 Сегодня", bh_show:"⚡ Показать платежи",
+    bh_count:"Платежи", bh_total:"Общая сумма", bh_subtotal:"Итого",
+    bh_no_payments:"Платежи на эту дату не найдены",
+    bh_part2_soon:"Расходы и PDF отчёт — добавятся во 2-й части",
+    bh_err_empty:"Excel файл пустой!", bh_err_read:"Ошибка чтения Excel",
+    bh_err_date:"Выберите дату!", bh_err_noexcel:"Сначала загрузите Excel файл!",
     library_title:"📚 Библиотека",
     lib_sub:"Книги, должники, касса",
     store_title:"🛒 Канцтовары", st_sub:"Товары, продажи, касса",
@@ -4583,6 +4638,208 @@ function deleteStoreDebtor(encName) {
     fetch(SHEETS_API, { method:'POST', body:p })
       .then(() => { done++; if (done === items.length) loadStore(); });
   });
+}
+
+// ============================================================
+//  BOSH HISOBOT — EXCEL O'QISH (HiBot to'lovlar)
+// ============================================================
+let bhRows = [];        // Excel dan o'qilgan barcha qatorlar
+let bhColumns = {};     // Aniqlangan ustunlar
+let bhFileName = '';
+let bhCurrentData = []; // Joriy ko'rsatilgan kun to'lovlari
+
+function onBhExcelSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  bhFileName = file.name;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const wb = XLSX.read(ev.target.result, { type:'array', cellDates:true });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const arr = XLSX.utils.sheet_to_json(ws, { header:1, raw:true });
+      if (!arr.length) { alert(t('bh_err_empty')); return; }
+      const headers = arr[0];
+      bhColumns = bhDetectColumns(headers);
+      bhRows = arr.slice(1).filter(r => r && r.length);
+      document.getElementById('bhExcelInfo').textContent =
+        '✅ ' + bhFileName + ' — ' + bhRows.length + ' ' + t('bh_rows');
+      document.getElementById('bhDateCard').style.display = '';
+      // Eng so'nggi sanani avtomatik qo'yish
+      bhAutoDate();
+    } catch(err) {
+      alert(t('bh_err_read') + ': ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+// Ustunlarni keyword bilan aniqlash (HiBot nomlarni o'zgartirishi mumkin)
+function bhDetectColumns(headers) {
+  const col = {};
+  headers.forEach((h, idx) => {
+    if (!h) return;
+    const hl = String(h).toLowerCase().trim();
+    if (hl === 'id') col.id = idx;
+    else if (hl.includes("o'quvchi") && !hl.includes('bonus')) col.student = idx;
+    else if (hl.includes('guruh')) col.group = idx;
+    else if (hl.includes("o'qituvchi")) col.teacher = idx;
+    else if (hl.includes("to'lov miqdori") || hl.includes('miqdor')) col.amount = idx;
+    else if (hl.includes("to'lov sanasi") || hl.includes('sana')) col.date = idx;
+    else if (hl.includes('tasir')) col.period = idx;
+    else if (hl.includes('izoh')) col.note = idx;
+    else if (hl.includes("to'lov turi") || hl.includes('turi')) col.type = idx;
+  });
+  // Zaxira — topilmasa standart joylashuv
+  if (col.student === undefined) col.student = 1;
+  if (col.group === undefined) col.group = 2;
+  if (col.teacher === undefined) col.teacher = 3;
+  if (col.amount === undefined) col.amount = 4;
+  if (col.date === undefined) col.date = 6;
+  if (col.period === undefined) col.period = 7;
+  if (col.note === undefined) col.note = 8;
+  if (col.type === undefined) col.type = 10;
+  return col;
+}
+
+// Sana qiymatini YYYY-MM-DD ga aylantirish
+function bhDateStr(val) {
+  if (val == null) return '';
+  if (val instanceof Date) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth()+1).padStart(2,'0');
+    const d = String(val.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + d;
+  }
+  // Excel raqamli sana
+  if (typeof val === 'number') {
+    const dt = new Date(Math.round((val - 25569) * 86400 * 1000));
+    const y = dt.getUTCFullYear();
+    const m = String(dt.getUTCMonth()+1).padStart(2,'0');
+    const d = String(dt.getUTCDate()).padStart(2,'0');
+    return y + '-' + m + '-' + d;
+  }
+  return String(val).slice(0,10);
+}
+
+// Excel ichidagi eng so'nggi sanani topib qo'yish
+function bhAutoDate() {
+  let latest = '';
+  bhRows.forEach(r => {
+    const ds = bhDateStr(r[bhColumns.date]);
+    if (ds && ds > latest) latest = ds;
+  });
+  document.getElementById('bhDate').value = latest ||
+    new Date().toISOString().slice(0,10);
+}
+
+function bhSetToday() {
+  document.getElementById('bhDate').value = new Date().toISOString().slice(0,10);
+}
+
+// Berilgan sana uchun to'lovlarni yig'ish
+function bhFilterByDate(targetStr) {
+  const out = [];
+  bhRows.forEach(r => {
+    if (bhDateStr(r[bhColumns.date]) !== targetStr) return;
+    let amt = parseFloat(r[bhColumns.amount]) || 0;
+    const pt = String(r[bhColumns.type] || '').trim().toLowerCase();
+    let note = String(r[bhColumns.note] || '').trim();
+    if (note === '.' || note === '0') note = '';
+    out.push({
+      student: String(r[bhColumns.student] || '').trim(),
+      group: String(r[bhColumns.group] || '').trim(),
+      teacher: String(r[bhColumns.teacher] || '').trim(),
+      period: String(r[bhColumns.period] || '').trim(),
+      amount: amt,
+      type: (pt === 'click') ? 'Click' : '',
+      note: note
+    });
+  });
+  // O'qituvchi → guruh → o'quvchi bo'yicha tartiblash
+  out.sort((a,b) =>
+    a.teacher.toLowerCase().localeCompare(b.teacher.toLowerCase()) ||
+    a.group.toLowerCase().localeCompare(b.group.toLowerCase()) ||
+    a.student.toLowerCase().localeCompare(b.student.toLowerCase()));
+  return out;
+}
+
+// O'qituvchi bo'yicha guruhlash
+function bhGroupByTeacher(data) {
+  const groups = {};
+  data.forEach(r => {
+    const t = r.teacher || '—';
+    if (!groups[t]) groups[t] = { teacher:t, rows:[], total:0, naqt:0, click:0 };
+    groups[t].rows.push(r);
+    groups[t].total += r.amount;
+    if (r.type === 'Click') groups[t].click += r.amount;
+    else groups[t].naqt += r.amount;
+  });
+  return Object.values(groups);
+}
+
+function bhGenerate() {
+  const target = document.getElementById('bhDate').value;
+  if (!target) { alert(t('bh_err_date')); return; }
+  if (!bhRows.length) { alert(t('bh_err_noexcel')); return; }
+
+  bhCurrentData = bhFilterByDate(target);
+  const resultEl = document.getElementById('bhResult');
+
+  if (!bhCurrentData.length) {
+    resultEl.innerHTML = '<div class="card" style="text-align:center;color:var(--text-dim);">' +
+      '⚠️ ' + t('bh_no_payments') + '</div>';
+    return;
+  }
+
+  const groups = bhGroupByTeacher(bhCurrentData);
+  const grandTotal = bhCurrentData.reduce((s,r)=>s+r.amount,0);
+  const grandClick = bhCurrentData.reduce((s,r)=>s+(r.type==='Click'?r.amount:0),0);
+  const grandNaqt = grandTotal - grandClick;
+
+  let html = '<div class="card">';
+  // Statistika
+  html += '<div class="stat-grid" style="margin-bottom:8px;">' +
+    '<div class="stat-card"><div class="stat-label">' + t('bh_count') + '</div>' +
+    '<div class="stat-value">' + bhCurrentData.length + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">' + t('bh_total') + '</div>' +
+    '<div class="stat-value" style="color:var(--accent)">' + fmt(grandTotal) + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">💵 ' + t('pt_cash').replace(/^\S+\s/,'') +
+    '</div><div class="stat-value" style="color:var(--success)">' + fmt(grandNaqt) + '</div></div>' +
+    '<div class="stat-card"><div class="stat-label">📱 Click</div>' +
+    '<div class="stat-value" style="color:var(--warning)">' + fmt(grandClick) + '</div></div>' +
+    '</div>';
+
+  // O'qituvchilar bo'yicha
+  groups.forEach(g => {
+    html += '<div style="margin-top:14px;border:1px solid var(--border);' +
+      'border-radius:8px;overflow:hidden;">' +
+      '<div style="background:var(--accent2);color:#fff;padding:8px 12px;' +
+      'font-weight:700;font-size:14px;">👨‍🏫 ' + escapeHtml(g.teacher) + '</div>';
+    g.rows.forEach((r,i) => {
+      html += '<div style="display:flex;justify-content:space-between;gap:8px;' +
+        'padding:7px 12px;font-size:13px;' +
+        (i%2 ? 'background:var(--input-bg);' : '') + '">' +
+        '<div><b>' + escapeHtml(r.student) + '</b>' +
+        '<span style="color:var(--text-dim);"> · ' + escapeHtml(r.group) + '</span>' +
+        (r.period ? '<span style="color:var(--text-dim);"> · ' +
+          escapeHtml(r.period) + '</span>' : '') + '</div>' +
+        '<div style="white-space:nowrap;">' + fmt(r.amount) +
+        (r.type === 'Click' ? ' <span style="color:var(--warning);">📱</span>' : '') +
+        '</div></div>';
+    });
+    html += '<div style="background:var(--card-hover);padding:7px 12px;' +
+      'font-size:13px;font-weight:700;display:flex;justify-content:space-between;">' +
+      '<span>' + t('bh_subtotal') + ' (' + g.rows.length + ')</span>' +
+      '<span>' + fmt(g.total) + ' · 💵' + fmt(g.naqt) +
+      ' · 📱' + fmt(g.click) + '</span></div>';
+    html += '</div>';
+  });
+
+  html += '<div style="margin-top:14px;font-size:12px;color:var(--text-dim);' +
+    'text-align:center;">' + t('bh_part2_soon') + '</div>';
+  html += '</div>';
+  resultEl.innerHTML = html;
 }
 
 // ============================================================
