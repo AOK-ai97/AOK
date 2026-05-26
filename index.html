@@ -1099,6 +1099,9 @@ Ozodbek 4</div>
                 onclick="openSellDialog()" data-i18n="st_sell">🛒 Sotish</button>
         <button class="btn" style="background:var(--warning);color:#333;"
                 onclick="openStoreUseCashDialog()" data-i18n="st_use_cash">💸 Tushum ishlatildi</button>
+        <button class="btn" style="background:var(--accent2);color:#fff;"
+                onclick="openStReport()" data-i18n="st_report">📊 Konstovar hisoboti</button>
+        <button class="btn btn-ghost" onclick="showStHistory()" data-i18n="lib_report_hist">📜 Hisobotlar tarixi</button>
         <button class="btn btn-ghost" onclick="loadStore()" data-i18n="refresh">🔄 Yangilash</button>
       </div>
 
@@ -1239,6 +1242,101 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- KONSTOVAR TUSHUM ISHLATILDI DIALOGI -->
+    <div class="modal-overlay" id="stUseCashModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span data-i18n="uc_title">💸 Tushumni ishlatish</span>
+          <button class="modal-close" onclick="closeStUseCash()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="stUseCashBalance" style="font-size:13px;color:var(--text-dim);
+               text-align:center;margin-bottom:14px;"></div>
+          <label data-i18n="uc_from_naqt">💵 Naqtdan olinmoqda:</label>
+          <div class="amount-with-magnet">
+            <input type="number" id="stUseCashNaqt" placeholder="0">
+            <button class="magnet-btn" onclick="fillStCashNaqt()" title="Hammasi">🧲</button>
+          </div>
+          <label data-i18n="uc_from_click">📱 Clickdan olinmoqda:</label>
+          <div class="amount-with-magnet">
+            <input type="number" id="stUseCashClick" placeholder="0">
+            <button class="magnet-btn" onclick="fillStCashClick()" title="Hammasi">🧲</button>
+          </div>
+          <label data-i18n="uc_reason">Sabab:</label>
+          <input type="text" id="stUseCashReason" data-i18n-ph="uc_reason_ph"
+                 placeholder="Masalan: yangi tovarlar olindi">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeStUseCash()" data-i18n="cancel">Bekor</button>
+          <button class="btn" style="background:var(--warning);color:#333;"
+                  id="stUseCashBtn" onclick="confirmStUseCash()">
+            <span data-i18n="uc_confirm">✅ Tasdiqlash</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONSTOVAR HISOBOTI DIALOGI -->
+    <div class="modal-overlay" id="stReportModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span data-i18n="sr_title">📊 Konstovar hisoboti</span>
+          <button class="modal-close" onclick="closeStReport()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="font-weight:700;margin-bottom:8px;" data-i18n="lr_what">
+            📋 Hisobotda nima ko'rsatilsin?
+          </div>
+          <label class="check-row">
+            <input type="checkbox" id="srAll" checked onchange="srToggleAll()">
+            <span data-i18n="lr_all">Quyidagilarning barchasi</span>
+          </label>
+          <div style="border-top:1px solid var(--border);margin:8px 0;"></div>
+          <label class="check-row">
+            <input type="checkbox" id="srProducts" checked>
+            <span data-i18n="sr_products">📦 Maxsulotlar (mavjud, narx, summa)</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="srDebts" checked>
+            <span data-i18n="sr_debts">💳 Qarzdorlar</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="srCash" checked>
+            <span data-i18n="sr_cash">💰 Kassa (naqt + click)</span>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="srSales" checked>
+            <span data-i18n="sr_sales">🛒 Sotuvlar ro'yxati</span>
+          </label>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeStReport()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" id="stReportBtn" onclick="generateStReport()">
+            <span data-i18n="lr_generate">📊 Hisobot yaratish</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONSTOVAR HISOBOTLARI TARIXI -->
+    <div class="modal-overlay" id="stHistModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span data-i18n="sr_hist_title">📜 Hisobotlar tarixi</span>
+          <button class="modal-close" onclick="closeStHistory()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="stHistList">
+            <div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeStHistory()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" onclick="showStHistory()" data-i18n="refresh">🔄 Yangilash</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ARXIV -->
     <div class="page" id="page-archive">
       <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
@@ -1355,6 +1453,16 @@ const I18N = {
     sl_err_select:"Maxsulotni tanlang!", sl_err_qty:"Nechta — kamida 1!",
     sl_err_stock:"Omborda faqat:", sl_err_buyer:"Xaridor ismini kiriting!",
     sl_err_payamount:"To'lov summasini kiriting!",
+    st_report:"📊 Konstovar hisoboti",
+    sr_title:"📊 Konstovar hisoboti",
+    sr_products:"📦 Maxsulotlar (mavjud, narx, summa)",
+    sr_debts:"💳 Qarzdorlar", sr_cash:"💰 Kassa (naqt + click)",
+    sr_sales:"🛒 Sotuvlar ro'yxati",
+    sr_hist_title:"📜 Hisobotlar tarixi",
+    sr_pdf_title:"KONSTOVAR HISOBOTI", sr_products_h:"Maxsulotlar",
+    sr_no_products:"Maxsulot yo'q", sr_sales_h:"Sotuvlar",
+    sr_no_sales:"Sotuv yo'q", sr_total_sales:"JAMI SOTUV",
+    sr_col_date:"Sana",
     archive_title:"🗃️ Arxiv",
     soon_title:"Tez kunda qo'shiladi",
     theme_dark_s:"Tungi rejim", theme_light_s:"Kunduzgi rejim", theme_warm_s:"Ko'z rejimi",
@@ -1477,6 +1585,16 @@ const I18N = {
     sl_err_select:"Select a product!", sl_err_qty:"Quantity — at least 1!",
     sl_err_stock:"In stock only:", sl_err_buyer:"Enter the buyer's name!",
     sl_err_payamount:"Enter the payment amount!",
+    st_report:"📊 Stationery report",
+    sr_title:"📊 Stationery report",
+    sr_products:"📦 Products (available, price, total)",
+    sr_debts:"💳 Debtors", sr_cash:"💰 Cash (cash + click)",
+    sr_sales:"🛒 Sales list",
+    sr_hist_title:"📜 Report history",
+    sr_pdf_title:"STATIONERY REPORT", sr_products_h:"Products",
+    sr_no_products:"No products", sr_sales_h:"Sales",
+    sr_no_sales:"No sales", sr_total_sales:"TOTAL SALES",
+    sr_col_date:"Date",
     archive_title:"🗃️ Archive",
     soon_title:"Coming soon",
     theme_dark_s:"Dark mode", theme_light_s:"Light mode", theme_warm_s:"Eye-care mode",
@@ -1599,6 +1717,16 @@ const I18N = {
     sl_err_select:"Выберите товар!", sl_err_qty:"Количество — минимум 1!",
     sl_err_stock:"На складе только:", sl_err_buyer:"Введите имя покупателя!",
     sl_err_payamount:"Введите сумму оплаты!",
+    st_report:"📊 Отчёт канцтоваров",
+    sr_title:"📊 Отчёт канцтоваров",
+    sr_products:"📦 Товары (наличие, цена, сумма)",
+    sr_debts:"💳 Должники", sr_cash:"💰 Касса (наличные + click)",
+    sr_sales:"🛒 Список продаж",
+    sr_hist_title:"📜 История отчётов",
+    sr_pdf_title:"ОТЧЁТ КАНЦТОВАРОВ", sr_products_h:"Товары",
+    sr_no_products:"Нет товаров", sr_sales_h:"Продажи",
+    sr_no_sales:"Продаж нет", sr_total_sales:"ВСЕГО ПРОДАЖ",
+    sr_col_date:"Дата",
     archive_title:"🗃️ Архив",
     soon_title:"Скоро добавится",
     theme_dark_s:"Тёмный режим", theme_light_s:"Светлый режим", theme_warm_s:"Режим для глаз",
@@ -3572,6 +3700,16 @@ function loadStore() {
     });
   loadStoreCash();
   loadStoreDebts();
+  loadStoreSales();
+}
+
+function loadStoreSales() {
+  fetch(SHEETS_API + '?action=list_sales')
+    .then(r => r.json())
+    .then(res => {
+      stSales = (res.status === 'ok') ? (res.rows || []) : [];
+    })
+    .catch(() => { stSales = []; });
 }
 
 function renderProducts() {
@@ -3766,7 +3904,409 @@ function deleteProduct(i) {
 }
 
 // Sotish va Tushum — 2 va 3-qismda qo'shiladi (vaqtincha)
-function openStoreUseCashDialog() { alert(t('soon_title')); }
+function openStoreUseCashDialog() {
+  const bal = getStoreCashBalance();
+  document.getElementById('stUseCashBalance').textContent =
+    '💵 ' + fmt(bal.naqt) + '   |   📱 ' + fmt(bal.click);
+  document.getElementById('stUseCashNaqt').value = '';
+  document.getElementById('stUseCashClick').value = '';
+  document.getElementById('stUseCashReason').value = '';
+  document.getElementById('stUseCashModal').classList.add('open');
+}
+
+// ============================================================
+//  KONSTOVAR — TUSHUM ISHLATILDI
+// ============================================================
+function getStoreCashBalance() {
+  let naqt = 0, click = 0;
+  stCash.forEach(c => {
+    if (String(c.module) !== 'Konstovar') return;
+    const amt = parseFloat(c.amount) || 0;
+    const sign = (String(c.type) === 'chiqim') ? -1 : 1;
+    if (String(c.payType) === 'Click') click += amt * sign;
+    else naqt += amt * sign;
+  });
+  return { naqt: naqt, click: click };
+}
+
+function closeStUseCash() {
+  document.getElementById('stUseCashModal').classList.remove('open');
+}
+
+function fillStCashNaqt() {
+  const bal = getStoreCashBalance();
+  document.getElementById('stUseCashNaqt').value = bal.naqt > 0 ? bal.naqt : 0;
+}
+
+function fillStCashClick() {
+  const bal = getStoreCashBalance();
+  document.getElementById('stUseCashClick').value = bal.click > 0 ? bal.click : 0;
+}
+
+function confirmStUseCash() {
+  const naqt = parseFloat(document.getElementById('stUseCashNaqt').value) || 0;
+  const click = parseFloat(document.getElementById('stUseCashClick').value) || 0;
+  const reason = document.getElementById('stUseCashReason').value.trim();
+  if (naqt <= 0 && click <= 0) { alert(t('uc_err_amount')); return; }
+  if (!reason) { alert(t('uc_err_reason')); return; }
+
+  const btn = document.getElementById('stUseCashBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+  const now = new Date().toISOString();
+  const tasks = [];
+
+  if (naqt > 0) {
+    tasks.push(fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+      action:'save_cash', module:'Konstovar', type:'chiqim',
+      amount:naqt, payType:'Naqt', note:reason, date:now
+    })}).then(r=>r.json()));
+  }
+  if (click > 0) {
+    tasks.push(fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+      action:'save_cash', module:'Konstovar', type:'chiqim',
+      amount:click, payType:'Click', note:reason, date:now
+    })}).then(r=>r.json()));
+  }
+  tasks.push(fetch(SHEETS_API, { method:'POST',
+    body: buildArchiveParams('Konstovar', t('uc_arch'),
+      reason + ' (naqt: ' + fmt(naqt) + ', click: ' + fmt(click) + ')',
+      naqt + click)
+  }).then(r=>r.json()));
+
+  Promise.all(tasks).then(() => {
+    btn.disabled = false; btn.textContent = t('uc_confirm');
+    closeStUseCash();
+    loadStore();
+  }).catch(() => {
+    btn.disabled = false; btn.textContent = t('uc_confirm');
+    alert('⚠️ Server bilan aloqa yo\'q');
+  });
+}
+
+// ============================================================
+//  KONSTOVAR HISOBOTI
+// ============================================================
+let stSales = [];
+
+function openStReport() {
+  document.getElementById('srAll').checked = true;
+  document.getElementById('srProducts').checked = true;
+  document.getElementById('srDebts').checked = true;
+  document.getElementById('srCash').checked = true;
+  document.getElementById('srSales').checked = true;
+  document.getElementById('stReportModal').classList.add('open');
+}
+
+function closeStReport() {
+  document.getElementById('stReportModal').classList.remove('open');
+}
+
+function srToggleAll() {
+  const on = document.getElementById('srAll').checked;
+  ['srProducts','srDebts','srCash','srSales'].forEach(id =>
+    document.getElementById(id).checked = on);
+}
+
+function buildStReportData(showProducts, showDebts, showCash, showSales) {
+  const data = { showProducts, showDebts, showCash, showSales };
+  if (showProducts) {
+    data.products = stProducts.map(p => ({
+      name: String(p.name),
+      count: parseInt(p.count) || 0,
+      price: parseFloat(p.price) || 0
+    }));
+    data.totalProducts = data.products.reduce((s,p)=>s+p.count,0);
+    data.totalValue = data.products.reduce((s,p)=>s+p.count*p.price,0);
+  }
+  if (showDebts) {
+    data.debts = getStoreDebtGroups()
+      .filter(g => g.debt > 0)
+      .map(g => ({ name:g.name, debt:g.debt }));
+    data.totalDebt = data.debts.reduce((s,d)=>s+d.debt,0);
+  }
+  if (showCash) {
+    const bal = getStoreCashBalance();
+    data.cash = { naqt:bal.naqt, click:bal.click, total:bal.naqt+bal.click };
+  }
+  if (showSales) {
+    data.sales = stSales.map(s => ({
+      date: s.date, product: String(s.product),
+      qty: parseInt(s.qty)||0, total: parseFloat(s.total)||0,
+      payType: String(s.payType)
+    }));
+    data.totalSales = data.sales.reduce((s,x)=>s+x.total,0);
+  }
+  return data;
+}
+
+function buildStReportPDF(d, dateStr) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const pageW = doc.internal.pageSize.getWidth();
+  let y = 16;
+  const markaz = localStorage.getItem('aok_markaz') || '';
+  if (markaz) {
+    doc.setFontSize(12); doc.setTextColor(51,51,51); doc.setFont(undefined,'bold');
+    doc.text(markaz, pageW/2, y, { align:'center' }); y += 7;
+  }
+  doc.setFontSize(17); doc.setTextColor(8,145,178); doc.setFont(undefined,'bold');
+  doc.text(t('sr_pdf_title'), pageW/2, y, { align:'center' }); y += 7;
+  doc.setFontSize(10); doc.setTextColor(85,85,85); doc.setFont(undefined,'normal');
+  doc.text(dateStr, pageW/2, y, { align:'center' }); y += 10;
+
+  // Maxsulotlar
+  if (d.showProducts) {
+    doc.setFontSize(13); doc.setTextColor(8,145,178); doc.setFont(undefined,'bold');
+    doc.text(t('sr_products_h'), 14, y); y += 2;
+    const rows = (d.products||[]).map(p =>
+      [p.name, p.count+'', fmt(p.price), fmt(p.count*p.price)]);
+    if (!rows.length) rows.push([t('sr_no_products'),'','','']);
+    else rows.push([t('lr_total_books').replace(/книг|kitob|book/i,'') +
+      ': ' + d.totalProducts, '', '', fmt(d.totalValue)]);
+    doc.autoTable({
+      startY:y+2,
+      head:[[t('lr_col_book'), t('lr_col_count'), t('lr_col_price'), t('lr_col_sum')]],
+      body:rows, theme:'grid',
+      headStyles:{ fillColor:[8,145,178], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell:function(dt){
+        if (dt.row.index===rows.length-1 && rows.length>1)
+          dt.cell.styles.fontStyle='bold';
+      },
+      margin:{ left:14, right:14 }
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  // Qarzdorlar
+  if (d.showDebts) {
+    if (y > 240) { doc.addPage(); y = 16; }
+    doc.setFontSize(13); doc.setTextColor(204,0,0); doc.setFont(undefined,'bold');
+    doc.text(t('lr_debts').replace(/^\S+\s/,''), 14, y); y += 2;
+    const rows = (d.debts||[]).map(x => [x.name, fmt(x.debt)+" so'm"]);
+    if (!rows.length) rows.push([t('lr_no_debts'),'']);
+    else rows.push([t('lr_total_debt'), fmt(d.totalDebt)+" so'm"]);
+    doc.autoTable({
+      startY:y+2, head:[[t('lr_col_teacher'), t('lr_col_debt')]],
+      body:rows, theme:'grid',
+      headStyles:{ fillColor:[204,0,0], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell:function(dt){
+        if (dt.row.index===rows.length-1 && rows.length>1)
+          dt.cell.styles.fontStyle='bold';
+      },
+      margin:{ left:14, right:14 }
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  // Kassa
+  if (d.showCash && d.cash) {
+    if (y > 240) { doc.addPage(); y = 16; }
+    doc.setFontSize(13); doc.setTextColor(16,133,101); doc.setFont(undefined,'bold');
+    doc.text(t('lr_cash_h'), 14, y); y += 2;
+    doc.autoTable({
+      startY:y+2, head:[[t('lr_col_type'), t('lr_col_amount')]],
+      body:[
+        [t('pt_cash').replace(/^\S+\s/,''), fmt(d.cash.naqt)+" so'm"],
+        [t('pt_click').replace(/^\S+\s/,''), fmt(d.cash.click)+" so'm"],
+        [t('lr_total'), fmt(d.cash.total)+" so'm"]
+      ], theme:'grid',
+      headStyles:{ fillColor:[16,133,101], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell:function(dt){
+        if (dt.row.index===2) dt.cell.styles.fontStyle='bold';
+      },
+      margin:{ left:14, right:14 }
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+  // Sotuvlar
+  if (d.showSales) {
+    if (y > 230) { doc.addPage(); y = 16; }
+    doc.setFontSize(13); doc.setTextColor(126,87,194); doc.setFont(undefined,'bold');
+    doc.text(t('sr_sales_h'), 14, y); y += 2;
+    const rows = (d.sales||[]).map(s => {
+      let ds = s.date;
+      try { ds = new Date(s.date).toLocaleDateString('uz-UZ'); } catch(e){}
+      return [ds, s.product, s.qty+'', fmt(s.total), s.payType];
+    });
+    if (!rows.length) rows.push([t('sr_no_sales'),'','','','']);
+    else rows.push(['', t('sr_total_sales'), '', fmt(d.totalSales), '']);
+    doc.autoTable({
+      startY:y+2,
+      head:[[t('sr_col_date'), t('lr_col_book'), t('lr_col_count'),
+             t('lr_col_sum'), t('d_pay_type').replace(':','')]],
+      body:rows, theme:'grid',
+      headStyles:{ fillColor:[126,87,194], textColor:255, fontSize:9 },
+      bodyStyles:{ fontSize:9 },
+      didParseCell:function(dt){
+        if (dt.row.index===rows.length-1 && rows.length>1)
+          dt.cell.styles.fontStyle='bold';
+      },
+      margin:{ left:14, right:14 }
+    });
+  }
+  return doc;
+}
+
+function generateStReport() {
+  const sp = document.getElementById('srProducts').checked;
+  const sd = document.getElementById('srDebts').checked;
+  const sc = document.getElementById('srCash').checked;
+  const ss = document.getElementById('srSales').checked;
+  if (!sp && !sd && !sc && !ss) { alert(t('lr_err_select')); return; }
+
+  const btn = document.getElementById('stReportBtn');
+  btn.disabled = true; btn.textContent = '⏳...';
+  const data = buildStReportData(sp, sd, sc, ss);
+  const params = new URLSearchParams({
+    action:'save_store_report', date:new Date().toISOString(),
+    totalDebt:data.totalDebt||0, totalProducts:data.totalProducts||0,
+    totalCash:(data.cash?data.cash.total:0),
+    dataJson:JSON.stringify(data)
+  });
+  fetch(SHEETS_API, { method:'POST', body:params })
+    .then(r => r.json())
+    .then(res => {
+      btn.disabled = false; btn.textContent = t('lr_generate');
+      if (res.status === 'ok') {
+        closeStReport();
+        alert(t('lr_saved'));
+        showStHistory();
+      } else alert('⚠️ ' + (res.message||''));
+    })
+    .catch(() => {
+      btn.disabled = false; btn.textContent = t('lr_generate');
+      alert('⚠️ Server bilan aloqa yo\'q');
+    });
+}
+
+// ---- KONSTOVAR HISOBOTLARI TARIXI ----
+let _stHistData = [];
+
+function showStHistory() {
+  document.getElementById('stHistModal').classList.add('open');
+  const listEl = document.getElementById('stHistList');
+  listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>';
+  _stHistData = [];
+  fetch(SHEETS_API + '?action=list_store_reports')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== 'ok') {
+        listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">⚠️ ' +
+          (res.message||'') + '</div>'; return;
+      }
+      if (!res.rows || !res.rows.length) {
+        listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">📭 ' +
+          t('lr_no_history') + '</div>'; return;
+      }
+      const rows = res.rows.slice().reverse();
+      let html = '';
+      rows.forEach(row => {
+        const idx = _stHistData.length;
+        _stHistData.push(row);
+        let ds = row.date;
+        try {
+          const dt = new Date(row.date);
+          ds = dt.toLocaleDateString('uz-UZ') + ' ' +
+            dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+        } catch(e){}
+        html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+          'border-radius:8px;padding:12px;margin-bottom:8px;">' +
+          '<div style="font-weight:700;font-size:13px;">📅 ' + ds + '</div>' +
+          '<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">' +
+          '📦 ' + row.totalProducts + '  •  💳 ' + fmt(row.totalDebt) +
+          '  •  💰 ' + fmt(row.totalCash) + '</div>' +
+          '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;">' +
+          '<button class="btn btn-primary" style="padding:6px 12px;font-size:12px;" ' +
+          'onclick="dlStHistPDF(' + idx + ')">📥 PDF</button>' +
+          '<button class="btn btn-warning" style="padding:6px 12px;font-size:12px;" ' +
+          'onclick="dlStHistJPG(' + idx + ')">🖼️ JPG</button>' +
+          '<button class="btn" style="padding:6px 12px;font-size:12px;' +
+          'background:var(--danger);color:#fff;" ' +
+          'onclick="delStHist(' + idx + ')">🗑️</button>' +
+          '</div></div>';
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(() => {
+      listEl.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+}
+
+function closeStHistory() {
+  document.getElementById('stHistModal').classList.remove('open');
+}
+
+function stHistRowDate(row) {
+  try {
+    const dt = new Date(row.date);
+    return dt.toLocaleDateString('uz-UZ') + ' ' +
+      dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+  } catch(e) { return String(row.date); }
+}
+
+function dlStHistPDF(idx) {
+  const row = _stHistData[idx];
+  if (!row) return;
+  let data = {};
+  try { data = JSON.parse(row.dataJson || '{}'); } catch(e){}
+  const doc = buildStReportPDF(data, stHistRowDate(row));
+  doc.save('konstovar_hisoboti_' +
+    new Date(row.date).toISOString().slice(0,10) + '.pdf');
+}
+
+async function dlStHistJPG(idx) {
+  const row = _stHistData[idx];
+  if (!row) return;
+  let data = {};
+  try { data = JSON.parse(row.dataJson || '{}'); } catch(e){}
+  try {
+    const doc = buildStReportPDF(data, stHistRowDate(row));
+    const pdfBytes = doc.output('arraybuffer');
+    const pdfjsLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+    if (pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+    const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
+    const page = await pdf.getPage(1);
+    const viewport = page.getViewport({ scale: 3 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width; canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+    const link = document.createElement('a');
+    link.download = 'konstovar_hisoboti_' +
+      new Date(row.date).toISOString().slice(0,10) + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 0.95);
+    link.click();
+  } catch(e) { alert('JPG xato: ' + e.message); }
+}
+
+function delStHist(idx) {
+  const row = _stHistData[idx];
+  if (!row) return;
+  if (!confirm(t('lr_del_confirm'))) return;
+  fetch(SHEETS_API, { method:'POST',
+    body: buildArchiveParams('Konstovar', t('lr_arch_del'),
+      'Konstovar hisoboti — ' + stHistRowDate(row),
+      parseFloat(row.totalCash) || 0)
+  })
+    .then(r => r.json())
+    .then(() => {
+      const p = new URLSearchParams({ action:'delete_store_report', id:row.id });
+      return fetch(SHEETS_API, { method:'POST', body:p });
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') showStHistory();
+      else alert('⚠️ ' + (res.message||''));
+    })
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
 
 // ============================================================
 //  KONSTOVAR — SOTISH
