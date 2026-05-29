@@ -5045,6 +5045,25 @@ function selectBhExpType(ty) {
 }
 
 // Joriy sana uchun xarajatlarni Sheets dan o'qish
+// Har xil sana formatlarini "YYYY-MM-DD" ga aylantirish
+function bhNormalizeDate(v) {
+  if (!v) return '';
+  const s = String(v);
+  // Allaqachon "YYYY-MM-DD..." bo'lsa
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  // Date obyekti yoki boshqa format
+  try {
+    const dt = new Date(v);
+    if (!isNaN(dt)) {
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth()+1).padStart(2,'0');
+      const d = String(dt.getDate()).padStart(2,'0');
+      return y + '-' + m + '-' + d;
+    }
+  } catch(e) {}
+  return s.slice(0,10);
+}
+
 function loadDailyExpenses() {
   const target = document.getElementById('bhDate').value;
   if (!target) return;
@@ -5055,7 +5074,6 @@ function loadDailyExpenses() {
     .then(r => r.json())
     .then(res => {
       if (res.status !== 'ok') {
-        // Apps Script eski versiyada — kalit so'z aniqlaymiz
         const msg = String(res.message || '');
         if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
           list.innerHTML = '<div style="background:#fff3cd;border:1px solid #ffc107;' +
@@ -5069,7 +5087,7 @@ function loadDailyExpenses() {
         return;
       }
       dailyExpenses = (res.rows || []).filter(e =>
-        String(e.reportDate).slice(0,10) === target);
+        bhNormalizeDate(e.reportDate) === target);
       renderDailyExpenses();
     })
     .catch(() => {
