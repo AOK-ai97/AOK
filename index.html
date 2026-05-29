@@ -5045,22 +5045,20 @@ function selectBhExpType(ty) {
 }
 
 // Joriy sana uchun xarajatlarni Sheets dan o'qish
-// Har xil sana formatlarini "YYYY-MM-DD" ga aylantirish
+// Har xil sana formatlarini "YYYY-MM-DD" ga aylantirish (mahalliy vaqt zonasida)
 function bhNormalizeDate(v) {
   if (!v) return '';
-  const s = String(v);
-  // Allaqachon "YYYY-MM-DD..." bo'lsa
-  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
-  // Date obyekti yoki boshqa format
-  try {
-    const dt = new Date(v);
-    if (!isNaN(dt)) {
-      const y = dt.getFullYear();
-      const m = String(dt.getMonth()+1).padStart(2,'0');
-      const d = String(dt.getDate()).padStart(2,'0');
-      return y + '-' + m + '-' + d;
-    }
-  } catch(e) {}
+  const s = String(v).trim();
+  // Sof "YYYY-MM-DD" formatda bo'lsa, qaytaramiz
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Vaqt bilan (ISO yoki boshqa) — Date sifatida o'qib, MAHALLIY vaqtni olamiz
+  const dt = new Date(v);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth()+1).padStart(2,'0');
+    const d = String(dt.getDate()).padStart(2,'0');
+    return y + '-' + m + '-' + d;
+  }
   return s.slice(0,10);
 }
 
