@@ -1,6 +1,6 @@
 // AOK PWA Service Worker — avtomatik yangilanish
 // Har deploy da CACHE_VERSION ni o'zgartiring (yoki sana qo'ying)
-const CACHE_VERSION = 'aok-v3-' + '2026-05-25-11';
+const CACHE_VERSION = 'aok-v3-' + '2026-05-25-12';
 const ASSETS = [
   './',
   './index.html',
