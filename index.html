@@ -572,6 +572,15 @@ textarea {
   align-items:center; justify-content:center;
 }
 .lightbox-close:hover { background:rgba(255,255,255,0.3); }
+
+/* ===== ARXIV FILTRLASH ===== */
+.ar-filter-btn {
+  padding:7px 14px; font-size:13px;
+  transition:all .15s;
+}
+.ar-filter-btn.active {
+  background:var(--accent); color:var(--btn-fg);
+}
 </style>
 </head>
 <body>
@@ -1511,12 +1520,38 @@ Ozodbek 4</div>
     <!-- ARXIV -->
     <div class="page" id="page-archive">
       <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
-      <div class="page-sub">Barcha hisobotlar tarixi</div>
-      <div class="card"><div class="coming-soon">
-        <div class="icon">🚧</div>
-        <div class="title" data-i18n="soon_title">Tez kunda qo'shiladi</div>
-        <div class="desc">Arxiv — keyingi yangilanishda</div>
-      </div></div>
+      <div class="page-sub" data-i18n="ar_sub">O'chirilgan hisobotlar va amallar tarixi</div>
+
+      <!-- Filtrlash -->
+      <div class="card">
+        <div class="card-title" data-i18n="ar_filter">🔍 Bo'lim bo'yicha filtrlash</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;" id="arFilters">
+          <button class="btn ar-filter-btn active" data-mod="all"
+                  onclick="setArFilter('all')" data-i18n="ar_all">📋 Hammasi</button>
+          <button class="btn btn-ghost ar-filter-btn" data-mod="Maosh"
+                  onclick="setArFilter('Maosh')">💼 Maosh</button>
+          <button class="btn btn-ghost ar-filter-btn" data-mod="Kutubxona"
+                  onclick="setArFilter('Kutubxona')">📚 Kutubxona</button>
+          <button class="btn btn-ghost ar-filter-btn" data-mod="Konstovar"
+                  onclick="setArFilter('Konstovar')">🛒 Konstovar</button>
+          <button class="btn btn-ghost ar-filter-btn" data-mod="Bosh hisobot"
+                  onclick="setArFilter('Bosh hisobot')">🏠 Bosh hisobot</button>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-primary" onclick="loadArchive()" data-i18n="refresh">
+            🔄 Yangilash
+          </button>
+          <span id="arStats" style="font-size:13px;color:var(--text-dim);"></span>
+        </div>
+      </div>
+
+      <!-- Arxiv ro'yxati -->
+      <div class="card">
+        <div class="card-title" data-i18n="ar_list">📋 Yozuvlar</div>
+        <div id="archiveList" style="margin-top:12px;">
+          <div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>
+        </div>
+      </div>
     </div>
 
     <!-- SOZLAMALAR -->
@@ -1674,6 +1709,9 @@ const I18N = {
     sr_no_sales:"Sotuv yo'q", sr_total_sales:"JAMI SOTUV",
     sr_col_date:"Sana",
     archive_title:"🗃️ Arxiv",
+    ar_sub:"O'chirilgan hisobotlar va amallar tarixi",
+    ar_filter:"🔍 Bo'lim bo'yicha filtrlash", ar_all:"📋 Hammasi",
+    ar_list:"📋 Yozuvlar", ar_empty:"Arxiv bo'sh", ar_entries:"yozuv",
     soon_title:"Tez kunda qo'shiladi",
     theme_dark_s:"Tungi rejim", theme_light_s:"Kunduzgi rejim", theme_warm_s:"Ko'z rejimi",
     theme_to_light:"☀️ Kunduzgi rejimga o'tish",
@@ -1848,6 +1886,9 @@ const I18N = {
     sr_no_sales:"No sales", sr_total_sales:"TOTAL SALES",
     sr_col_date:"Date",
     archive_title:"🗃️ Archive",
+    ar_sub:"Deleted reports and action history",
+    ar_filter:"🔍 Filter by section", ar_all:"📋 All",
+    ar_list:"📋 Entries", ar_empty:"Archive is empty", ar_entries:"entries",
     soon_title:"Coming soon",
     theme_dark_s:"Dark mode", theme_light_s:"Light mode", theme_warm_s:"Eye-care mode",
     theme_to_light:"☀️ Switch to light mode",
@@ -2022,6 +2063,9 @@ const I18N = {
     sr_no_sales:"Продаж нет", sr_total_sales:"ВСЕГО ПРОДАЖ",
     sr_col_date:"Дата",
     archive_title:"🗃️ Архив",
+    ar_sub:"Удалённые отчёты и история действий",
+    ar_filter:"🔍 Фильтр по разделу", ar_all:"📋 Все",
+    ar_list:"📋 Записи", ar_empty:"Архив пуст", ar_entries:"записей",
     soon_title:"Скоро добавится",
     theme_dark_s:"Тёмный режим", theme_light_s:"Светлый режим", theme_warm_s:"Режим для глаз",
     theme_to_light:"☀️ Переключить на светлый режим",
@@ -2285,6 +2329,7 @@ function navigate(page) {
   // Kutubxona ochilganда — ma'lumotlarni yuklash
   if (page === 'library') loadLibrary();
   if (page === 'store') loadStore();
+  if (page === 'archive') loadArchive();
   if (page === 'home') {
     // Xarajat sanasi — bugungi (mustaqil, Excel/hisobotdan)
     const ed = document.getElementById('expDate');
@@ -5771,6 +5816,116 @@ function delBhHist(idx) {
       else alert('⚠️ ' + (res.message||''));
     })
     .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+// ============================================================
+//  ARXIV MODULI
+// ============================================================
+let archiveData = [];
+let arCurrentFilter = 'all';
+
+function setArFilter(mod) {
+  arCurrentFilter = mod;
+  document.querySelectorAll('.ar-filter-btn').forEach(b => {
+    if (b.getAttribute('data-mod') === mod) {
+      b.classList.add('active');
+      b.classList.remove('btn-ghost');
+    } else {
+      b.classList.remove('active');
+      b.classList.add('btn-ghost');
+    }
+  });
+  renderArchive();
+}
+
+function loadArchive() {
+  const list = document.getElementById('archiveList');
+  list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ ' +
+    t('loading') + '</div>';
+  fetch(SHEETS_API + '?action=list_archive')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== 'ok') {
+        list.innerHTML = '<div style="color:var(--danger);font-size:13px;">' +
+          '⚠️ ' + escapeHtml(res.message || '') + '</div>';
+        return;
+      }
+      archiveData = res.rows || [];
+      renderArchive();
+    })
+    .catch(() => {
+      list.innerHTML = '<div style="color:var(--danger);font-size:13px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+}
+
+function renderArchive() {
+  const list = document.getElementById('archiveList');
+  const stats = document.getElementById('arStats');
+  // Filter
+  let rows = archiveData;
+  if (arCurrentFilter !== 'all') {
+    rows = rows.filter(r => String(r.module) === arCurrentFilter);
+  }
+  // Eng yangisi yuqorida (id desc orqali)
+  rows = rows.slice().reverse();
+
+  if (!rows.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;' +
+      'text-align:center;padding:20px;">📭 ' + t('ar_empty') + '</div>';
+    stats.textContent = '';
+    return;
+  }
+
+  const totalSum = rows.reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  stats.textContent = rows.length + ' ' + t('ar_entries') +
+    '  •  ' + fmt(totalSum) + " so'm";
+
+  // Bo'lim ranglari
+  const moduleColors = {
+    'Maosh':        { bg:'#fff3cd', fg:'#856404', icon:'💼' },
+    'Kutubxona':    { bg:'#d1ecf1', fg:'#0c5460', icon:'📚' },
+    'Konstovar':    { bg:'#d4edda', fg:'#155724', icon:'🛒' },
+    'Bosh hisobot': { bg:'#cfe2ff', fg:'#084298', icon:'🏠' }
+  };
+
+  let html = '';
+  rows.forEach(r => {
+    const mod = String(r.module || '');
+    const c = moduleColors[mod] || { bg:'#e2e3e5', fg:'#383d41', icon:'📋' };
+    let dateStr = String(r.date || '');
+    try {
+      const dt = new Date(r.date);
+      dateStr = dt.toLocaleDateString('uz-UZ') + ' ' +
+        dt.toLocaleTimeString('uz-UZ',{hour:'2-digit',minute:'2-digit'});
+    } catch(e){}
+    const amount = parseFloat(r.amount) || 0;
+
+    html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+      'border-left:3px solid ' + c.fg + ';border-radius:6px;padding:10px 12px;' +
+      'margin-bottom:6px;">' +
+      // Tepasi: badge + sana
+      '<div style="display:flex;justify-content:space-between;gap:8px;' +
+      'align-items:center;margin-bottom:5px;flex-wrap:wrap;">' +
+      '<span style="background:' + c.bg + ';color:' + c.fg + ';' +
+      'padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;">' +
+      c.icon + ' ' + escapeHtml(mod) + '</span>' +
+      '<span style="font-size:11px;color:var(--text-dim);">📅 ' + dateStr + '</span>' +
+      '</div>' +
+      // Amal nomi
+      '<div style="font-weight:700;font-size:13px;color:var(--text);margin-bottom:3px;">' +
+      escapeHtml(String(r.action || '')) + '</div>' +
+      // Tavsif
+      (r.description ?
+        '<div style="font-size:12px;color:var(--text-dim);">' +
+        escapeHtml(String(r.description)) + '</div>' : '') +
+      // Summa
+      (amount > 0 ?
+        '<div style="font-size:13px;font-weight:700;color:' + c.fg + ';' +
+        'margin-top:4px;">💰 ' + fmt(amount) + " so'm</div>" : '') +
+      '</div>';
+  });
+  list.innerHTML = html;
 }
 
 // ============================================================
