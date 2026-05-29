@@ -596,9 +596,6 @@ textarea {
       <div class="nav-item active" data-page="salary" onclick="navigate('salary')">
         <span class="ic">💼</span> <span data-i18n="nav_salary">Maosh</span>
       </div>
-      <div class="nav-item" data-page="expenses" onclick="navigate('expenses')">
-        <span class="ic">💸</span> <span data-i18n="nav_expenses">Xarajatlar</span>
-      </div>
       <div class="nav-item" data-page="library" onclick="navigate('library')">
         <span class="ic">📚</span> <span data-i18n="nav_library">Kutubxona</span>
       </div>
@@ -793,12 +790,13 @@ Ozodbek 4</div>
       </div>
 
       <!-- Sana tanlash -->
-      <div class="card" id="bhDateCard" style="display:none;">
+      <div class="card" id="bhDateCard">
         <div class="card-title" data-i18n="bh_date">📅 Sana tanlash</div>
         <div style="font-size:13px;color:var(--text-dim);margin:6px 0 12px;"
              data-i18n="bh_date_hint">Qaysi kunning hisobotini ko'rmoqchisiz?</div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="date" id="bhDate" class="select-input" style="max-width:200px;">
+          <input type="date" id="bhDate" class="select-input" style="max-width:200px;"
+                 onchange="onBhDateChange()">
           <button class="btn" style="background:var(--warning);color:#333;"
                   onclick="bhSetToday()" data-i18n="bh_today">🧲 Bugun</button>
         </div>
@@ -806,6 +804,49 @@ Ozodbek 4</div>
                 onclick="bhGenerate()">
           <span data-i18n="bh_show">⚡ To'lovlarni ko'rsatish</span>
         </button>
+      </div>
+
+      <!-- XARAJATLAR (Bosh sahifa ichida) -->
+      <div class="card" id="bhExpCard">
+        <div class="card-title" data-i18n="bh_exp_section">💸 Xarajatlar</div>
+        <div style="font-size:13px;color:var(--text-dim);margin:6px 0 12px;"
+             data-i18n="bh_exp_section_hint">Kun davomida xarajat qo'shing — pastda ro'yxatda turadi</div>
+
+        <!-- Xarajat qo'shish tugmasi -->
+        <button class="btn" style="background:var(--danger);color:#fff;width:100%;"
+                onclick="toggleBhExpForm()">
+          <span id="bhExpToggleBtn" data-i18n="bh_exp_add">➕ Xarajat qo'shish</span>
+        </button>
+
+        <!-- Forma (boshida yashirin) -->
+        <div id="bhExpForm" style="display:none;margin-top:14px;
+             background:var(--input-bg);border:1px solid var(--border);
+             border-radius:8px;padding:14px;">
+          <label data-i18n="bh_exp_person">Kimga berildi:</label>
+          <input type="text" id="bhExpPerson" data-i18n-ph="bh_exp_person_ph"
+                 placeholder="Masalan: Farrux aka">
+          <label data-i18n="d_pay_amount">Summa:</label>
+          <input type="number" id="bhExpAmount" placeholder="0">
+          <label data-i18n="d_pay_type">To'lov turi:</label>
+          <div class="pay-type-row">
+            <button class="pay-type-btn active" data-bet="Naqt"
+                    onclick="selectBhExpType('Naqt')" data-i18n="pt_cash">💵 Naqt</button>
+            <button class="pay-type-btn" data-bet="Click"
+                    onclick="selectBhExpType('Click')" data-i18n="pt_click">📱 Click</button>
+          </div>
+          <label data-i18n="bh_exp_reason">Nima uchun:</label>
+          <input type="text" id="bhExpReason" data-i18n-ph="bh_exp_reason_ph"
+                 placeholder="Masalan: kommunal to'lov">
+          <button class="btn btn-primary" style="margin-top:12px;width:100%;"
+                  id="bhExpSaveBtn" onclick="saveBhExpense()">
+            <span data-i18n="save">💾 Saqlash</span>
+          </button>
+        </div>
+
+        <!-- Kiritilgan xarajatlar -->
+        <div id="bhExpListInline" style="margin-top:14px;">
+          <div style="color:var(--text-dim);font-size:13px;text-align:center;">📭 ...</div>
+        </div>
       </div>
 
       <!-- Natija -->
@@ -1389,57 +1430,6 @@ Ozodbek 4</div>
       </div>
     </div>
 
-    <!-- XARAJATLAR (Bosh hisobot uchun kunlik) -->
-    <div class="page" id="page-expenses">
-      <div class="page-title" data-i18n="exp_title">💸 Xarajatlar</div>
-      <div class="page-sub" data-i18n="exp_sub">Bosh hisobot uchun kunlik chiqimlar</div>
-
-      <!-- Sana tanlash -->
-      <div class="card">
-        <div class="card-title" data-i18n="exp_date">📅 Qaysi sana uchun</div>
-        <div style="font-size:13px;color:var(--text-dim);margin:6px 0 12px;"
-             data-i18n="exp_date_hint">Xarajat qaysi kun hisobotiga tegishli</div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="date" id="expDate" class="select-input" style="max-width:200px;"
-                 onchange="loadDailyExpenses()">
-          <button class="btn" style="background:var(--warning);color:#333;"
-                  onclick="expSetToday()" data-i18n="bh_today">🧲 Bugun</button>
-        </div>
-      </div>
-
-      <!-- Xarajat qo'shish formasi -->
-      <div class="card">
-        <div class="card-title" data-i18n="exp_add_title">➕ Xarajat qo'shish</div>
-        <label data-i18n="bh_exp_person">Kimga berildi:</label>
-        <input type="text" id="expPerson" data-i18n-ph="bh_exp_person_ph"
-               placeholder="Masalan: Farrux aka">
-        <label data-i18n="d_pay_amount">Summa:</label>
-        <input type="number" id="expAmount" placeholder="0">
-        <label data-i18n="d_pay_type">To'lov turi:</label>
-        <div class="pay-type-row">
-          <button class="pay-type-btn active" data-ept="Naqt"
-                  onclick="selectExpType('Naqt')" data-i18n="pt_cash">💵 Naqt</button>
-          <button class="pay-type-btn" data-ept="Click"
-                  onclick="selectExpType('Click')" data-i18n="pt_click">📱 Click</button>
-        </div>
-        <label data-i18n="bh_exp_reason">Nima uchun:</label>
-        <input type="text" id="expReason" data-i18n-ph="bh_exp_reason_ph"
-               placeholder="Masalan: kommunal to'lov">
-        <button class="btn btn-primary" style="margin-top:14px;width:100%;"
-                id="expAddBtn" onclick="addDailyExpense()">
-          <span data-i18n="bh_exp_add">➕ Xarajatni qo'shish</span>
-        </button>
-      </div>
-
-      <!-- Kiritilgan xarajatlar -->
-      <div class="card">
-        <div class="card-title" data-i18n="exp_list_title">📋 Kiritilgan xarajatlar</div>
-        <div id="expensesList" style="margin-top:12px;">
-          <div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>
-        </div>
-      </div>
-    </div>
-
     <!-- ARXIV -->
     <div class="page" id="page-archive">
       <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
@@ -1560,6 +1550,8 @@ const I18N = {
     bh_expenses:"XARAJATLAR", bh_summary:"UMUMIY HISOB-KITOB",
     bh_indicator:"Ko'rsatkich", bh_income:"Daromad", bh_available:"MAVJUD PUL",
     nav_expenses:"Xarajatlar",
+    bh_exp_section:"💸 Xarajatlar",
+    bh_exp_section_hint:"Kun davomida xarajat qo'shing — pastda ro'yxatda turadi",
     exp_title:"💸 Xarajatlar", exp_sub:"Bosh hisobot uchun kunlik chiqimlar",
     exp_date:"📅 Qaysi sana uchun", exp_date_hint:"Xarajat qaysi kun hisobotiga tegishli",
     exp_add_title:"➕ Xarajat qo'shish",
@@ -1728,6 +1720,8 @@ const I18N = {
     bh_expenses:"EXPENSES", bh_summary:"SUMMARY",
     bh_indicator:"Indicator", bh_income:"Income", bh_available:"AVAILABLE",
     nav_expenses:"Expenses",
+    bh_exp_section:"💸 Expenses",
+    bh_exp_section_hint:"Add expenses during the day — they appear below",
     exp_title:"💸 Expenses", exp_sub:"Daily expenses for main report",
     exp_date:"📅 For which date", exp_date_hint:"Which day's report does this expense belong to",
     exp_add_title:"➕ Add expense",
@@ -1896,6 +1890,8 @@ const I18N = {
     bh_expenses:"РАСХОДЫ", bh_summary:"ИТОГИ",
     bh_indicator:"Показатель", bh_income:"Доход", bh_available:"ДОСТУПНО",
     nav_expenses:"Расходы",
+    bh_exp_section:"💸 Расходы",
+    bh_exp_section_hint:"Добавляйте расходы в течение дня — они появятся ниже",
     exp_title:"💸 Расходы", exp_sub:"Ежедневные расходы для главного отчёта",
     exp_date:"📅 На какую дату", exp_date_hint:"К отчёту какого дня относится расход",
     exp_add_title:"➕ Добавить расход",
@@ -2197,10 +2193,11 @@ function navigate(page) {
   // Kutubxona ochilganда — ma'lumotlarni yuklash
   if (page === 'library') loadLibrary();
   if (page === 'store') loadStore();
-  if (page === 'expenses') {
-    if (!document.getElementById('expDate').value) {
-      document.getElementById('expDate').value =
-        new Date().toISOString().slice(0,10);
+  if (page === 'home') {
+    // Bugungi sanani avtomatik qo'yamiz va xarajatlarni yuklaymiz
+    const bhDateEl = document.getElementById('bhDate');
+    if (bhDateEl && !bhDateEl.value) {
+      bhDateEl.value = new Date().toISOString().slice(0,10);
     }
     loadDailyExpenses();
   }
@@ -4827,9 +4824,10 @@ function onBhExcelSelected(e) {
       bhRows = arr.slice(1).filter(r => r && r.length);
       document.getElementById('bhExcelInfo').textContent =
         '✅ ' + bhFileName + ' — ' + bhRows.length + ' ' + t('bh_rows');
-      document.getElementById('bhDateCard').style.display = '';
       // Eng so'nggi sanani avtomatik qo'yish
       bhAutoDate();
+      // Shu sanaga tushadigan xarajatlarni yuklab ko'rsatamiz
+      loadDailyExpenses();
     } catch(err) {
       alert(t('bh_err_read') + ': ' + err.message);
     }
@@ -4898,6 +4896,7 @@ function bhAutoDate() {
 
 function bhSetToday() {
   document.getElementById('bhDate').value = new Date().toISOString().slice(0,10);
+  loadDailyExpenses();
 }
 
 // Berilgan sana uchun to'lovlarni yig'ish
@@ -5006,47 +5005,85 @@ function bhGenerate() {
 }
 
 // ============================================================
-//  XARAJATLAR SAHIFASI — KUNLIK XARAJATLAR
+//  BOSH SAHIFA — XARAJATLAR (sana ostida, inline)
 // ============================================================
-let dailyExpenses = [];
-let expCurrentType = 'Naqt';
+let dailyExpenses = [];      // Joriy sanaga tushadigan xarajatlar
+let bhExpType = 'Naqt';      // Forma uchun joriy to'lov turi
 
-function expSetToday() {
-  document.getElementById('expDate').value =
-    new Date().toISOString().slice(0,10);
+// Sana o'zgarganda chaqiriladi
+function onBhDateChange() {
   loadDailyExpenses();
 }
 
-function selectExpType(ty) {
-  expCurrentType = ty;
-  document.querySelectorAll('#page-expenses .pay-type-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('data-ept') === ty);
+// Bosh sahifa "Xarajat qo'shish" tugmasi — formani ochish/yopish
+function toggleBhExpForm() {
+  const form = document.getElementById('bhExpForm');
+  const btn = document.getElementById('bhExpToggleBtn');
+  if (form.style.display === 'none') {
+    form.style.display = '';
+    btn.textContent = '✕ ' + t('cancel');
+    // Tozalaymiz
+    document.getElementById('bhExpPerson').value = '';
+    document.getElementById('bhExpAmount').value = '';
+    document.getElementById('bhExpReason').value = '';
+    bhExpType = 'Naqt';
+    document.querySelectorAll('#bhExpForm .pay-type-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-bet') === 'Naqt');
+    });
+    setTimeout(() => document.getElementById('bhExpPerson').focus(), 100);
+  } else {
+    form.style.display = 'none';
+    btn.textContent = '➕ ' + t('bh_exp_add');
+  }
+}
+
+function selectBhExpType(ty) {
+  bhExpType = ty;
+  document.querySelectorAll('#bhExpForm .pay-type-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-bet') === ty);
   });
 }
 
+// Joriy sana uchun xarajatlarni Sheets dan o'qish
 function loadDailyExpenses() {
-  const target = document.getElementById('expDate').value;
+  const target = document.getElementById('bhDate').value;
   if (!target) return;
-  const list = document.getElementById('expensesList');
-  list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>';
+  const list = document.getElementById('bhExpListInline');
+  if (!list) return;
+  list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;">⏳ ...</div>';
   fetch(SHEETS_API + '?action=list_daily_expenses')
     .then(r => r.json())
     .then(res => {
-      const all = (res.status === 'ok') ? (res.rows || []) : [];
-      dailyExpenses = all.filter(e => String(e.reportDate).slice(0,10) === target);
+      if (res.status !== 'ok') {
+        // Apps Script eski versiyada — kalit so'z aniqlaymiz
+        const msg = String(res.message || '');
+        if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+          list.innerHTML = '<div style="background:#fff3cd;border:1px solid #ffc107;' +
+            'color:#856404;padding:10px;border-radius:6px;font-size:13px;">' +
+            '⚠️ Apps Script yangilanmagan. Sheets → Apps Script da yangi kodni ' +
+            'deploy qiling (New version).</div>';
+        } else {
+          list.innerHTML = '<div style="color:var(--danger);font-size:13px;">' +
+            '⚠️ ' + escapeHtml(msg) + '</div>';
+        }
+        return;
+      }
+      dailyExpenses = (res.rows || []).filter(e =>
+        String(e.reportDate).slice(0,10) === target);
       renderDailyExpenses();
     })
     .catch(() => {
-      list.innerHTML = '<div style="color:var(--danger);font-size:14px;">' +
+      list.innerHTML = '<div style="color:var(--danger);font-size:13px;">' +
         '⚠️ Server bilan aloqa yo\'q</div>';
     });
 }
 
 function renderDailyExpenses() {
-  const list = document.getElementById('expensesList');
+  const list = document.getElementById('bhExpListInline');
+  if (!list) return;
   if (!dailyExpenses.length) {
-    list.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">' +
-      '📭 ' + t('exp_no_items') + '</div>';
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;' +
+      'text-align:center;padding:10px;">📭 ' + t('exp_no_items') + '</div>';
     return;
   }
   const total = dailyExpenses.reduce((s,e)=>s+(parseFloat(e.amount)||0),0);
@@ -5055,19 +5092,20 @@ function renderDailyExpenses() {
   const totalClick = total - totalNaqt;
 
   let html = '<div style="background:var(--input-bg);padding:10px;border-radius:8px;' +
-    'margin-bottom:10px;font-size:13px;">' +
+    'margin-bottom:10px;font-size:13px;border-left:3px solid var(--danger);">' +
     '<b style="color:var(--danger);">' + t('bh_exp_total') + ': ' +
-    fmt(total) + " so'm</b><br>" +
-    '<span style="color:var(--text-dim);">💵 ' + fmt(totalNaqt) +
+    fmt(total) + " so'm</b> (" + dailyExpenses.length + ')<br>' +
+    '<span style="color:var(--text-dim);font-size:12px;">💵 ' + fmt(totalNaqt) +
     '  •  📱 ' + fmt(totalClick) + '</span></div>';
 
   dailyExpenses.forEach(e => {
-    html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
-      'border-radius:6px;padding:10px;margin-bottom:6px;display:flex;' +
+    html += '<div style="background:var(--card);border:1px solid var(--border);' +
+      'border-radius:6px;padding:9px 11px;margin-bottom:5px;display:flex;' +
       'justify-content:space-between;gap:8px;align-items:center;">' +
-      '<div style="font-size:13px;flex:1;"><b>' + escapeHtml(String(e.person)) +
-      '</b> — ' + fmt(e.amount) + ' (' + e.payType + ')<br>' +
-      '<span style="color:var(--text-dim);font-size:12px;">' +
+      '<div style="font-size:13px;flex:1;min-width:0;">' +
+      '<b>' + escapeHtml(String(e.person)) + '</b> — ' +
+      fmt(e.amount) + ' (' + e.payType + ')<br>' +
+      '<span style="color:var(--text-dim);font-size:11px;">' +
       escapeHtml(String(e.reason)) + '</span></div>' +
       '<button class="icon-btn del" onclick="delDailyExpense(\'' +
       e.id + '\')">🗑️</button>' +
@@ -5076,37 +5114,42 @@ function renderDailyExpenses() {
   list.innerHTML = html;
 }
 
-function addDailyExpense() {
-  const target = document.getElementById('expDate').value;
+// Forma orqali xarajat saqlash
+function saveBhExpense() {
+  const target = document.getElementById('bhDate').value;
   if (!target) { alert(t('bh_err_date')); return; }
-  const person = document.getElementById('expPerson').value.trim();
-  const amount = parseFloat(document.getElementById('expAmount').value) || 0;
-  const reason = document.getElementById('expReason').value.trim();
+  const person = document.getElementById('bhExpPerson').value.trim();
+  const amount = parseFloat(document.getElementById('bhExpAmount').value) || 0;
+  const reason = document.getElementById('bhExpReason').value.trim();
   if (!person) { alert(t('bh_err_exp_person')); return; }
   if (amount <= 0) { alert(t('bh_err_exp_amount')); return; }
   if (!reason) { alert(t('bh_err_exp_reason')); return; }
 
-  const btn = document.getElementById('expAddBtn');
+  const btn = document.getElementById('bhExpSaveBtn');
   btn.disabled = true; btn.textContent = '⏳...';
   const params = new URLSearchParams({
     action: 'save_daily_expense',
     date: new Date().toISOString(),
     reportDate: target,
-    person, amount, payType: expCurrentType, reason
+    person, amount, payType: bhExpType, reason
   });
   fetch(SHEETS_API, { method:'POST', body:params })
     .then(r => r.json())
     .then(res => {
-      btn.disabled = false; btn.textContent = t('bh_exp_add');
+      btn.disabled = false; btn.textContent = '💾 ' + t('save');
       if (res.status === 'ok') {
-        document.getElementById('expPerson').value = '';
-        document.getElementById('expAmount').value = '';
-        document.getElementById('expReason').value = '';
+        // Inputlarni tozalaymiz, formani yopmiymiz (ketma-ket qo'shish uchun)
+        document.getElementById('bhExpPerson').value = '';
+        document.getElementById('bhExpAmount').value = '';
+        document.getElementById('bhExpReason').value = '';
+        document.getElementById('bhExpPerson').focus();
         loadDailyExpenses();
-      } else alert('⚠️ ' + (res.message||''));
+      } else {
+        alert('⚠️ ' + (res.message || 'Server xato — Apps Script yangilangmi?'));
+      }
     })
     .catch(() => {
-      btn.disabled = false; btn.textContent = t('bh_exp_add');
+      btn.disabled = false; btn.textContent = '💾 ' + t('save');
       alert('⚠️ Server bilan aloqa yo\'q');
     });
 }
@@ -5159,7 +5202,6 @@ function openBhExpenses() {
 }
 
 let bhExpenses = [];
-let bhExpType = 'Naqt';
 
 // (Eski xarajatlar dialogi — endi ishlatilmaydi, lekin saqlanib qolingan)
 function closeBhExpenses() {
