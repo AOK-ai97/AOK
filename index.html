@@ -1282,22 +1282,26 @@ Ozodbek 4</div>
         <button class="btn" style="background:var(--accent2);color:#fff;"
                 onclick="openStReport()" data-i18n="st_report">📊 Konstovar hisoboti</button>
         <button class="btn btn-ghost" onclick="showStHistory()" data-i18n="lib_report_hist">📜 Hisobotlar tarixi</button>
+        <button class="btn btn-ghost" onclick="showStoreActivity()" data-i18n="st_activity">📋 Amallar tarixi</button>
         <button class="btn btn-ghost" onclick="loadStore()" data-i18n="refresh">🔄 Yangilash</button>
       </div>
 
-      <!-- Maxsulotlar javoni -->
-      <div class="card">
-        <div class="card-title" data-i18n="st_shelf">📦 Maxsulotlar</div>
-        <div id="productsList" style="margin-top:12px;">
-          <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
+      <!-- 2 ustun: chap — maxsulotlar, o'ng — qarzdorlar -->
+      <div class="lib-split">
+        <!-- Maxsulotlar javoni -->
+        <div class="card">
+          <div class="card-title" data-i18n="st_shelf">📦 Maxsulotlar</div>
+          <div id="productsList" style="margin-top:12px;">
+            <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
+          </div>
         </div>
-      </div>
 
-      <!-- Qarzdorlar -->
-      <div class="card">
-        <div class="card-title" data-i18n="st_debtors">💳 Qarzdorlar</div>
-        <div id="storeDebtsList" style="margin-top:12px;">
-          <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
+        <!-- Qarzdorlar -->
+        <div class="card">
+          <div class="card-title" data-i18n="st_debtors">💳 Qarzdorlar</div>
+          <div id="storeDebtsList" style="margin-top:12px;">
+            <div style="color:var(--text-dim);font-size:14px;" data-i18n="loading">⏳ Yuklanmoqda...</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1513,6 +1517,25 @@ Ozodbek 4</div>
         <div class="modal-footer">
           <button class="btn btn-ghost" onclick="closeStHistory()" data-i18n="cancel">Bekor</button>
           <button class="btn btn-primary" onclick="showStHistory()" data-i18n="refresh">🔄 Yangilash</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KONSTOVAR AMALLAR TARIXI -->
+    <div class="modal-overlay" id="stActivityModal">
+      <div class="modal" style="max-width:700px;">
+        <div class="modal-header">
+          <span data-i18n="st_activity_title">📋 Konstovar amallar tarixi</span>
+          <button class="modal-close" onclick="closeStoreActivity()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="stActivityList">
+            <div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeStoreActivity()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" onclick="showStoreActivity()" data-i18n="refresh">🔄 Yangilash</button>
         </div>
       </div>
     </div>
@@ -1789,6 +1812,9 @@ const I18N = {
     lib_activity_title:"📋 Kutubxona amallar tarixi",
     lib_no_activity:"Hali amal yo'q",
     lib_act_give:"Berildi", lib_act_return:"Qaytarildi", lib_act_pay:"To'landi",
+    st_activity:"📋 Amallar tarixi", st_activity_title:"📋 Konstovar amallar tarixi",
+    st_act_sell:"Sotildi", st_act_debt:"Qarzga", st_act_pay:"To'landi",
+    st_act_usecash:"Tushum ishlatildi",
     lr_hist_title:"📜 Hisobotlar tarixi", lr_no_history:"Hali hisobot yo'q",
     lr_saved:"✅ Hisobot saqlandi! Tarixdan ko'chirib oling.",
     lr_del_confirm:"Bu hisobotni o'chirasizmi? (Arxivga tushadi)",
@@ -1966,6 +1992,9 @@ const I18N = {
     lib_activity_title:"📋 Library activity log",
     lib_no_activity:"No activity yet",
     lib_act_give:"Given", lib_act_return:"Returned", lib_act_pay:"Paid",
+    st_activity:"📋 Activity log", st_activity_title:"📋 Store activity log",
+    st_act_sell:"Sold", st_act_debt:"On credit", st_act_pay:"Paid",
+    st_act_usecash:"Cash used",
     lr_hist_title:"📜 Report history", lr_no_history:"No reports yet",
     lr_saved:"✅ Report saved! Download it from history.",
     lr_del_confirm:"Delete this report? (It will go to Archive)",
@@ -2143,6 +2172,9 @@ const I18N = {
     lib_activity_title:"📋 Журнал действий библиотеки",
     lib_no_activity:"Действий пока нет",
     lib_act_give:"Выдано", lib_act_return:"Возврат", lib_act_pay:"Оплачено",
+    st_activity:"📋 Журнал действий", st_activity_title:"📋 Журнал действий магазина",
+    st_act_sell:"Продано", st_act_debt:"В долг", st_act_pay:"Оплачено",
+    st_act_usecash:"Касса израсходована",
     lr_hist_title:"📜 История отчётов", lr_no_history:"Отчётов пока нет",
     lr_saved:"✅ Отчёт сохранён! Скачайте из истории.",
     lr_del_confirm:"Удалить этот отчёт? (Перейдёт в Архив)",
@@ -4445,6 +4477,9 @@ function confirmStUseCash() {
   }).then(r=>r.json()));
 
   Promise.all(tasks).then(() => {
+    // Tarixga yozamiz — tushum ishlatildi
+    logStoreAction('use_cash', '', 0, naqt + click, '',
+      reason + ' (N:' + naqt + ' C:' + click + ')');
     btn.disabled = false; btn.textContent = t('uc_confirm');
     closeStUseCash();
     loadStore();
@@ -4904,6 +4939,13 @@ function confirmSell() {
   tasks.push(fetch(SHEETS_API, { method:'POST', body:p3 }).then(r=>r.json()));
 
   Promise.all(tasks).then(() => {
+    // Tarixga yozamiz
+    if (sellMode === 'sotuv') {
+      logStoreAction('sell', p.name, qty, total, '', sellPayType);
+    } else {
+      const buyer = document.getElementById('sellBuyer').value.trim();
+      logStoreAction('debt', p.name, qty, total, buyer, '');
+    }
     btn.disabled = false; btn.textContent = t('sl_confirm');
     closeSellDialog();
     loadStore();
@@ -5033,6 +5075,8 @@ function confirmStPay() {
     fetch(SHEETS_API, { method:'POST', body:p1 }).then(r=>r.json()),
     fetch(SHEETS_API, { method:'POST', body:p2 }).then(r=>r.json())
   ]).then(() => {
+    // Tarixga yozamiz — qarz to'landi
+    logStoreAction('pay', '', 0, amount, stPayBuyer, stPayType);
     btn.disabled = false; btn.textContent = t('d_pay_btn');
     closeStPayDialog();
     loadStore();
@@ -5816,6 +5860,101 @@ function delBhHist(idx) {
       else alert('⚠️ ' + (res.message||''));
     })
     .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+// ============================================================
+//  KONSTOVAR TARIXI — amallarni log qilish va ko'rsatish
+// ============================================================
+// actionName: 'sell' (sotildi), 'debt' (qarzga olindi),
+//             'pay' (qarz to'landi), 'use_cash' (tushum ishlatildi)
+function logStoreAction(actionName, product, qty, amount, buyer, note) {
+  const params = new URLSearchParams({
+    action: 'save_store_history',
+    date: new Date().toISOString(),
+    actionName: actionName,
+    product: product || '',
+    qty: qty || 0,
+    amount: amount || 0,
+    buyer: buyer || '',
+    note: note || ''
+  });
+  // Fon rejimda — xato bo'lsa ham asosiy amalni to'xtatmaymiz
+  fetch(SHEETS_API, { method:'POST', body:params }).catch(()=>{});
+}
+
+function showStoreActivity() {
+  document.getElementById('stActivityModal').classList.add('open');
+  const listEl = document.getElementById('stActivityList');
+  listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">⏳ ...</div>';
+  fetch(SHEETS_API + '?action=list_store_history')
+    .then(r => r.json())
+    .then(res => {
+      if (res.status !== 'ok') {
+        const msg = String(res.message || '');
+        if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+          listEl.innerHTML = '<div style="background:#fff3cd;border:1px solid #ffc107;' +
+            'color:#856404;padding:10px;border-radius:6px;font-size:13px;">' +
+            '⚠️ Apps Script yangilanmagan. Sheets → Apps Script da yangi kodni ' +
+            'deploy qiling (New version).</div>';
+        } else {
+          listEl.innerHTML = '<div style="color:var(--danger);font-size:13px;">' +
+            '⚠️ ' + escapeHtml(msg) + '</div>';
+        }
+        return;
+      }
+      const rows = (res.rows || []).slice().reverse();
+      if (!rows.length) {
+        listEl.innerHTML = '<div style="color:var(--text-dim);font-size:14px;">' +
+          '📭 ' + t('lib_no_activity') + '</div>';
+        return;
+      }
+      let html = '';
+      rows.forEach(r => {
+        let dt = String(r.date);
+        try {
+          const d = new Date(r.date);
+          dt = d.toLocaleDateString('uz-UZ') + ' ' +
+            d.toLocaleTimeString('uz-UZ', {hour:'2-digit',minute:'2-digit'});
+        } catch(e){}
+        let icon = '📋', label = String(r.actionName), color = 'var(--accent)';
+        if (r.actionName === 'sell') {
+          icon = '🛒'; label = t('st_act_sell'); color = 'var(--success)';
+        } else if (r.actionName === 'debt') {
+          icon = '💳'; label = t('st_act_debt'); color = 'var(--danger)';
+        } else if (r.actionName === 'pay') {
+          icon = '💰'; label = t('st_act_pay'); color = 'var(--success)';
+        } else if (r.actionName === 'use_cash') {
+          icon = '💸'; label = t('st_act_usecash'); color = 'var(--warning)';
+        }
+        html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+          'border-left:3px solid ' + color + ';border-radius:6px;padding:10px;' +
+          'margin-bottom:6px;">' +
+          '<div style="display:flex;justify-content:space-between;gap:8px;' +
+          'align-items:center;font-size:13px;flex-wrap:wrap;">' +
+          '<div style="flex:1;min-width:0;">' +
+          '<b style="color:' + color + ';">' + icon + ' ' + label + '</b>' +
+          (r.product ? ' — <b>' + escapeHtml(String(r.product)) + '</b>' +
+            (r.qty && r.qty > 0 ? ' × ' + r.qty : '') : '') +
+          (r.buyer ? '<br><span style="color:var(--text-dim);font-size:12px;">👤 ' +
+            escapeHtml(String(r.buyer)) + '</span>' : '') +
+          (r.note ? '<br><span style="color:var(--text-dim);font-size:12px;">' +
+            escapeHtml(String(r.note)) + '</span>' : '') +
+          '</div>' +
+          '<div style="text-align:right;font-size:12px;color:var(--text-dim);">' +
+          (parseFloat(r.amount) ? '<b style="color:' + color + ';">' +
+            fmt(r.amount) + "</b><br>" : '') +
+          dt + '</div></div></div>';
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(() => {
+      listEl.innerHTML = '<div style="color:var(--danger);font-size:13px;">' +
+        '⚠️ Server bilan aloqa yo\'q</div>';
+    });
+}
+
+function closeStoreActivity() {
+  document.getElementById('stActivityModal').classList.remove('open');
 }
 
 // ============================================================
