@@ -1548,6 +1548,34 @@ Ozodbek 4</div>
       <div class="page-title" data-i18n="mk_title">🏫 Markaz</div>
       <div class="page-sub" data-i18n="mk_sub">O'quv markaz xonalari, ustozlar va guruhlari</div>
 
+      <!-- 🗺️ Markaz xaritasi (eng yuqorida) -->
+      <div class="card" id="mkMapCard" style="background:linear-gradient(135deg,rgba(0,212,170,0.05),rgba(8,145,178,0.05));">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+          <div style="font-weight:700;font-size:14px;color:var(--accent);"
+               data-i18n="mk_map_title">🗺️ Markaz xaritasi</div>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;"
+                    onclick="mkEditMap()" data-i18n="mk_map_edit">✏️ Rasm yuklash</button>
+            <button class="btn btn-ghost" style="padding:5px 10px;font-size:12px;"
+                    onclick="mkDeleteMap()" id="mkMapDelBtn" style="display:none;" data-i18n="mk_map_del">🗑️ O'chirish</button>
+          </div>
+        </div>
+        <div id="mkMapImage">
+          <div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;
+               background:var(--input-bg);border:2px dashed var(--border);border-radius:8px;">
+            🗺️ <span data-i18n="mk_map_empty">Hali xarita yuklanmagan</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📋 Vazifalar (tepada katta tugma) -->
+      <div class="card">
+        <button class="btn" style="background:var(--accent2);color:#fff;width:100%;padding:12px;font-size:14px;font-weight:700;"
+                onclick="mkOpenTasks()">
+          <span id="mkTaskBtnText">📋 Vazifalar</span>
+        </button>
+      </div>
+
       <!-- Filial selektori (yuqorida har doim ko'rinadi) -->
       <div class="card" id="mkFilialCard">
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -1670,6 +1698,17 @@ Ozodbek 4</div>
             <label class="check-row"><input type="checkbox" data-jihoz="🪟 Deraza"> 🪟 Deraza</label>
             <label class="check-row"><input type="checkbox" data-jihoz="🎤 Mikrofon"> 🎤 Mikrofon</label>
           </div>
+
+          <label data-i18n="mk_xona_rasm">🖼️ Xona rasmi:</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;"
+                    onclick="document.getElementById('mkXonaRasmInput').click()" data-i18n="mk_xona_rasm_pick">📂 Tanlash</button>
+            <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;display:none;"
+                    id="mkXonaRasmDel" onclick="mkXonaRasmRemove()" data-i18n="mk_xona_rasm_del">🗑️ O'chirish</button>
+          </div>
+          <input type="file" id="mkXonaRasmInput" accept="image/*" style="display:none;"
+                 onchange="mkXonaRasmPick(event)">
+          <div id="mkXonaRasmPreview" style="margin-top:8px;"></div>
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" onclick="closeMkXonaDialog()" data-i18n="cancel">Bekor</button>
@@ -1825,6 +1864,54 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- MARKAZ — VAZIFALAR DIALOGI -->
+    <div class="modal-overlay" id="mkTaskModal">
+      <div class="modal" style="max-width:560px;">
+        <div class="modal-header">
+          <span data-i18n="mk_tasks_title">📋 Vazifalar</span>
+          <button class="modal-close" onclick="closeMkTaskDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;gap:6px;margin-bottom:12px;">
+            <input type="text" id="mkTaskInput" data-i18n-ph="mk_task_ph"
+                   placeholder="Yangi vazifa..." style="flex:1;"
+                   onkeydown="if(event.key==='Enter')mkAddTask()">
+            <button class="btn btn-primary" onclick="mkAddTask()" style="padding:8px 14px;">
+              ➕
+            </button>
+          </div>
+          <div id="mkTaskList">
+            <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeMkTaskDialog()" data-i18n="cancel">Yopish</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MARKAZ — O'QUVCHIni edit dialogi -->
+    <div class="modal-overlay" id="mkOquvchiEditModal">
+      <div class="modal">
+        <div class="modal-header">
+          <span data-i18n="mk_o_edit_title">✏️ O'quvchini tahrirlash</span>
+          <button class="modal-close" onclick="closeMkOquvchiEdit()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label data-i18n="mk_yangi_fio">F.I.O:</label>
+          <input type="text" id="mkOEditFIO">
+          <label data-i18n="mk_yangi_tel">📞 Telefon:</label>
+          <input type="text" id="mkOEditTel">
+          <label data-i18n="mk_o_edit_guruh">📅 Guruhga ko'chirish (boshqa o'qituvchi/vaqt):</label>
+          <select id="mkOEditGuruh" class="select-input"></select>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeMkOquvchiEdit()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" onclick="saveMkOquvchiEdit()" data-i18n="save">💾 Saqlash</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ARXIV -->
     <div class="page" id="page-archive">
       <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
@@ -1973,7 +2060,16 @@ const I18N = {
     mk_yangi_no_match_hint:"Vaqt yoki kunlarni o'zgartirib ko'ring, yoki avval yangi guruh oching.",
     mk_yangi_free:"Joy bor", mk_yangi_low:"Kam joy", mk_yangi_full:"To'la",
     mk_yangi_give:"Berish", mk_yangi_full_btn:"To'la",
-    mk_yangi_err_fio:"O'quvchi F.I.O sini kiriting!", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
+    mk_yangi_err_fio:"O'quvchi F.I.O sini kiriting!",
+    mk_map_title:"🗺️ Markaz xaritasi", mk_map_edit:"✏️ Rasm yuklash",
+    mk_map_del:"🗑️ O'chirish", mk_map_empty:"Hali xarita yuklanmagan",
+    mk_map_del_confirm:"Xarita rasmini o'chirasizmi?",
+    mk_tasks_title:"Vazifalar", mk_no_tasks:"Hali vazifa yo'q",
+    mk_task_ph:"Yangi vazifa...", mk_task_del_confirm:"Vazifa o'chirilsinmi?",
+    mk_xona_rasm:"🖼️ Xona rasmi:", mk_xona_rasm_pick:"📂 Tanlash", mk_xona_rasm_del:"🗑️ O'chirish",
+    mk_doimiy_list:"Doimiy", mk_oquvchi_del_confirm:"o'quvchini o'chirasizmi?",
+    mk_o_edit_title:"✏️ O'quvchini tahrirlash",
+    mk_o_edit_guruh:"📅 Guruhga ko'chirish (boshqa o'qituvchi/vaqt):", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
     soon:"tez kunda",
     back:"⬅️ Orqaga", next:"Keyingi ➡️", next_ok:"✅ Keyingi ➡️",
     refresh:"🔄 Yangilash", loading:"⏳ Yuklanmoqda...", cancel:"Bekor", save:"💾 Saqlash",
@@ -2197,6 +2293,15 @@ const I18N = {
     mk_yangi_free:"Free", mk_yangi_low:"Few spots", mk_yangi_full:"Full",
     mk_yangi_give:"Assign", mk_yangi_full_btn:"Full",
     mk_yangi_err_fio:"Enter student name!",
+    mk_map_title:"🗺️ Center map", mk_map_edit:"✏️ Upload image",
+    mk_map_del:"🗑️ Remove", mk_map_empty:"No map uploaded yet",
+    mk_map_del_confirm:"Remove map image?",
+    mk_tasks_title:"Tasks", mk_no_tasks:"No tasks yet",
+    mk_task_ph:"New task...", mk_task_del_confirm:"Delete task?",
+    mk_xona_rasm:"🖼️ Room image:", mk_xona_rasm_pick:"📂 Select", mk_xona_rasm_del:"🗑️ Remove",
+    mk_doimiy_list:"Permanent", mk_oquvchi_del_confirm:"delete student?",
+    mk_o_edit_title:"✏️ Edit student",
+    mk_o_edit_guruh:"📅 Move to group (different teacher/time):",
     soon:"soon",
     back:"⬅️ Back", next:"Next ➡️", next_ok:"✅ Next ➡️",
     refresh:"🔄 Refresh", loading:"⏳ Loading...", cancel:"Cancel", save:"💾 Save",
@@ -2420,6 +2525,15 @@ const I18N = {
     mk_yangi_free:"Места есть", mk_yangi_low:"Мало мест", mk_yangi_full:"Полная",
     mk_yangi_give:"Назначить", mk_yangi_full_btn:"Полная",
     mk_yangi_err_fio:"Введите Ф.И.О студента!",
+    mk_map_title:"🗺️ Карта центра", mk_map_edit:"✏️ Загрузить",
+    mk_map_del:"🗑️ Удалить", mk_map_empty:"Карта не загружена",
+    mk_map_del_confirm:"Удалить карту?",
+    mk_tasks_title:"Задачи", mk_no_tasks:"Нет задач",
+    mk_task_ph:"Новая задача...", mk_task_del_confirm:"Удалить задачу?",
+    mk_xona_rasm:"🖼️ Фото кабинета:", mk_xona_rasm_pick:"📂 Выбрать", mk_xona_rasm_del:"🗑️ Удалить",
+    mk_doimiy_list:"Постоянные", mk_oquvchi_del_confirm:"удалить студента?",
+    mk_o_edit_title:"✏️ Изменить студента",
+    mk_o_edit_guruh:"📅 Перевести в группу (другой преподаватель/время):",
     soon:"скоро",
     back:"⬅️ Назад", next:"Далее ➡️", next_ok:"✅ Далее ➡️",
     refresh:"🔄 Обновить", loading:"⏳ Загрузка...", cancel:"Отмена", save:"💾 Сохранить",
@@ -6525,31 +6639,48 @@ function mkFormatTime(v) {
 }
 
 // Markazni boshlash — barcha ma'lumotlarni yuklash
+let mkTasks = [];
+let mkMapImage = '';
+let mkEditingOquvchiId = null;
+let mkXonaTempRasm = '';
+
+// Markazni boshlash — barcha ma'lumotlarni yuklash
 function loadMarkaz() {
   Promise.all([
     fetch(SHEETS_API + '?action=list_mk_filials').then(r=>r.json()),
     fetch(SHEETS_API + '?action=list_mk_xonas').then(r=>r.json()),
     fetch(SHEETS_API + '?action=list_mk_ustozs').then(r=>r.json()),
     fetch(SHEETS_API + '?action=list_mk_guruhs').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_yangis').then(r=>r.json())
-  ]).then(([f,x,u,g,y]) => {
+    fetch(SHEETS_API + '?action=list_mk_yangis').then(r=>r.json()),
+    fetch(SHEETS_API + '?action=list_mk_tasks').then(r=>r.json()),
+    fetch(SHEETS_API + '?action=get_mk_sozlama&kalit=map_image').then(r=>r.json())
+  ]).then(([f,x,u,g,y,tk,mp]) => {
     if (f.status === 'ok') mkFilials = f.rows || [];
     if (x.status === 'ok') mkXonas = x.rows || [];
     if (u.status === 'ok') mkUstozs = u.rows || [];
     if (g.status === 'ok') mkGuruhs = g.rows || [];
     if (y.status === 'ok') mkYangis = y.rows || [];
+    if (tk.status === 'ok') mkTasks = tk.rows || [];
+    if (mp.status === 'ok') mkMapImage = mp.qiymat || '';
 
     // Filial selektorini to'ldirish
     const sel = document.getElementById('mkFilialSelect');
     sel.innerHTML = mkFilials.map(f =>
       '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>'
     ).join('');
-    // Default filial — birinchisi yoki "isDefault"
     if (!mkCurrentFilialID || !mkFilials.find(f=>f.id===mkCurrentFilialID)) {
       const def = mkFilials.find(f => String(f.isDefault).toLowerCase()==='true');
       mkCurrentFilialID = def ? def.id : (mkFilials[0] ? mkFilials[0].id : '');
     }
     sel.value = mkCurrentFilialID;
+
+    // Vazifalar tugmasi
+    const undone = mkTasks.filter(t => String(t.bajarildi).toLowerCase() !== 'true').length;
+    document.getElementById('mkTaskBtnText').textContent =
+      '📋 ' + t('mk_tasks_title') + (undone ? ' (' + undone + ')' : '');
+
+    // Xarita rasm
+    mkRenderMap();
 
     // Joriy tab ga ko'ra ko'rsatish
     mkRender();
@@ -6558,6 +6689,259 @@ function loadMarkaz() {
     document.getElementById('mkVisualGrid').innerHTML =
       '<div class="card"><div style="color:var(--danger);">⚠️ Server bilan aloqa yo\'q yoki Apps Script eski</div></div>';
   });
+}
+
+// ============================================================
+//  MARKAZ — XARITA RASMI
+// ============================================================
+function mkRenderMap() {
+  const box = document.getElementById('mkMapImage');
+  const delBtn = document.getElementById('mkMapDelBtn');
+  if (mkMapImage) {
+    box.innerHTML = '<img src="' + mkMapImage + '" style="width:100%;max-height:500px;' +
+      'object-fit:contain;border-radius:8px;cursor:zoom-in;" ' +
+      'onclick="mkOpenMapLightbox()">';
+    if (delBtn) delBtn.style.display = '';
+  } else {
+    box.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:13px;' +
+      'background:var(--input-bg);border:2px dashed var(--border);border-radius:8px;">' +
+      '🗺️ ' + t('mk_map_empty') + '</div>';
+    if (delBtn) delBtn.style.display = 'none';
+  }
+}
+
+function mkOpenMapLightbox() {
+  if (!mkMapImage) return;
+  document.getElementById('lightboxImg').src = mkMapImage;
+  document.getElementById('imageLightbox').classList.add('open');
+}
+
+function mkEditMap() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'image/*';
+  inp.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    resizeImage(file, 1200, 0.85, (dataUrl) => {
+      fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+        action:'set_mk_sozlama', kalit:'map_image', qiymat:dataUrl
+      })}).then(r => r.json()).then(res => {
+        if (res.status === 'ok') {
+          mkMapImage = dataUrl;
+          mkRenderMap();
+        } else alert('⚠️ ' + (res.message||''));
+      });
+    });
+  };
+  inp.click();
+}
+
+function mkDeleteMap() {
+  if (!confirm(t('mk_map_del_confirm'))) return;
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'set_mk_sozlama', kalit:'map_image', qiymat:''
+  })}).then(() => {
+    mkMapImage = '';
+    mkRenderMap();
+  });
+}
+
+// Universal rasm o'lchamlash funksiyasi
+function resizeImage(file, maxSize, quality, callback) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        if (w > h) { h = h * (maxSize/w); w = maxSize; }
+        else { w = w * (maxSize/h); h = maxSize; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      callback(canvas.toDataURL('image/jpeg', quality || 0.7));
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============================================================
+//  MARKAZ — VAZIFALAR (Task)
+// ============================================================
+function mkOpenTasks() {
+  document.getElementById('mkTaskModal').classList.add('open');
+  mkRenderTasks();
+  setTimeout(() => document.getElementById('mkTaskInput').focus(), 100);
+}
+
+function closeMkTaskDialog() {
+  document.getElementById('mkTaskModal').classList.remove('open');
+}
+
+function mkRenderTasks() {
+  const list = document.getElementById('mkTaskList');
+  if (!mkTasks.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:10px;">' +
+      '📭 ' + t('mk_no_tasks') + '</div>';
+    return;
+  }
+  // Bajarilmaganlar yuqorida
+  const sorted = mkTasks.slice().sort((a,b) => {
+    const ab = String(a.bajarildi).toLowerCase() === 'true' ? 1 : 0;
+    const bb = String(b.bajarildi).toLowerCase() === 'true' ? 1 : 0;
+    return ab - bb;
+  });
+  let html = '';
+  sorted.forEach(tt => {
+    const done = String(tt.bajarildi).toLowerCase() === 'true';
+    html += '<div style="display:flex;gap:8px;align-items:center;padding:8px 10px;' +
+      'background:var(--input-bg);border:1px solid var(--border);border-radius:6px;' +
+      'margin-bottom:5px;' + (done ? 'opacity:0.6;' : '') + '">' +
+      '<input type="checkbox" ' + (done ? 'checked' : '') +
+      ' onchange="mkToggleTask(\'' + tt.id + '\', this.checked)" ' +
+      'style="width:18px;height:18px;cursor:pointer;flex-shrink:0;">' +
+      '<div style="flex:1;font-size:13px;' + (done ? 'text-decoration:line-through;color:var(--text-dim);' : '') + '">' +
+      escapeHtml(String(tt.matn)) + '</div>' +
+      '<button class="icon-btn del" onclick="mkDeleteTask(\'' + tt.id + '\')">🗑️</button>' +
+      '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function mkAddTask() {
+  const inp = document.getElementById('mkTaskInput');
+  const matn = inp.value.trim();
+  if (!matn) return;
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'save_mk_task', matn, sana: new Date().toISOString()
+  })}).then(r=>r.json()).then(res => {
+    if (res.status === 'ok') {
+      inp.value = '';
+      mkTasks.push({ id:res.id, sana:new Date().toISOString(), matn, bajarildi:'false' });
+      mkRenderTasks();
+      // Tugmadagi sanog'ni yangilash
+      const undone = mkTasks.filter(t => String(t.bajarildi).toLowerCase() !== 'true').length;
+      document.getElementById('mkTaskBtnText').textContent =
+        '📋 ' + t('mk_tasks_title') + (undone ? ' (' + undone + ')' : '');
+    }
+  });
+}
+
+function mkToggleTask(id, done) {
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'update_mk_task', id, bajarildi: done ? 'true' : 'false'
+  })}).then(r=>r.json()).then(res => {
+    if (res.status === 'ok') {
+      const tt = mkTasks.find(t => t.id === id);
+      if (tt) tt.bajarildi = done ? 'true' : 'false';
+      mkRenderTasks();
+      const undone = mkTasks.filter(t => String(t.bajarildi).toLowerCase() !== 'true').length;
+      document.getElementById('mkTaskBtnText').textContent =
+        '📋 ' + t('mk_tasks_title') + (undone ? ' (' + undone + ')' : '');
+    }
+  });
+}
+
+function mkDeleteTask(id) {
+  if (!confirm(t('mk_task_del_confirm'))) return;
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'delete_mk_task', id
+  })}).then(r=>r.json()).then(res => {
+    if (res.status === 'ok') {
+      mkTasks = mkTasks.filter(t => t.id !== id);
+      mkRenderTasks();
+      const undone = mkTasks.filter(t => String(t.bajarildi).toLowerCase() !== 'true').length;
+      document.getElementById('mkTaskBtnText').textContent =
+        '📋 ' + t('mk_tasks_title') + (undone ? ' (' + undone + ')' : '');
+    }
+  });
+}
+
+// ============================================================
+//  MARKAZ — O'QUVCHINI TAHRIRLASH (boshqa guruhga ko'chirish)
+// ============================================================
+function mkEditOquvchi(yangiId) {
+  const y = mkYangis.find(yy => yy.id === yangiId);
+  if (!y) return;
+  mkEditingOquvchiId = yangiId;
+  document.getElementById('mkOEditFIO').value = y.fio || '';
+  document.getElementById('mkOEditTel').value = y.telefon || '';
+  // Joriy filialdagi barcha guruhlar
+  const filialXonaIDs = new Set(mkXonas.filter(x => x.filialID === mkCurrentFilialID).map(x => x.id));
+  const sel = document.getElementById('mkOEditGuruh');
+  sel.innerHTML = mkGuruhs.filter(g => filialXonaIDs.has(g.xonaID)).map(g => {
+    const x = mkXonas.find(xx => xx.id === g.xonaID);
+    const u = mkUstozs.find(uu => uu.id === g.ustozID);
+    const label = (x ? x.nomi : '?') + ' — ' + (u ? u.ism : '?') + ' (' +
+      mkFormatTime(g.vaqtDan) + '-' + mkFormatTime(g.vaqtGacha) + ')';
+    return '<option value="' + g.id + '"' + (g.id === y.guruhID ? ' selected' : '') + '>' +
+      escapeHtml(label) + '</option>';
+  }).join('');
+  document.getElementById('mkOquvchiEditModal').classList.add('open');
+}
+
+function closeMkOquvchiEdit() {
+  document.getElementById('mkOquvchiEditModal').classList.remove('open');
+}
+
+function saveMkOquvchiEdit() {
+  const fio = document.getElementById('mkOEditFIO').value.trim();
+  const tel = document.getElementById('mkOEditTel').value.trim();
+  const guruhID = document.getElementById('mkOEditGuruh').value;
+  if (!fio) { alert(t('mk_yangi_err_fio')); return; }
+  if (!guruhID) { alert(t('mk_err_xona_select')); return; }
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'update_mk_yangi', id:mkEditingOquvchiId,
+    fio, telefon:tel, guruhID
+  })}).then(r=>r.json()).then(res => {
+    if (res.status === 'ok') {
+      closeMkOquvchiEdit();
+      loadMarkaz();
+    } else alert('⚠️ ' + (res.message||''));
+  });
+}
+
+function mkDeleteOquvchi(yangiId) {
+  const y = mkYangis.find(yy => yy.id === yangiId);
+  if (!y) return;
+  if (!confirm('"' + y.fio + '" — ' + t('mk_oquvchi_del_confirm'))) return;
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'delete_mk_yangi', id:yangiId
+  })}).then(r=>r.json()).then(res => {
+    if (res.status === 'ok') loadMarkaz();
+  });
+}
+
+// ============================================================
+//  MARKAZ — XONA RASMI YORDAMCHI
+// ============================================================
+function mkXonaRasmPick(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  resizeImage(file, 600, 0.75, (dataUrl) => {
+    mkXonaTempRasm = dataUrl;
+    mkXonaRasmShow();
+  });
+}
+
+function mkXonaRasmShow() {
+  const prev = document.getElementById('mkXonaRasmPreview');
+  const del = document.getElementById('mkXonaRasmDel');
+  if (mkXonaTempRasm) {
+    prev.innerHTML = '<img src="' + mkXonaTempRasm + '" style="max-width:200px;max-height:120px;border-radius:6px;border:1px solid var(--border);">';
+    del.style.display = '';
+  } else {
+    prev.innerHTML = '';
+    del.style.display = 'none';
+  }
+}
+
+function mkXonaRasmRemove() {
+  mkXonaTempRasm = '';
+  mkXonaRasmShow();
 }
 
 function onMkFilialChange() {
@@ -6616,12 +7000,17 @@ function mkRenderVisual() {
     return;
   }
 
-  // Joriy kun turi uchun aktiv guruhlarni filtrlaymiz
-  // (toq = "toq" kun turi, juft = "juft", istisno = "istisno")
-  const activeGuruhs = mkGuruhs.filter(g => g.kunTuri === mkCurrentDayType);
+  // Joriy yorliqqa tegishli guruhlar:
+  // Toq → toq + (istisno bilan Du/Cho/Ju tanlangan)
+  // Juft → juft + (istisno bilan Se/Pa/Sh tanlangan)
+  // Istisno → faqat istisno
+  const activeGuruhs = mkGuruhs.filter(g => mkDayBelongsToType(g, mkCurrentDayType));
 
-  // Vaqt to'qnashuvini aniqlaymiz (har ustoz, har vaqt)
-  const conflicts = mkDetectConflicts(activeGuruhs);
+  // Muammoni aniqlash — JORIY FILIAL ning BARCHA guruhlari ichida
+  // (chunki istisno guruh boshqa kun turi bilan kesishadi)
+  const filialXonaIDs = new Set(xonas.map(x => x.id));
+  const allFilialGuruhs = mkGuruhs.filter(g => filialXonaIDs.has(g.xonaID));
+  const conflicts = mkDetectConflicts(allFilialGuruhs);
 
   // Etajga ko'ra guruhlash
   const byEtaj = {};
@@ -6644,6 +7033,21 @@ function mkRenderVisual() {
     html += '</div></div>';
   });
   grid.innerHTML = html;
+}
+
+// Guruhning kun turi joriy yorliqqa tegishlimi?
+function mkDayBelongsToType(g, dayType) {
+  if (g.kunTuri === dayType) return true;
+  if (g.kunTuri === 'istisno') {
+    const days = new Set(String(g.tanlanganKunlar||'').split(',').filter(Boolean));
+    if (dayType === 'toq') {
+      return days.has('Du') || days.has('Cho') || days.has('Ju');
+    }
+    if (dayType === 'juft') {
+      return days.has('Se') || days.has('Pa') || days.has('Sh');
+    }
+  }
+  return false;
 }
 
 // Bitta xona kartochkasi — vaqt jadvali bilan (06:00–22:00)
@@ -6706,16 +7110,63 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     // Guruh boshlanishi — to'liq batafsil
     const ustoz = mkUstozs.find(u => u.id === g.ustozID);
     const ustozName = ustoz ? ustoz.ism : '—';
-    const son = parseInt(g.oquvchiSoni) || 0;
-    const yangilar = mkYangis.filter(y => y.guruhID === g.id);
-    const jami = son + yangilar.length;
+    const sonManual = parseInt(g.oquvchiSoni) || 0;
+    // Bu guruhdagi barcha o'quvchilar
+    const allInGroup = mkYangis.filter(y => y.guruhID === g.id);
+    // Yangi (qizil) — yangimi=true yoki bo'sh/undefined
+    const yangilar = allInGroup.filter(y =>
+      String(y.yangimi||'true').toLowerCase() !== 'false');
+    // Doimiy (yashil) — yangimi=false
+    const doimiy = allInGroup.filter(y =>
+      String(y.yangimi||'').toLowerCase() === 'false');
+    // Jami: qo'lda kiritilgan son + doimiy FIO lar + yangi FIO lar
+    const jami = sonManual + doimiy.length + yangilar.length;
     const pct = cap ? Math.round(jami * 100 / cap) : 0;
     const hasConflict = conflicts.some(c => c.guruhID === g.id);
 
-    // To'liq vaqt oralig'i
-    const vaqtFull = mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha);
+    // Istisno guruh ekanligini belgilash (agar joriy yorliq Toq/Juft bo'lsa)
+    const isExceptionGroup = (g.kunTuri === 'istisno' && mkCurrentDayType !== 'istisno');
+    let exceptionBadge = '';
+    if (isExceptionGroup) {
+      const days = String(g.tanlanganKunlar||'').split(',').filter(Boolean).join(', ');
+      exceptionBadge = '<div style="background:rgba(245,158,11,0.15);color:#f59e0b;' +
+        'padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;' +
+        'display:inline-block;margin-bottom:3px;">⚠️ Istisno: ' + days + '</div><br>';
+    }
 
-    // Yangi o'quvchilar HTML
+    // DOIMIY o'quvchilar (yashil — FIO bilan + edit/delete)
+    let doimiyHtml = '';
+    if (sonManual > 0) {
+      doimiyHtml += '<div style="color:#10b981;font-size:11px;font-weight:700;margin-top:2px;">' +
+        '🟢 ' + sonManual + ' ' + t('mk_doimiy') +
+        ' <span style="color:var(--text-dim);font-weight:400;">(no name)</span></div>';
+    }
+    if (doimiy.length) {
+      doimiyHtml += '<div style="margin-top:5px;">' +
+        '<div style="font-size:10px;color:#10b981;font-weight:700;margin-bottom:3px;">' +
+        '🟢 ' + t('mk_doimiy_list') + ' (' + doimiy.length + '):</div>';
+      doimiy.forEach(y => {
+        doimiyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+          'gap:4px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);' +
+          'border-radius:4px;padding:4px 6px;margin-bottom:3px;">' +
+          '<div style="font-size:10px;color:#10b981;flex:1;min-width:0;line-height:1.3;">' +
+          '<b>' + escapeHtml(String(y.fio)) + '</b>' +
+          (y.telefon ? '<br><span style="color:var(--text-dim);font-weight:400;">📞 ' +
+            escapeHtml(String(y.telefon)) + '</span>' : '') +
+          '</div>' +
+          '<div style="display:flex;gap:3px;flex-shrink:0;">' +
+          '<button onclick="mkEditOquvchi(\'' + y.id + '\')" ' +
+          'style="background:#f59e0b;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
+          'font-size:10px;cursor:pointer;">✏️</button>' +
+          '<button onclick="mkDeleteOquvchi(\'' + y.id + '\')" ' +
+          'style="background:#ef4444;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
+          'font-size:10px;cursor:pointer;">🗑️</button>' +
+          '</div></div>';
+      });
+      doimiyHtml += '</div>';
+    }
+
+    // YANGI o'quvchilar (qizil) HTML — edit/delete + doimiyga
     let yangiHtml = '';
     if (yangilar.length) {
       yangiHtml = '<div style="margin-top:5px;">' +
@@ -6723,20 +7174,26 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
         '🔴 ' + t('mk_yangilar') + ' (' + yangilar.length + '):</div>';
       yangilar.forEach(y => {
         yangiHtml += '<div style="display:flex;justify-content:space-between;align-items:center;' +
-          'gap:5px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);' +
+          'gap:4px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);' +
           'border-radius:4px;padding:4px 6px;margin-bottom:3px;">' +
           '<div style="font-size:10px;color:#ef4444;flex:1;min-width:0;line-height:1.3;">' +
           '<b>' + escapeHtml(String(y.fio)) + '</b>' +
           (y.telefon ? '<br><span style="color:var(--text-dim);font-weight:400;">📞 ' +
             escapeHtml(String(y.telefon)) + '</span>' : '') +
           '</div>' +
+          '<div style="display:flex;gap:3px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end;">' +
           '<button onclick="mkPromoteYangi(\'' + y.id + '\',\'' + g.id + '\')" ' +
-          'style="background:#10b981;color:#fff;border:none;border-radius:4px;' +
-          'padding:4px 8px;font-size:10px;cursor:pointer;white-space:nowrap;font-weight:600;">' +
-          '➕ ' + t('mk_promote_one') + '</button>' +
-        '</div>';
+          'title="' + t('mk_promote_one') + '" ' +
+          'style="background:#10b981;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
+          'font-size:10px;cursor:pointer;font-weight:600;">➕</button>' +
+          '<button onclick="mkEditOquvchi(\'' + y.id + '\')" ' +
+          'style="background:#f59e0b;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
+          'font-size:10px;cursor:pointer;">✏️</button>' +
+          '<button onclick="mkDeleteOquvchi(\'' + y.id + '\')" ' +
+          'style="background:#ef4444;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
+          'font-size:10px;cursor:pointer;">🗑️</button>' +
+          '</div></div>';
       });
-      // Hammasini birga
       if (yangilar.length > 1) {
         yangiHtml += '<button onclick="mkPromoteAllYangis(\'' + g.id + '\')" ' +
           'style="background:#10b981;color:#fff;border:none;border-radius:4px;' +
@@ -6745,6 +7202,9 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
       }
       yangiHtml += '</div>';
     }
+
+    // To'liq vaqt oralig'i
+    const vaqtFull = mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha);
 
     body += '<div style="display:flex;gap:8px;padding:7px 0;' +
       'border-bottom:1px solid var(--border);background:rgba(16,185,129,0.06);' +
@@ -6756,15 +7216,16 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
       mkFormatTime(g.vaqtGacha) + '</span></div>' +
       // O'ng ustun
       '<div style="flex:1;min-width:0;">' +
+      // Istisno belgi (agar bo'lsa)
+      exceptionBadge +
       // Ustoz nomi
       '<div style="font-size:11px;font-weight:700;color:var(--text);">' +
       '👨‍🏫 ' + escapeHtml(ustozName) + '</div>' +
       // Foiz
       '<div style="font-size:10px;color:var(--text-dim);margin:2px 0;">' +
       jami + '/' + cap + ' (' + pct + '%)</div>' +
-      // Doimiy (yashil)
-      (son > 0 ? '<div style="color:#10b981;font-size:11px;font-weight:700;">' +
-        '🟢 ' + son + ' ' + t('mk_doimiy') + '</div>' : '') +
+      // Doimiy (yashil) - FIO + son
+      doimiyHtml +
       // Yangilar (qizil)
       yangiHtml +
       // Vaqt to'qnashuvi
@@ -6777,12 +7238,17 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
 
   return '<div style="background:var(--card);border:1px solid var(--border);' +
     'border-radius:10px;padding:12px;">' +
-    // Sarlavha
+    // Sarlavha — rasm bilan
     '<div style="display:flex;justify-content:space-between;align-items:center;' +
-    'margin-bottom:8px;">' +
-    '<div style="font-weight:700;font-size:14px;color:var(--accent);">' +
+    'margin-bottom:8px;gap:8px;">' +
+    '<div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">' +
+    (xona.rasm ? '<img src="' + xona.rasm + '" style="width:36px;height:36px;' +
+      'object-fit:cover;border-radius:6px;cursor:zoom-in;flex-shrink:0;" ' +
+      'onclick="mkOpenXonaRasm(\'' + xona.id + '\')">' : '') +
+    '<div style="font-weight:700;font-size:14px;color:var(--accent);min-width:0;">' +
     '🏠 ' + escapeHtml(xona.nomi) + '</div>' +
-    '<div style="font-size:11px;color:var(--text-dim);">' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--text-dim);flex-shrink:0;">' +
     cap + ' ' + t('mk_kishi') + '</div>' +
     '</div>' +
     // Jihozlar
@@ -6793,43 +7259,39 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     '</div>';
 }
 
+function mkOpenXonaRasm(xonaId) {
+  const x = mkXonas.find(xx => xx.id === xonaId);
+  if (!x || !x.rasm) return;
+  document.getElementById('lightboxImg').src = x.rasm;
+  document.getElementById('imageLightbox').classList.add('open');
+}
+
 // ============================================================
 //  MARKAZ — YANGI O'QUVCHINI DOIMIYGA KIRITISH
 // ============================================================
 function mkPromoteYangi(yangiId, guruhId) {
   const y = mkYangis.find(yy => yy.id === yangiId);
-  const g = mkGuruhs.find(gg => gg.id === guruhId);
-  if (!y || !g) return;
+  if (!y) return;
   if (!confirm('"' + y.fio + '" — ' + t('mk_promote_confirm'))) return;
-  const newCount = (parseInt(g.oquvchiSoni) || 0) + 1;
-  Promise.all([
-    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
-      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
-    })}).then(r=>r.json()),
-    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
-      action:'delete_mk_yangi', id:y.id
-    })}).then(r=>r.json())
-  ]).then(() => loadMarkaz())
-    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+  // Yangini doimiyga aylantiramiz: yangimi=false (yozuvni o'chirmaymiz)
+  fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+    action:'update_mk_yangi', id:y.id, yangimi:'false'
+  })}).then(r=>r.json()).then(res => {
+    if (res.status === 'ok') loadMarkaz();
+    else alert('⚠️ ' + (res.message||''));
+  }).catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
 function mkPromoteAllYangis(guruhId) {
-  const g = mkGuruhs.find(gg => gg.id === guruhId);
-  if (!g) return;
-  const yangilar = mkYangis.filter(y => y.guruhID === guruhId);
+  const yangilar = mkYangis.filter(y =>
+    y.guruhID === guruhId && String(y.yangimi||'true').toLowerCase() !== 'false');
   if (!yangilar.length) return;
   if (!confirm(yangilar.length + ' ta — ' + t('mk_promote_all_confirm'))) return;
-  const newCount = (parseInt(g.oquvchiSoni) || 0) + yangilar.length;
-  const tasks = [
+  const tasks = yangilar.map(y =>
     fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
-      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
+      action:'update_mk_yangi', id:y.id, yangimi:'false'
     })}).then(r=>r.json())
-  ];
-  yangilar.forEach(y => {
-    tasks.push(fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
-      action:'delete_mk_yangi', id:y.id
-    })}).then(r=>r.json()));
-  });
+  );
   Promise.all(tasks).then(() => loadMarkaz())
     .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
@@ -6963,7 +7425,8 @@ function mkYangiBerib(guruhId) {
     guruhID: guruhId,
     fio: fio,
     telefon: tel,
-    qoshilganSana: new Date().toISOString().slice(0,10)
+    qoshilganSana: new Date().toISOString().slice(0,10),
+    yangimi: 'true'
   });
   fetch(SHEETS_API, { method:'POST', body:params })
     .then(r => r.json())
@@ -7187,6 +7650,8 @@ function mkAddXona() {
   document.getElementById('mkXonaEtaj').value = '1';
   document.getElementById('mkXonaSigimi').value = '12';
   document.querySelectorAll('#mkXonaJihozlar input').forEach(c => c.checked = false);
+  mkXonaTempRasm = '';
+  mkXonaRasmShow();
   document.getElementById('mkXonaModal').classList.add('open');
 }
 
@@ -7202,6 +7667,8 @@ function mkEditXona(id) {
   document.querySelectorAll('#mkXonaJihozlar input').forEach(c => {
     c.checked = jih.includes(c.getAttribute('data-jihoz'));
   });
+  mkXonaTempRasm = x.rasm || '';
+  mkXonaRasmShow();
   document.getElementById('mkXonaModal').classList.add('open');
 }
 
@@ -7215,7 +7682,8 @@ function saveMkXonaDialog() {
 
   const params = new URLSearchParams({
     filialID: mkCurrentFilialID,
-    nomi, etaj, sigimi, jihozlar
+    nomi, etaj, sigimi, jihozlar,
+    rasm: mkXonaTempRasm || ''
   });
   if (mkEditingXonaId) {
     params.set('action','update_mk_xona');
