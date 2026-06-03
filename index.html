@@ -1882,7 +1882,12 @@ const I18N = {
     mk_err_xona_nomi:"Xona nomini kiriting!", mk_err_ustoz_ism:"Ustoz F.I.O sini kiriting!",
     mk_err_xona_select:"Xonani tanlang!", mk_err_ustoz_select:"Ustozni tanlang!",
     mk_err_days:"Kunlarni tanlang!",
-    mk_conflict_msg:"⚠️ Vaqt to'qnashuvi (boshqa guruh bilan)", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
+    mk_conflict_msg:"⚠️ Vaqt to'qnashuvi (boshqa guruh bilan)",
+    mk_slot_empty:"Bo'sh", mk_slot_cont:"davom",
+    mk_doimiy:"doimiy", mk_yangilar:"Yangi",
+    mk_promote_one:"Doimiyga", mk_promote_all:"Hammasini doimiyga",
+    mk_promote_confirm:"doimiy ro'yxatga kiritamizmi?",
+    mk_promote_all_confirm:"yangi o'quvchini doimiyga kiritamizmi?", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
     soon:"tez kunda",
     back:"⬅️ Orqaga", next:"Keyingi ➡️", next_ok:"✅ Keyingi ➡️",
     refresh:"🔄 Yangilash", loading:"⏳ Yuklanmoqda...", cancel:"Bekor", save:"💾 Saqlash",
@@ -2089,6 +2094,11 @@ const I18N = {
     mk_err_xona_select:"Select room!", mk_err_ustoz_select:"Select teacher!",
     mk_err_days:"Select days!",
     mk_conflict_msg:"⚠️ Time conflict (with another group)",
+    mk_slot_empty:"Empty", mk_slot_cont:"ongoing",
+    mk_doimiy:"permanent", mk_yangilar:"New",
+    mk_promote_one:"Confirm", mk_promote_all:"Confirm all",
+    mk_promote_confirm:"add to permanent list?",
+    mk_promote_all_confirm:"new students to permanent list?",
     soon:"soon",
     back:"⬅️ Back", next:"Next ➡️", next_ok:"✅ Next ➡️",
     refresh:"🔄 Refresh", loading:"⏳ Loading...", cancel:"Cancel", save:"💾 Save",
@@ -2295,6 +2305,11 @@ const I18N = {
     mk_err_xona_select:"Выберите кабинет!", mk_err_ustoz_select:"Выберите преподавателя!",
     mk_err_days:"Выберите дни!",
     mk_conflict_msg:"⚠️ Конфликт по времени",
+    mk_slot_empty:"Свободно", mk_slot_cont:"продолж.",
+    mk_doimiy:"постоянных", mk_yangilar:"Новые",
+    mk_promote_one:"В список", mk_promote_all:"Всех в список",
+    mk_promote_confirm:"добавить в постоянный список?",
+    mk_promote_all_confirm:"новых студентов в список?",
     soon:"скоро",
     back:"⬅️ Назад", next:"Далее ➡️", next_ok:"✅ Далее ➡️",
     refresh:"🔄 Обновить", loading:"⏳ Загрузка...", cancel:"Отмена", save:"💾 Сохранить",
@@ -6521,64 +6536,134 @@ function mkRenderVisual() {
   grid.innerHTML = html;
 }
 
-// Bitta xona kartochkasi
+// Bitta xona kartochkasi — vaqt jadvali bilan (06:00–22:00)
 function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
-  // Shu xona uchun guruhlar
   const xonaGuruhs = activeGuruhs.filter(g => g.xonaID === xona.id);
   const cap = parseInt(xona.sigimi) || 0;
 
-  let body = '';
-  if (!xonaGuruhs.length) {
-    body = '<div style="color:var(--text-muted);font-size:12px;text-align:center;padding:14px 0;">' +
-      '🚫 ' + t('mk_no_groups') + '</div>';
-  } else {
-    // Vaqt bo'yicha tartiblash
-    xonaGuruhs.sort((a,b) => String(a.vaqtDan).localeCompare(String(b.vaqtDan)));
-    xonaGuruhs.forEach(g => {
-      const ustoz = mkUstozs.find(u => u.id === g.ustozID);
-      const ustozName = ustoz ? ustoz.ism : '—';
-      const son = parseInt(g.oquvchiSoni) || 0;
-      const yangilar = mkYangis.filter(y => y.guruhID === g.id);
-      const yangiSoni = yangilar.length;
-      const jami = son + yangiSoni;
-      const pct = cap ? Math.round(jami * 100 / cap) : 0;
-      // Rang
-      let dotColor = '#10b981'; // yashil
-      if (pct >= 95) dotColor = '#ef4444';
-      else if (pct >= 75) dotColor = '#f59e0b';
-      else if (pct < 30) dotColor = '#9ca3af';
+  // Vaqt slotlari: 06:00 dan 22:00 gacha (har soat boshi)
+  const slots = [];
+  for (let h = 6; h <= 22; h++) {
+    slots.push(h);
+  }
 
-      // Muammo bormi?
-      const hasConflict = conflicts.some(c => c.guruhID === g.id);
-
-      body += '<div style="background:var(--input-bg);border-radius:6px;padding:8px 10px;' +
-        'margin-bottom:6px;border-left:3px solid ' + dotColor + ';' +
-        (hasConflict ? 'box-shadow:0 0 0 1px var(--warning);' : '') + '">' +
-        // Tepasi: vaqt + ustoz
-        '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">' +
-        '<span style="font-weight:700;font-size:12px;">⏰ ' + mkFormatTime(g.vaqtDan) +
-        '–' + mkFormatTime(g.vaqtGacha) + '</span>' +
-        '<span style="font-size:11px;color:var(--text-dim);">' + jami + '/' + cap +
-        ' (' + pct + '%)</span></div>' +
-        // Ustoz
-        '<div style="font-size:12px;color:var(--text);margin-top:3px;">👨‍🏫 ' +
-        escapeHtml(ustozName) + '</div>' +
-        // Yashil son (mavjud)
-        (son > 0 ? '<div style="color:#10b981;font-size:11px;font-weight:600;margin-top:2px;">' +
-          '🟢 ' + son + ' o\'quvchi</div>' : '') +
-        // Qizil yangilar (FIO + telefon)
-        (yangilar.length ? '<div style="margin-top:4px;">' +
-          yangilar.map(y => '<div style="color:#ef4444;font-size:11px;">' +
-            '🔴 ' + escapeHtml(String(y.fio)) +
-            (y.telefon ? ' (' + escapeHtml(String(y.telefon)) + ')' : '') +
-            '</div>').join('') + '</div>' : '') +
-        // Muammo
-        (hasConflict ? '<div style="background:#fff3cd;color:#856404;padding:4px 6px;' +
-          'border-radius:4px;font-size:10px;margin-top:4px;">⚠️ ' +
-          t('mk_conflict_msg') + '</div>' : '') +
-      '</div>';
+  // Shu soatda davom etayotgan guruhni topish
+  function findGuruhAtHour(hour) {
+    return xonaGuruhs.find(g => {
+      const dh = parseInt(mkFormatTime(g.vaqtDan).slice(0,2));
+      const gh = parseInt(mkFormatTime(g.vaqtGacha).slice(0,2));
+      if (isNaN(dh) || isNaN(gh)) return false;
+      return hour >= dh && hour < gh;
     });
   }
+
+  // Guruh boshlanish soatimi?
+  function isGuruhStart(hour, g) {
+    const dh = parseInt(mkFormatTime(g.vaqtDan).slice(0,2));
+    return hour === dh;
+  }
+
+  let body = '';
+  slots.forEach(hour => {
+    const slot = String(hour).padStart(2,'0') + ':00';
+    const g = findGuruhAtHour(hour);
+
+    // Bo'sh slot
+    if (!g) {
+      body += '<div style="display:flex;gap:8px;padding:5px 0;' +
+        'border-bottom:1px solid var(--border);align-items:center;">' +
+        '<div style="font-size:11px;color:var(--text-muted);font-weight:600;' +
+        'width:46px;flex-shrink:0;">' + slot + '</div>' +
+        '<div style="flex:1;color:var(--text-muted);font-size:11px;">⚪ ' +
+        t('mk_slot_empty') + '</div>' +
+      '</div>';
+      return;
+    }
+
+    // Davomi (boshi emas) — qisqa ko'rsatish
+    if (!isGuruhStart(hour, g)) {
+      body += '<div style="display:flex;gap:8px;padding:4px 0;' +
+        'border-bottom:1px solid var(--border);align-items:center;' +
+        'background:rgba(16,185,129,0.06);">' +
+        '<div style="font-size:11px;color:var(--text-dim);font-weight:600;' +
+        'width:46px;flex-shrink:0;">' + slot + '</div>' +
+        '<div style="flex:1;color:var(--text-dim);font-size:10px;font-style:italic;">' +
+        '↑ ' + t('mk_slot_cont') + '</div>' +
+      '</div>';
+      return;
+    }
+
+    // Guruh boshlanishi — to'liq batafsil
+    const ustoz = mkUstozs.find(u => u.id === g.ustozID);
+    const ustozName = ustoz ? ustoz.ism : '—';
+    const son = parseInt(g.oquvchiSoni) || 0;
+    const yangilar = mkYangis.filter(y => y.guruhID === g.id);
+    const jami = son + yangilar.length;
+    const pct = cap ? Math.round(jami * 100 / cap) : 0;
+    const hasConflict = conflicts.some(c => c.guruhID === g.id);
+
+    // To'liq vaqt oralig'i
+    const vaqtFull = mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha);
+
+    // Yangi o'quvchilar HTML
+    let yangiHtml = '';
+    if (yangilar.length) {
+      yangiHtml = '<div style="margin-top:5px;">' +
+        '<div style="font-size:10px;color:#ef4444;font-weight:700;margin-bottom:3px;">' +
+        '🔴 ' + t('mk_yangilar') + ' (' + yangilar.length + '):</div>';
+      yangilar.forEach(y => {
+        yangiHtml += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+          'gap:5px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);' +
+          'border-radius:4px;padding:4px 6px;margin-bottom:3px;">' +
+          '<div style="font-size:10px;color:#ef4444;flex:1;min-width:0;line-height:1.3;">' +
+          '<b>' + escapeHtml(String(y.fio)) + '</b>' +
+          (y.telefon ? '<br><span style="color:var(--text-dim);font-weight:400;">📞 ' +
+            escapeHtml(String(y.telefon)) + '</span>' : '') +
+          '</div>' +
+          '<button onclick="mkPromoteYangi(\'' + y.id + '\',\'' + g.id + '\')" ' +
+          'style="background:#10b981;color:#fff;border:none;border-radius:4px;' +
+          'padding:4px 8px;font-size:10px;cursor:pointer;white-space:nowrap;font-weight:600;">' +
+          '➕ ' + t('mk_promote_one') + '</button>' +
+        '</div>';
+      });
+      // Hammasini birga
+      if (yangilar.length > 1) {
+        yangiHtml += '<button onclick="mkPromoteAllYangis(\'' + g.id + '\')" ' +
+          'style="background:#10b981;color:#fff;border:none;border-radius:4px;' +
+          'padding:5px 10px;font-size:11px;cursor:pointer;width:100%;margin-top:3px;font-weight:600;">' +
+          '✅ ' + t('mk_promote_all') + ' (' + yangilar.length + ')</button>';
+      }
+      yangiHtml += '</div>';
+    }
+
+    body += '<div style="display:flex;gap:8px;padding:7px 0;' +
+      'border-bottom:1px solid var(--border);background:rgba(16,185,129,0.06);' +
+      (hasConflict ? 'box-shadow:inset 3px 0 0 var(--warning);' : '') + '">' +
+      // Vaqt ustun
+      '<div style="font-size:11px;font-weight:700;width:46px;flex-shrink:0;line-height:1.3;">' +
+      mkFormatTime(g.vaqtDan) +
+      '<br><span style="color:var(--text-dim);font-weight:400;font-size:10px;">' +
+      mkFormatTime(g.vaqtGacha) + '</span></div>' +
+      // O'ng ustun
+      '<div style="flex:1;min-width:0;">' +
+      // Ustoz nomi
+      '<div style="font-size:11px;font-weight:700;color:var(--text);">' +
+      '👨‍🏫 ' + escapeHtml(ustozName) + '</div>' +
+      // Foiz
+      '<div style="font-size:10px;color:var(--text-dim);margin:2px 0;">' +
+      jami + '/' + cap + ' (' + pct + '%)</div>' +
+      // Doimiy (yashil)
+      (son > 0 ? '<div style="color:#10b981;font-size:11px;font-weight:700;">' +
+        '🟢 ' + son + ' ' + t('mk_doimiy') + '</div>' : '') +
+      // Yangilar (qizil)
+      yangiHtml +
+      // Vaqt to'qnashuvi
+      (hasConflict ? '<div style="background:#fff3cd;color:#856404;padding:3px 5px;' +
+        'border-radius:3px;font-size:9px;margin-top:3px;">⚠️ ' +
+        t('mk_conflict_msg') + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  });
 
   return '<div style="background:var(--card);border:1px solid var(--border);' +
     'border-radius:10px;padding:12px;">' +
@@ -6590,12 +6675,53 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     '<div style="font-size:11px;color:var(--text-dim);">' +
     cap + ' ' + t('mk_kishi') + '</div>' +
     '</div>' +
-    // Jihozlar (kichik)
+    // Jihozlar
     (xona.jihozlar ? '<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">' +
       escapeHtml(xona.jihozlar) + '</div>' : '') +
-    // Guruhlar
-    body +
+    // Vaqt jadvali
+    '<div style="border-top:1px solid var(--border);">' + body + '</div>' +
     '</div>';
+}
+
+// ============================================================
+//  MARKAZ — YANGI O'QUVCHINI DOIMIYGA KIRITISH
+// ============================================================
+function mkPromoteYangi(yangiId, guruhId) {
+  const y = mkYangis.find(yy => yy.id === yangiId);
+  const g = mkGuruhs.find(gg => gg.id === guruhId);
+  if (!y || !g) return;
+  if (!confirm('"' + y.fio + '" — ' + t('mk_promote_confirm'))) return;
+  const newCount = (parseInt(g.oquvchiSoni) || 0) + 1;
+  Promise.all([
+    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
+    })}).then(r=>r.json()),
+    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'delete_mk_yangi', id:y.id
+    })}).then(r=>r.json())
+  ]).then(() => loadMarkaz())
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+function mkPromoteAllYangis(guruhId) {
+  const g = mkGuruhs.find(gg => gg.id === guruhId);
+  if (!g) return;
+  const yangilar = mkYangis.filter(y => y.guruhID === guruhId);
+  if (!yangilar.length) return;
+  if (!confirm(yangilar.length + ' ta — ' + t('mk_promote_all_confirm'))) return;
+  const newCount = (parseInt(g.oquvchiSoni) || 0) + yangilar.length;
+  const tasks = [
+    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
+    })}).then(r=>r.json())
+  ];
+  yangilar.forEach(y => {
+    tasks.push(fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'delete_mk_yangi', id:y.id
+    })}).then(r=>r.json()));
+  });
+  Promise.all(tasks).then(() => loadMarkaz())
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
 // Vaqt to'qnashuvini aniqlash:
