@@ -6381,6 +6381,24 @@ const MK_TIME_SLOTS = ['08:00','10:00','12:00','14:00','16:00','18:00','20:00'];
 const MK_DAY_NAMES = {Du:"Dushanba",Se:"Seshanba",Cho:"Chorshanba",
                      Pa:"Payshanba",Ju:"Juma",Sh:"Shanba",Ya:"Yakshanba"};
 
+// Vaqtni "HH:MM" ga formatlash (ISO/Date formatlarni ham qabul qiladi)
+function mkFormatTime(v) {
+  if (!v) return '—';
+  const s = String(v).trim();
+  // Sof "HH:MM" yoki "HH:MM:SS"
+  if (/^\d{1,2}:\d{2}/.test(s)) {
+    const m = s.match(/^(\d{1,2}):(\d{2})/);
+    return m[1].padStart(2,'0') + ':' + m[2];
+  }
+  // ISO yoki boshqa Date format
+  const d = new Date(v);
+  if (!isNaN(d.getTime())) {
+    return String(d.getHours()).padStart(2,'0') + ':' +
+           String(d.getMinutes()).padStart(2,'0');
+  }
+  return s;
+}
+
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 function loadMarkaz() {
   Promise.all([
@@ -6538,8 +6556,8 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
         (hasConflict ? 'box-shadow:0 0 0 1px var(--warning);' : '') + '">' +
         // Tepasi: vaqt + ustoz
         '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">' +
-        '<span style="font-weight:700;font-size:12px;">⏰ ' + (g.vaqtDan||'—') +
-        '–' + (g.vaqtGacha||'—') + '</span>' +
+        '<span style="font-weight:700;font-size:12px;">⏰ ' + mkFormatTime(g.vaqtDan) +
+        '–' + mkFormatTime(g.vaqtGacha) + '</span>' +
         '<span style="font-size:11px;color:var(--text-dim);">' + jami + '/' + cap +
         ' (' + pct + '%)</span></div>' +
         // Ustoz
@@ -6603,8 +6621,11 @@ function mkDetectConflicts(guruhs) {
 }
 
 function mkTimeOverlap(a1, a2, b1, b2) {
-  if (!a1 || !a2 || !b1 || !b2) return false;
-  return a1 < b2 && b1 < a2;
+  // Vaqtlarni HH:MM formatga keltirib taqqoslaymiz
+  const fa1 = mkFormatTime(a1), fa2 = mkFormatTime(a2);
+  const fb1 = mkFormatTime(b1), fb2 = mkFormatTime(b2);
+  if (fa1 === '—' || fa2 === '—' || fb1 === '—' || fb2 === '—') return false;
+  return fa1 < fb2 && fb1 < fa2;
 }
 
 function mkDaysOverlap(a, b) {
@@ -6722,7 +6743,7 @@ function mkRenderGuruhs() {
       '<b>🏠 ' + (x ? escapeHtml(x.nomi) : '?') + '</b> — ' +
       '👨‍🏫 ' + (u ? escapeHtml(u.ism) : '?') +
       '<br><span style="font-size:12px;color:var(--text-dim);">' +
-      kunMatn + ' • ⏰ ' + (g.vaqtDan||'?') + '–' + (g.vaqtGacha||'?') +
+      kunMatn + ' • ⏰ ' + mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha) +
       ' • 👥 ' + (g.oquvchiSoni||0) + ' o\'quvchi</span>' +
       '</div>' +
       '<div style="display:flex;gap:4px;">' +
@@ -6950,8 +6971,8 @@ function mkEditGuruh(id) {
     '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
   document.getElementById('mkGuruhXona').value = g.xonaID;
   document.getElementById('mkGuruhUstoz').value = g.ustozID;
-  document.getElementById('mkGuruhVaqtDan').value = g.vaqtDan || '08:00';
-  document.getElementById('mkGuruhVaqtGacha').value = g.vaqtGacha || '10:00';
+  document.getElementById('mkGuruhVaqtDan').value = mkFormatTime(g.vaqtDan) === '—' ? '08:00' : mkFormatTime(g.vaqtDan);
+  document.getElementById('mkGuruhVaqtGacha').value = mkFormatTime(g.vaqtGacha) === '—' ? '10:00' : mkFormatTime(g.vaqtGacha);
   document.getElementById('mkGuruhOquvchi').value = g.oquvchiSoni || 0;
   mkSelDayType(g.kunTuri || 'toq');
   const days = String(g.tanlanganKunlar||'').split(',').filter(Boolean);
