@@ -1782,11 +1782,11 @@ Ozodbek 4</div>
           <div style="display:flex;gap:10px;margin-top:10px;">
             <div style="flex:1;">
               <label data-i18n="mk_g_vaqtdan">⏰ Vaqt dan:</label>
-              <input type="time" id="mkGuruhVaqtDan" value="08:00">
+              <input type="time" id="mkGuruhVaqtDan" value="08:00" step="3600">
             </div>
             <div style="flex:1;">
               <label data-i18n="mk_g_vaqtgacha">⏰ Vaqt gacha:</label>
-              <input type="time" id="mkGuruhVaqtGacha" value="10:00">
+              <input type="time" id="mkGuruhVaqtGacha" value="10:00" step="3600">
             </div>
           </div>
 
@@ -1842,11 +1842,11 @@ Ozodbek 4</div>
           <div style="display:flex;gap:10px;margin-top:10px;">
             <div style="flex:1;">
               <label data-i18n="mk_g_vaqtdan">⏰ Vaqt dan:</label>
-              <input type="time" id="mkYangiVaqtDan" value="08:00">
+              <input type="time" id="mkYangiVaqtDan" value="08:00" step="3600">
             </div>
             <div style="flex:1;">
               <label data-i18n="mk_g_vaqtgacha">⏰ Vaqt gacha:</label>
-              <input type="time" id="mkYangiVaqtGacha" value="10:00">
+              <input type="time" id="mkYangiVaqtGacha" value="10:00" step="3600">
             </div>
           </div>
 
@@ -6638,6 +6638,20 @@ function mkFormatTime(v) {
   return s;
 }
 
+// Soatga yaxlitlash — 16:34 → 16:00 (ko'rsatish uchun)
+function mkFormatTimeHour(v) {
+  const f = mkFormatTime(v);
+  if (!f || f === '—') return '—';
+  return f.slice(0,2) + ':00';
+}
+
+// Soatni butun son sifatida olish — 16:34 → 16
+function mkHourOf(v) {
+  const f = mkFormatTime(v);
+  if (!f || f === '—') return NaN;
+  return parseInt(f.slice(0,2));
+}
+
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 let mkTasks = [];
 let mkMapImage = '';
@@ -7078,8 +7092,14 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
   }
 
   let body = '';
+  let skipUntil = -1;  // Shu soatgacha barcha slotlarni o'tkazib yuboramiz (guruh ichida)
+
   slots.forEach(hour => {
     const slot = String(hour).padStart(2,'0') + ':00';
+
+    // Agar oldingi guruh davom etayotgan bo'lsa — o'tkazib yuboramiz
+    if (hour < skipUntil) return;
+
     const g = findGuruhAtHour(hour);
 
     // Bo'sh slot
@@ -7094,18 +7114,15 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
       return;
     }
 
-    // Davomi (boshi emas) — qisqa ko'rsatish
+    // Guruh boshlanishi emas (boshqa joyda boshlangan) — o'tkazib yuboramiz
     if (!isGuruhStart(hour, g)) {
-      body += '<div style="display:flex;gap:8px;padding:4px 0;' +
-        'border-bottom:1px solid var(--border);align-items:center;' +
-        'background:rgba(16,185,129,0.06);">' +
-        '<div style="font-size:11px;color:var(--text-dim);font-weight:600;' +
-        'width:46px;flex-shrink:0;">' + slot + '</div>' +
-        '<div style="flex:1;color:var(--text-dim);font-size:10px;font-style:italic;">' +
-        '↑ ' + t('mk_slot_cont') + '</div>' +
-      '</div>';
       return;
     }
+
+    // Guruh boshlanishi — to'liq batafsil
+    // Tugash soatini hisoblaymiz (keyingi slotlarni o'tkazish uchun)
+    skipUntil = mkHourOf(g.vaqtGacha);
+    if (isNaN(skipUntil)) skipUntil = hour + 1;
 
     // Guruh boshlanishi — to'liq batafsil
     const ustoz = mkUstozs.find(u => u.id === g.ustozID);
@@ -7209,11 +7226,11 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     body += '<div style="display:flex;gap:8px;padding:7px 0;' +
       'border-bottom:1px solid var(--border);background:rgba(16,185,129,0.06);' +
       (hasConflict ? 'box-shadow:inset 3px 0 0 var(--warning);' : '') + '">' +
-      // Vaqt ustun
+      // Vaqt ustun (YAXLIT: 16:00 / 18:00)
       '<div style="font-size:11px;font-weight:700;width:46px;flex-shrink:0;line-height:1.3;">' +
-      mkFormatTime(g.vaqtDan) +
+      mkFormatTimeHour(g.vaqtDan) +
       '<br><span style="color:var(--text-dim);font-weight:400;font-size:10px;">' +
-      mkFormatTime(g.vaqtGacha) + '</span></div>' +
+      mkFormatTimeHour(g.vaqtGacha) + '</span></div>' +
       // O'ng ustun
       '<div style="flex:1;min-width:0;">' +
       // Istisno belgi (agar bo'lsa)
@@ -7842,8 +7859,11 @@ function mkSelDayType(dt) {
 function saveMkGuruhDialog() {
   const xonaID = document.getElementById('mkGuruhXona').value;
   const ustozID = document.getElementById('mkGuruhUstoz').value;
-  const vaqtDan = document.getElementById('mkGuruhVaqtDan').value;
-  const vaqtGacha = document.getElementById('mkGuruhVaqtGacha').value;
+  // Vaqtni soatga yaxlitlaymiz (16:34 → 16:00)
+  let vaqtDan = document.getElementById('mkGuruhVaqtDan').value;
+  let vaqtGacha = document.getElementById('mkGuruhVaqtGacha').value;
+  if (vaqtDan) vaqtDan = vaqtDan.slice(0,2) + ':00';
+  if (vaqtGacha) vaqtGacha = vaqtGacha.slice(0,2) + ':00';
   const oquvchiSoni = parseInt(document.getElementById('mkGuruhOquvchi').value) || 0;
   const kunTuri = mkGuruhSelectedDayType;
   if (!xonaID) { alert(t('mk_err_xona_select')); return; }
