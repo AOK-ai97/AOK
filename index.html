@@ -1565,6 +1565,16 @@ Ozodbek 4</div>
         </div>
       </div>
 
+      <!-- ⭐ Yangi o'quvchi qo'shish — asosiy tugma (qizil va katta) -->
+      <div class="card" style="background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(245,158,11,0.1));border:1px solid rgba(239,68,68,0.3);">
+        <button class="btn" style="background:var(--danger);color:#fff;width:100%;padding:14px;font-size:15px;font-weight:700;"
+                onclick="mkAddYangi()">
+          <span data-i18n="mk_add_yangi">➕ Yangi o'quvchini qo'shish</span>
+        </button>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:6px;text-align:center;"
+             data-i18n="mk_add_yangi_hint">Vaqt va kunni tanlang — mos guruhlar avtomatik tavsiya qilinadi</div>
+      </div>
+
       <!-- Tab tugmalari -->
       <div class="action-row" style="margin-bottom:16px;">
         <button class="btn" id="mkTabBtn-vizual"
@@ -1751,6 +1761,70 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- MARKAZ — YANGI O'QUVCHI DIALOGI -->
+    <div class="modal-overlay" id="mkYangiModal">
+      <div class="modal" style="max-width:600px;">
+        <div class="modal-header">
+          <span data-i18n="mk_yangi_title">👤 Yangi o'quvchi qo'shish</span>
+          <button class="modal-close" onclick="closeMkYangiDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label data-i18n="mk_yangi_fio">F.I.O:</label>
+          <input type="text" id="mkYangiFIO" placeholder="Aziz Karimov">
+
+          <label data-i18n="mk_yangi_tel">📞 Telefon:</label>
+          <input type="text" id="mkYangiTel" placeholder="+998 90 123 45 67">
+
+          <label data-i18n="mk_yangi_dt">📅 Qaysi kunda dars olishni xohlaydi:</label>
+          <div class="pay-type-row">
+            <button class="pay-type-btn active" data-yangidt="toq"
+                    onclick="mkYangiSelDt('toq')" data-i18n="mk_day_odd">🔄 Toq</button>
+            <button class="pay-type-btn" data-yangidt="juft"
+                    onclick="mkYangiSelDt('juft')" data-i18n="mk_day_even">📅 Juft</button>
+            <button class="pay-type-btn" data-yangidt="istisno"
+                    onclick="mkYangiSelDt('istisno')" data-i18n="mk_day_excl">⚠️ Istisno</button>
+          </div>
+
+          <div id="mkYangiDaysBox" style="display:none;background:var(--input-bg);
+               border:1px solid var(--border);border-radius:8px;padding:10px;margin-top:8px;">
+            <div style="font-size:12px;color:var(--text-dim);margin-bottom:6px;"
+                 data-i18n="mk_g_select_days">Kunlarni belgilang:</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Du"> Du</label>
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Se"> Se</label>
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Cho"> Cho</label>
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Pa"> Pa</label>
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Ju"> Ju</label>
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Sh"> Sh</label>
+              <label class="check-row" style="margin-right:8px;"><input type="checkbox" data-day="Ya"> Ya</label>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <div style="flex:1;">
+              <label data-i18n="mk_g_vaqtdan">⏰ Vaqt dan:</label>
+              <input type="time" id="mkYangiVaqtDan" value="08:00">
+            </div>
+            <div style="flex:1;">
+              <label data-i18n="mk_g_vaqtgacha">⏰ Vaqt gacha:</label>
+              <input type="time" id="mkYangiVaqtGacha" value="10:00">
+            </div>
+          </div>
+
+          <button class="btn btn-primary" style="width:100%;margin-top:12px;"
+                  onclick="mkYangiFindGuruhs()">
+            <span data-i18n="mk_yangi_find">🔍 Mos guruhlarni topish</span>
+          </button>
+
+          <!-- Tavsiya ro'yxati -->
+          <div id="mkYangiTavsiya"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeMkYangiDialog()" data-i18n="cancel">Bekor</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ARXIV -->
     <div class="page" id="page-archive">
       <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
@@ -1887,7 +1961,19 @@ const I18N = {
     mk_doimiy:"doimiy", mk_yangilar:"Yangi",
     mk_promote_one:"Doimiyga", mk_promote_all:"Hammasini doimiyga",
     mk_promote_confirm:"doimiy ro'yxatga kiritamizmi?",
-    mk_promote_all_confirm:"yangi o'quvchini doimiyga kiritamizmi?", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
+    mk_promote_all_confirm:"yangi o'quvchini doimiyga kiritamizmi?",
+    mk_add_yangi:"➕ Yangi o'quvchini qo'shish",
+    mk_add_yangi_hint:"Vaqt va kunni tanlang — mos guruhlar avtomatik tavsiya qilinadi",
+    mk_yangi_title:"👤 Yangi o'quvchi qo'shish",
+    mk_yangi_fio:"F.I.O:", mk_yangi_tel:"📞 Telefon:",
+    mk_yangi_dt:"📅 Qaysi kunda dars olishni xohlaydi:",
+    mk_yangi_find:"🔍 Mos guruhlarni topish",
+    mk_yangi_matches:"Mos guruhlar topildi",
+    mk_yangi_no_match:"Bu vaqtga mos guruh yo'q!",
+    mk_yangi_no_match_hint:"Vaqt yoki kunlarni o'zgartirib ko'ring, yoki avval yangi guruh oching.",
+    mk_yangi_free:"Joy bor", mk_yangi_low:"Kam joy", mk_yangi_full:"To'la",
+    mk_yangi_give:"Berish", mk_yangi_full_btn:"To'la",
+    mk_yangi_err_fio:"O'quvchi F.I.O sini kiriting!", nav_archive:"Arxiv", nav_settings:"Sozlamalar",
     soon:"tez kunda",
     back:"⬅️ Orqaga", next:"Keyingi ➡️", next_ok:"✅ Keyingi ➡️",
     refresh:"🔄 Yangilash", loading:"⏳ Yuklanmoqda...", cancel:"Bekor", save:"💾 Saqlash",
@@ -2099,6 +2185,18 @@ const I18N = {
     mk_promote_one:"Confirm", mk_promote_all:"Confirm all",
     mk_promote_confirm:"add to permanent list?",
     mk_promote_all_confirm:"new students to permanent list?",
+    mk_add_yangi:"➕ Add new student",
+    mk_add_yangi_hint:"Select time and days — matching groups will be suggested",
+    mk_yangi_title:"👤 Add new student",
+    mk_yangi_fio:"Full name:", mk_yangi_tel:"📞 Phone:",
+    mk_yangi_dt:"📅 Preferred days:",
+    mk_yangi_find:"🔍 Find matching groups",
+    mk_yangi_matches:"Matching groups",
+    mk_yangi_no_match:"No matching group for this time!",
+    mk_yangi_no_match_hint:"Try changing time or days, or open a new group first.",
+    mk_yangi_free:"Free", mk_yangi_low:"Few spots", mk_yangi_full:"Full",
+    mk_yangi_give:"Assign", mk_yangi_full_btn:"Full",
+    mk_yangi_err_fio:"Enter student name!",
     soon:"soon",
     back:"⬅️ Back", next:"Next ➡️", next_ok:"✅ Next ➡️",
     refresh:"🔄 Refresh", loading:"⏳ Loading...", cancel:"Cancel", save:"💾 Save",
@@ -2310,6 +2408,18 @@ const I18N = {
     mk_promote_one:"В список", mk_promote_all:"Всех в список",
     mk_promote_confirm:"добавить в постоянный список?",
     mk_promote_all_confirm:"новых студентов в список?",
+    mk_add_yangi:"➕ Добавить нового студента",
+    mk_add_yangi_hint:"Выберите время и дни — подходящие группы будут предложены",
+    mk_yangi_title:"👤 Добавить нового студента",
+    mk_yangi_fio:"Ф.И.О:", mk_yangi_tel:"📞 Телефон:",
+    mk_yangi_dt:"📅 Предпочитаемые дни:",
+    mk_yangi_find:"🔍 Найти подходящие группы",
+    mk_yangi_matches:"Подходящие группы",
+    mk_yangi_no_match:"Нет подходящей группы на это время!",
+    mk_yangi_no_match_hint:"Измените время или дни, или сначала откройте новую группу.",
+    mk_yangi_free:"Места есть", mk_yangi_low:"Мало мест", mk_yangi_full:"Полная",
+    mk_yangi_give:"Назначить", mk_yangi_full_btn:"Полная",
+    mk_yangi_err_fio:"Введите Ф.И.О студента!",
     soon:"скоро",
     back:"⬅️ Назад", next:"Далее ➡️", next_ok:"✅ Далее ➡️",
     refresh:"🔄 Обновить", loading:"⏳ Загрузка...", cancel:"Отмена", save:"💾 Сохранить",
@@ -6721,6 +6831,150 @@ function mkPromoteAllYangis(guruhId) {
     })}).then(r=>r.json()));
   });
   Promise.all(tasks).then(() => loadMarkaz())
+    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+}
+
+// ============================================================
+//  MARKAZ — YANGI O'QUVCHI QO'SHISH
+// ============================================================
+let mkYangiSelectedDt = 'toq';
+
+function mkAddYangi() {
+  // Forma tozalash
+  document.getElementById('mkYangiFIO').value = '';
+  document.getElementById('mkYangiTel').value = '';
+  document.getElementById('mkYangiVaqtDan').value = '08:00';
+  document.getElementById('mkYangiVaqtGacha').value = '10:00';
+  document.getElementById('mkYangiTavsiya').innerHTML = '';
+  document.querySelectorAll('#mkYangiDaysBox input').forEach(c => c.checked = false);
+  mkYangiSelDt('toq');
+  document.getElementById('mkYangiModal').classList.add('open');
+  setTimeout(() => document.getElementById('mkYangiFIO').focus(), 100);
+}
+
+function closeMkYangiDialog() {
+  document.getElementById('mkYangiModal').classList.remove('open');
+}
+
+function mkYangiSelDt(dt) {
+  mkYangiSelectedDt = dt;
+  document.querySelectorAll('#mkYangiModal .pay-type-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-yangidt') === dt);
+  });
+  document.getElementById('mkYangiDaysBox').style.display =
+    dt === 'istisno' ? '' : 'none';
+  // Tavsiyani tozalaymiz
+  document.getElementById('mkYangiTavsiya').innerHTML = '';
+}
+
+// Mos guruhlarni topish (avtomatik tavsiya)
+function mkYangiFindGuruhs() {
+  const fio = document.getElementById('mkYangiFIO').value.trim();
+  if (!fio) { alert(t('mk_yangi_err_fio')); return; }
+
+  const dt = mkYangiSelectedDt;
+  const vd = document.getElementById('mkYangiVaqtDan').value;
+  const vg = document.getElementById('mkYangiVaqtGacha').value;
+  let tanlanganKunlar = '';
+  if (dt === 'istisno') {
+    tanlanganKunlar = Array.from(document.querySelectorAll('#mkYangiDaysBox input:checked'))
+      .map(c => c.getAttribute('data-day')).join(',');
+    if (!tanlanganKunlar) { alert(t('mk_err_days')); return; }
+  }
+
+  // Mos guruhlarni topamiz:
+  // 1. Joriy filialdagi xonalardagi guruhlar
+  // 2. Kunlar kesishadi
+  // 3. Vaqt kesishadi
+  const fakeGuruh = { kunTuri: dt, tanlanganKunlar, vaqtDan: vd, vaqtGacha: vg };
+  const filialXonaIds = new Set(mkXonas.filter(x =>
+    x.filialID === mkCurrentFilialID).map(x => x.id));
+
+  const matching = mkGuruhs.filter(g => {
+    if (!filialXonaIds.has(g.xonaID)) return false;
+    if (!mkDaysOverlap(fakeGuruh, g)) return false;
+    if (!mkTimeOverlap(fakeGuruh.vaqtDan, fakeGuruh.vaqtGacha,
+                       g.vaqtDan, g.vaqtGacha)) return false;
+    return true;
+  });
+
+  const box = document.getElementById('mkYangiTavsiya');
+  if (!matching.length) {
+    box.innerHTML = '<div style="background:#fff3cd;color:#856404;padding:12px;' +
+      'border-radius:6px;margin-top:12px;font-size:13px;border:1px solid #ffc107;">' +
+      '⚠️ ' + t('mk_yangi_no_match') +
+      '<div style="font-size:11px;margin-top:6px;color:#856404;">' +
+      t('mk_yangi_no_match_hint') + '</div></div>';
+    return;
+  }
+
+  // Joy ko'p bo'lganlar yuqorida tartibga olamiz
+  const enriched = matching.map(g => {
+    const x = mkXonas.find(xx => xx.id === g.xonaID);
+    const u = mkUstozs.find(uu => uu.id === g.ustozID);
+    const cap = parseInt(x ? x.sigimi : 0) || 0;
+    const son = parseInt(g.oquvchiSoni) || 0;
+    const yangiSoni = mkYangis.filter(y => y.guruhID === g.id).length;
+    const jami = son + yangiSoni;
+    const free = cap - jami;
+    const pct = cap ? Math.round(jami * 100 / cap) : 0;
+    return { g, x, u, cap, son, yangiSoni, jami, free, pct };
+  });
+  // Bo'sh joyi ko'p bo'lganlar yuqorida
+  enriched.sort((a,b) => b.free - a.free);
+
+  let html = '<div style="margin-top:14px;font-size:13px;font-weight:700;color:var(--accent);">' +
+    '📋 ' + t('mk_yangi_matches') + ' (' + matching.length + ')</div>';
+  enriched.forEach(e => {
+    const { g, x, u, cap, jami, free, pct } = e;
+    let color = '#10b981', status = '✅ ' + t('mk_yangi_free') + ' (' + free + ')';
+    if (pct >= 100) { color = '#ef4444'; status = '🔴 ' + t('mk_yangi_full'); }
+    else if (pct >= 80) { color = '#f59e0b'; status = '🟡 ' + t('mk_yangi_low') + ' (' + free + ')'; }
+
+    html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+      'border-left:4px solid ' + color + ';border-radius:6px;padding:10px;margin-top:6px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">' +
+      '<div style="flex:1;min-width:160px;">' +
+      '<b>🏠 ' + escapeHtml(x ? x.nomi : '?') + '</b> — ' +
+      '👨‍🏫 ' + escapeHtml(u ? u.ism : '?') +
+      '<div style="font-size:11px;color:var(--text-dim);margin-top:3px;">' +
+      '⏰ ' + mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha) + '  •  ' +
+      jami + '/' + cap + ' (' + pct + '%)' +
+      '<br><b style="color:' + color + ';">' + status + '</b></div>' +
+      '</div>' +
+      (pct < 100
+        ? '<button class="btn btn-primary" style="padding:8px 14px;font-size:12px;font-weight:700;" ' +
+          'onclick="mkYangiBerib(\'' + g.id + '\')">' +
+          '➕ ' + t('mk_yangi_give') + '</button>'
+        : '<button class="btn" disabled style="padding:8px 14px;font-size:12px;background:#666;color:#fff;cursor:not-allowed;">' +
+          t('mk_yangi_full_btn') + '</button>') +
+      '</div></div>';
+  });
+  box.innerHTML = html;
+}
+
+// Tanlangan guruhga yangi o'quvchini qo'shish
+function mkYangiBerib(guruhId) {
+  const fio = document.getElementById('mkYangiFIO').value.trim();
+  const tel = document.getElementById('mkYangiTel').value.trim();
+  if (!fio) { alert(t('mk_yangi_err_fio')); return; }
+  const params = new URLSearchParams({
+    action: 'save_mk_yangi',
+    guruhID: guruhId,
+    fio: fio,
+    telefon: tel,
+    qoshilganSana: new Date().toISOString().slice(0,10)
+  });
+  fetch(SHEETS_API, { method:'POST', body:params })
+    .then(r => r.json())
+    .then(res => {
+      if (res.status === 'ok') {
+        closeMkYangiDialog();
+        loadMarkaz();
+        // Vizual ekran ochiq bo'lsin
+        mkSwitchTab('vizual');
+      } else alert('⚠️ ' + (res.message||''));
+    })
     .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
