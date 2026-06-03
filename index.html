@@ -6914,7 +6914,15 @@ function saveMkOquvchiEdit() {
     if (res.status === 'ok') {
       closeMkOquvchiEdit();
       loadMarkaz();
-    } else alert('⚠️ ' + (res.message||''));
+    } else {
+      const msg = String(res.message || '');
+      if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+        alert('⚠️ Apps Script yangilanmagan!\n\n' +
+              'Sheets → Apps Script → yangi kodni joylang va Deploy → New version qiling.');
+      } else {
+        alert('⚠️ ' + msg);
+      }
+    }
   });
 }
 
@@ -6925,7 +6933,11 @@ function mkDeleteOquvchi(yangiId) {
   fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
     action:'delete_mk_yangi', id:yangiId
   })}).then(r=>r.json()).then(res => {
-    if (res.status === 'ok') loadMarkaz();
+    if (res.status === 'ok') {
+      loadMarkaz();
+    } else {
+      alert('⚠️ ' + (res.message||''));
+    }
   });
 }
 
@@ -7151,17 +7163,16 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
         'display:inline-block;margin-bottom:3px;">⚠️ Istisno: ' + days + '</div><br>';
     }
 
-    // DOIMIY o'quvchilar (yashil — FIO bilan + edit/delete)
+    // DOIMIY o'quvchilar
+    // Yashil son = qo'lda kiritilgan (eski) + doimiy ro'yxat (FIO bilan)
+    const doimiyJami = sonManual + doimiy.length;
     let doimiyHtml = '';
-    if (sonManual > 0) {
-      doimiyHtml += '<div style="color:#10b981;font-size:11px;font-weight:700;margin-top:2px;">' +
-        '🟢 ' + sonManual + ' ' + t('mk_doimiy') +
-        ' <span style="color:var(--text-dim);font-weight:400;">(no name)</span></div>';
+    if (doimiyJami > 0) {
+      doimiyHtml += '<div style="color:#10b981;font-size:11px;font-weight:700;margin-top:3px;">' +
+        '🟢 ' + doimiyJami + ' ' + t('mk_doimiy') + '</div>';
     }
     if (doimiy.length) {
-      doimiyHtml += '<div style="margin-top:5px;">' +
-        '<div style="font-size:10px;color:#10b981;font-weight:700;margin-bottom:3px;">' +
-        '🟢 ' + t('mk_doimiy_list') + ' (' + doimiy.length + '):</div>';
+      doimiyHtml += '<div style="margin-top:4px;">';
       doimiy.forEach(y => {
         doimiyHtml += '<div style="display:flex;justify-content:space-between;align-items:center;' +
           'gap:4px;background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.3);' +
@@ -7173,9 +7184,11 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
           '</div>' +
           '<div style="display:flex;gap:3px;flex-shrink:0;">' +
           '<button onclick="mkEditOquvchi(\'' + y.id + '\')" ' +
+          'title="✏️" ' +
           'style="background:#f59e0b;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
           'font-size:10px;cursor:pointer;">✏️</button>' +
           '<button onclick="mkDeleteOquvchi(\'' + y.id + '\')" ' +
+          'title="🗑️" ' +
           'style="background:#ef4444;color:#fff;border:none;border-radius:3px;padding:3px 6px;' +
           'font-size:10px;cursor:pointer;">🗑️</button>' +
           '</div></div>';
@@ -7290,12 +7303,22 @@ function mkPromoteYangi(yangiId, guruhId) {
   const y = mkYangis.find(yy => yy.id === yangiId);
   if (!y) return;
   if (!confirm('"' + y.fio + '" — ' + t('mk_promote_confirm'))) return;
-  // Yangini doimiyga aylantiramiz: yangimi=false (yozuvni o'chirmaymiz)
   fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
     action:'update_mk_yangi', id:y.id, yangimi:'false'
   })}).then(r=>r.json()).then(res => {
-    if (res.status === 'ok') loadMarkaz();
-    else alert('⚠️ ' + (res.message||''));
+    if (res.status === 'ok') {
+      loadMarkaz();
+    } else {
+      const msg = String(res.message || '');
+      if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+        alert('⚠️ Apps Script yangilanmagan!\n\n' +
+              'Sheets → Apps Script → eski kodni o\'chiring va yangisini joylang.\n' +
+              'Keyin Deploy → Manage deployments → ✏️ qalam → New version → Deploy\n\n' +
+              'Aks holda bu funksiya ishlamaydi.');
+      } else {
+        alert('⚠️ ' + msg);
+      }
+    }
   }).catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
@@ -7309,8 +7332,17 @@ function mkPromoteAllYangis(guruhId) {
       action:'update_mk_yangi', id:y.id, yangimi:'false'
     })}).then(r=>r.json())
   );
-  Promise.all(tasks).then(() => loadMarkaz())
-    .catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
+  Promise.all(tasks).then(results => {
+    const fail = results.find(r => r.status !== 'ok');
+    if (fail) {
+      const msg = String(fail.message || '');
+      if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+        alert('⚠️ Apps Script yangilanmagan! Sheets → Apps Script → Deploy → New version');
+        return;
+      }
+    }
+    loadMarkaz();
+  }).catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
 // ============================================================
