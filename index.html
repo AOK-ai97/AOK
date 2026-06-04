@@ -1759,6 +1759,10 @@ Ozodbek 4</div>
           <button class="modal-close" onclick="closeMkGuruhDialog()">✕</button>
         </div>
         <div class="modal-body">
+          <label data-i18n="mk_g_nomi">📝 Guruh nomi (ixtiyoriy):</label>
+          <input type="text" id="mkGuruhNomi" data-i18n-ph="mk_g_nomi_ph"
+                 placeholder="Masalan: A1-1, Kichik guruh, Beta...">
+
           <label data-i18n="mk_g_xona">🏠 Xona:</label>
           <select id="mkGuruhXona" class="select-input"></select>
 
@@ -1977,6 +1981,30 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- MARKAZ — IZOHNI KO'RISH (💬 bosilganda) -->
+    <div class="modal-overlay" id="mkIzohModal">
+      <div class="modal" style="max-width:480px;">
+        <div class="modal-header">
+          <span data-i18n="mk_izoh_title">💬 Guruh izohi</span>
+          <button class="modal-close" onclick="closeMkIzoh()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div id="mkIzohHeader" style="background:rgba(245,158,11,0.1);
+               border-left:3px solid #f59e0b;padding:8px 12px;border-radius:4px;
+               margin-bottom:12px;font-size:12px;"></div>
+          <div id="mkIzohContent" style="font-size:14px;line-height:1.6;
+               white-space:pre-wrap;color:var(--text);
+               background:var(--input-bg);border:1px solid var(--border);
+               border-radius:6px;padding:12px;"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeMkIzoh()" data-i18n="cancel">Yopish</button>
+          <button class="btn btn-primary" id="mkIzohEditBtn"
+                  data-i18n="mk_izoh_edit">✏️ Tahrirlash</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MARKAZ — FAN DIALOGI -->
     <div class="modal-overlay" id="mkFanModal">
       <div class="modal" style="max-width:480px;">
@@ -2124,6 +2152,9 @@ const I18N = {
     mk_g_oquvchi:"👥 O'quvchilar soni:",
     mk_g_izoh:"💬 Izoh (guruh haqida ma'lumot):",
     mk_g_fan:"📚 Fan:", mk_no_fan:"Fan tanlanmagan",
+    mk_g_nomi:"📝 Guruh nomi (ixtiyoriy):",
+    mk_g_nomi_ph:"Masalan: A1-1, Kichik guruh, Beta...",
+    mk_izoh_title:"💬 Guruh izohi", mk_izoh_edit:"✏️ Tahrirlash",
     mk_fans:"📚 Fanlar", mk_add_fan:"➕ Fan qo'shish",
     mk_no_fans:"Hali fan qo'shilmagan",
     mk_fan_new:"📚 Yangi fan", mk_fan_edit:"✏️ Fanni tahrirlash",
@@ -7591,8 +7622,16 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     // Izoh (tooltip va badge)
     const izohText = String(g.izoh || '').trim();
     const titleAttr = izohText ? ' title="' + escapeHtml(izohText).replace(/"/g,'&quot;') + '"' : '';
-    const izohBadge = izohText ? ' <span style="color:#f59e0b;cursor:help;" ' +
+    // 💬 belgi — bossa modal ochiladi
+    const izohBadge = izohText ? ' <span onclick="event.stopPropagation();mkShowIzoh(\'' + g.id + '\')" ' +
+      'style="color:#f59e0b;cursor:pointer;" ' +
       'title="' + escapeHtml(izohText).replace(/"/g,'&quot;') + '">💬</span>' : '';
+
+    // Guruh nomi (agar bor bo'lsa)
+    const guruhNomi = String(g.nomi || '').trim();
+    const nomiText = guruhNomi ?
+      ' <span style="color:var(--text-dim);font-weight:400;font-size:10px;">(' +
+      escapeHtml(guruhNomi) + ')</span>' : '';
 
     body += '<div onclick="mkAddYangiToGuruh(\'' + g.id + '\')"' + titleAttr + ' ' +
       'style="display:flex;gap:8px;padding:7px 0;cursor:pointer;' +
@@ -7607,9 +7646,9 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
       '<div style="flex:1;min-width:0;">' +
       // Istisno belgi (agar bo'lsa)
       exceptionBadge +
-      // Ustoz nomi + konflikt badge + izoh badge
+      // Ustoz nomi + guruh nomi + badgelar
       '<div style="font-size:11px;font-weight:700;color:var(--text);">' +
-      '👨‍🏫 ' + escapeHtml(ustozName) + conflictBadge + izohBadge + '</div>' +
+      '👨‍🏫 ' + escapeHtml(ustozName) + nomiText + conflictBadge + izohBadge + '</div>' +
       // Fan nomi (ustoz tagida)
       (function() {
         const fan = mkFans.find(f => f.id === g.fanID);
@@ -8033,6 +8072,7 @@ function mkRenderGuruhs() {
         '⚠️ ' + t('mk_conflict_msg') + '</div><br>' : '') +
       '<b>🏠 ' + (x ? escapeHtml(x.nomi) : '?') + '</b> — ' +
       '👨‍🏫 ' + (u ? escapeHtml(u.ism) : '?') +
+      (g.nomi ? ' <span style="color:var(--text-dim);font-size:11px;">(' + escapeHtml(String(g.nomi)) + ')</span>' : '') +
       (fan ? ' <span style="color:#0891b2;font-size:11px;">📚 ' + escapeHtml(fan.nomi) + '</span>' : '') +
       '<br><span style="font-size:12px;color:var(--text-dim);">' +
       kunMatn + ' • ⏰ ' + mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha) +
@@ -8174,6 +8214,37 @@ function mkDeleteXona(id) {
 
 // ============================================================
 // ============================================================
+//  MARKAZ — IZOH KO'RISH (💬 belgi bosilganda)
+// ============================================================
+function mkShowIzoh(guruhId) {
+  const g = mkGuruhs.find(gg => gg.id === guruhId);
+  if (!g) return;
+  const izoh = String(g.izoh || '').trim();
+  if (!izoh) return;
+  const x = mkXonas.find(xx => xx.id === g.xonaID);
+  const u = mkUstozs.find(uu => uu.id === g.ustozID);
+  const fan = mkFans.find(ff => ff.id === g.fanID);
+  const nomi = String(g.nomi || '').trim();
+  document.getElementById('mkIzohHeader').innerHTML =
+    '👨‍🏫 <b>' + (u ? escapeHtml(u.ism) : '?') + '</b>' +
+    (nomi ? ' <span style="color:var(--text-dim);">(' + escapeHtml(nomi) + ')</span>' : '') +
+    '<br>🏠 ' + (x ? escapeHtml(x.nomi) : '?') +
+    ' • ⏰ ' + mkFormatTimeHour(g.vaqtDan) + '–' + mkFormatTimeHour(g.vaqtGacha) +
+    (fan ? '<br>📚 ' + escapeHtml(fan.nomi) : '');
+  document.getElementById('mkIzohContent').textContent = izoh;
+  // Tahrirlash tugmasi — guruh edit dialogini ochadi
+  document.getElementById('mkIzohEditBtn').onclick = () => {
+    closeMkIzoh();
+    mkEditGuruh(guruhId);
+  };
+  document.getElementById('mkIzohModal').classList.add('open');
+}
+
+function closeMkIzoh() {
+  document.getElementById('mkIzohModal').classList.remove('open');
+}
+
+// ============================================================
 //  MARKAZ — FAN CRUD
 // ============================================================
 function mkAddFan() {
@@ -8309,6 +8380,7 @@ function mkAddGuruh() {
   document.getElementById('mkGuruhVaqtGacha').value = '10:00';
   document.getElementById('mkGuruhOquvchi').value = '0';
   document.getElementById('mkGuruhIzoh').value = '';
+  document.getElementById('mkGuruhNomi').value = '';
   mkSelDayType('toq');
   document.querySelectorAll('#mkGuruhDaysBox input').forEach(c => c.checked = false);
   document.getElementById('mkGuruhModal').classList.add('open');
@@ -8334,6 +8406,7 @@ function mkEditGuruh(id) {
   document.getElementById('mkGuruhVaqtGacha').value = mkFormatTime(g.vaqtGacha) === '—' ? '10:00' : mkFormatTime(g.vaqtGacha);
   document.getElementById('mkGuruhOquvchi').value = g.oquvchiSoni || 0;
   document.getElementById('mkGuruhIzoh').value = g.izoh || '';
+  document.getElementById('mkGuruhNomi').value = g.nomi || '';
   mkSelDayType(g.kunTuri || 'toq');
   const days = String(g.tanlanganKunlar||'').split(',').filter(Boolean);
   document.querySelectorAll('#mkGuruhDaysBox input').forEach(c => {
@@ -8362,6 +8435,7 @@ function saveMkGuruhDialog() {
   const oquvchiSoni = parseInt(document.getElementById('mkGuruhOquvchi').value) || 0;
   const izoh = document.getElementById('mkGuruhIzoh').value.trim();
   const fanID = document.getElementById('mkGuruhFan').value;
+  const nomi = document.getElementById('mkGuruhNomi').value.trim();
   const kunTuri = mkGuruhSelectedDayType;
   if (!xonaID) { alert(t('mk_err_xona_select')); return; }
   if (!ustozID) { alert(t('mk_err_ustoz_select')); return; }
@@ -8373,7 +8447,7 @@ function saveMkGuruhDialog() {
   }
   const params = new URLSearchParams({
     xonaID, ustozID, kunTuri, tanlanganKunlar,
-    vaqtDan, vaqtGacha, oquvchiSoni, izoh, fanID
+    vaqtDan, vaqtGacha, oquvchiSoni, izoh, fanID, nomi
   });
   if (mkEditingGuruhId) {
     params.set('action','update_mk_guruh');
