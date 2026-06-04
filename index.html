@@ -7453,13 +7453,15 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     let conflictBadge = '';
     if (myConflict) {
       if (myConflict.role === 'new') {
-        blockBg = 'rgba(239,68,68,0.10)';    // QIZIL (yangi qo'shilgan)
-        blockBorder = 'box-shadow:inset 4px 0 0 #ef4444;';
+        // YANGI qo'shilgan — qizil, chet PASTDA
+        blockBg = 'rgba(239,68,68,0.10)';
+        blockBorder = 'border-bottom:3px solid #ef4444;';
         conflictBadge = '<span style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;' +
           'padding:1px 5px;border-radius:3px;margin-left:4px;">YANGI</span>';
       } else {
-        blockBg = 'rgba(59,130,246,0.10)';   // KO'K (eski egasi)
-        blockBorder = 'box-shadow:inset 4px 0 0 #3b82f6;';
+        // ESKI joy egasi — ko'k, chet TEPADA
+        blockBg = 'rgba(59,130,246,0.10)';
+        blockBorder = 'border-top:3px solid #3b82f6;';
         conflictBadge = '<span style="background:#3b82f6;color:#fff;font-size:9px;font-weight:700;' +
           'padding:1px 5px;border-radius:3px;margin-left:4px;">ESKI</span>';
       }
@@ -7554,10 +7556,6 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
       doimiyHtml +
       // Yangilar (qizil)
       yangiHtml +
-      // Vaqt to'qnashuvi
-      (hasConflict ? '<div style="background:#fff3cd;color:#856404;padding:3px 5px;' +
-        'border-radius:3px;font-size:9px;margin-top:3px;">⚠️ ' +
-        t('mk_conflict_msg') + '</div>' : '') +
       '</div>' +
     '</div>';
   });
