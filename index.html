@@ -6723,27 +6723,56 @@ let mkXonaTempRasm = '';
 
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 function loadMarkaz() {
-  Promise.all([
-    fetch(SHEETS_API + '?action=list_mk_filials').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_xonas').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_ustozs').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_guruhs').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_yangis').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_tasks').then(r=>r.json()),
-    fetch(SHEETS_API + '?action=list_mk_rasms').then(r=>r.json())
-  ]).then(([f,x,u,g,y,tk,rs]) => {
-    if (f.status === 'ok') mkFilials = f.rows || [];
-    if (x.status === 'ok') mkXonas = x.rows || [];
-    if (u.status === 'ok') mkUstozs = u.rows || [];
-    if (g.status === 'ok') mkGuruhs = g.rows || [];
-    if (y.status === 'ok') mkYangis = y.rows || [];
-    if (tk.status === 'ok') mkTasks = tk.rows || [];
-    if (rs.status === 'ok') {
-      // Tartib bo'yicha saralash
-      mkMaps = (rs.rows || []).sort((a,b) =>
-        (parseInt(a.tartib)||0) - (parseInt(b.tartib)||0));
-    } else {
-      mkMaps = [];
+  // Har bir so'rov alohida — bittasi xato bersa boshqalari yuklanaveradi
+  const endpoints = [
+    { key:'filials', url:'list_mk_filials' },
+    { key:'xonas',   url:'list_mk_xonas' },
+    { key:'ustozs',  url:'list_mk_ustozs' },
+    { key:'guruhs',  url:'list_mk_guruhs' },
+    { key:'yangis',  url:'list_mk_yangis' },
+    { key:'tasks',   url:'list_mk_tasks' },
+    { key:'rasms',   url:'list_mk_rasms' }
+  ];
+  Promise.allSettled(
+    endpoints.map(e =>
+      fetch(SHEETS_API + '?action=' + e.url)
+        .then(r => r.json())
+        .then(res => ({ key:e.key, url:e.url, res }))
+    )
+  ).then(results => {
+    const errors = [];
+    results.forEach((r, i) => {
+      const e = endpoints[i];
+      if (r.status === 'rejected') {
+        errors.push(e.url + ': aloqa yo\'q');
+        return;
+      }
+      const res = r.value.res;
+      if (res && res.status === 'ok') {
+        if (e.key === 'filials') mkFilials = res.rows || [];
+        else if (e.key === 'xonas')  mkXonas  = res.rows || [];
+        else if (e.key === 'ustozs') mkUstozs = res.rows || [];
+        else if (e.key === 'guruhs') mkGuruhs = res.rows || [];
+        else if (e.key === 'yangis') mkYangis = res.rows || [];
+        else if (e.key === 'tasks')  mkTasks  = res.rows || [];
+        else if (e.key === 'rasms')  {
+          mkMaps = (res.rows || []).sort((a,b) =>
+            (parseInt(a.tartib)||0) - (parseInt(b.tartib)||0));
+        }
+      } else {
+        const msg = String((res && res.message) || 'noma\'lum xato');
+        errors.push(e.url + ': ' + msg);
+      }
+    });
+
+    // Hech narsa yuklanmagan bo'lsa
+    if (errors.length === endpoints.length) {
+      document.getElementById('mkVisualGrid').innerHTML =
+        '<div class="card"><div style="color:var(--danger);">' +
+        '⚠️ Server bilan aloqa yo\'q.<br>' +
+        '<small style="color:var(--text-dim);">Internet yo\'q yoki Apps Script URL noto\'g\'ri</small>' +
+        '</div></div>';
+      return;
     }
 
     // Filial selektorini to'ldirish
@@ -6767,10 +6796,29 @@ function loadMarkaz() {
 
     // Joriy tab ga ko'ra ko'rsatish
     mkRender();
-  }).catch(err => {
-    console.error(err);
-    document.getElementById('mkVisualGrid').innerHTML =
-      '<div class="card"><div style="color:var(--danger);">⚠️ Server bilan aloqa yo\'q yoki Apps Script eski</div></div>';
+
+    // Agar ba'zi action lar xato bo'lsa — aniq xabar
+    if (errors.length > 0) {
+      const noma = errors.filter(e => e.toLowerCase().includes('noma') || e.toLowerCase().includes('unknown'));
+      if (noma.length > 0) {
+        console.warn('Apps Script eski actionlar:', noma);
+        // Faqat birinchi marta ko'rsatamiz (har safar emas)
+        if (!window.mkAppsScriptWarned) {
+          window.mkAppsScriptWarned = true;
+          alert('⚠️ Apps Script yangilanmagan!\n\n' +
+                'Quyidagi funksiyalar ishlamayapti:\n' +
+                noma.map(n => '  • ' + n.split(':')[0]).join('\n') +
+                '\n\nHal qilish:\n' +
+                '1. Sheets → Extensions → Apps Script\n' +
+                '2. Eski kodni Ctrl+A → Delete\n' +
+                '3. Yangi apps_script.gs ni Ctrl+V\n' +
+                '4. Ctrl+S (saqlash)\n' +
+                '5. Deploy → Manage deployments → ✏️ → New version → Deploy');
+        }
+      } else {
+        console.warn('Xato actionlar:', errors);
+      }
+    }
   });
 }
 
