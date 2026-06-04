@@ -6904,25 +6904,52 @@ function closeMkOquvchiEdit() {
 function saveMkOquvchiEdit() {
   const fio = document.getElementById('mkOEditFIO').value.trim();
   const tel = document.getElementById('mkOEditTel').value.trim();
-  const guruhID = document.getElementById('mkOEditGuruh').value;
+  const newGuruhID = document.getElementById('mkOEditGuruh').value;
   if (!fio) { alert(t('mk_yangi_err_fio')); return; }
-  if (!guruhID) { alert(t('mk_err_xona_select')); return; }
-  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
-    action:'update_mk_yangi', id:mkEditingOquvchiId,
-    fio, telefon:tel, guruhID
-  })}).then(r=>r.json()).then(res => {
-    if (res.status === 'ok') {
-      closeMkOquvchiEdit();
-      loadMarkaz();
-    } else {
-      const msg = String(res.message || '');
-      if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
-        alert('⚠️ Apps Script yangilanmagan!\n\n' +
-              'Sheets → Apps Script → yangi kodni joylang va Deploy → New version qiling.');
-      } else {
-        alert('⚠️ ' + msg);
-      }
+  if (!newGuruhID) { alert(t('mk_err_xona_select')); return; }
+  const y = mkYangis.find(yy => yy.id === mkEditingOquvchiId);
+  if (!y) return;
+  const oldGuruhID = y.guruhID;
+  const isDoimiy = String(y.yangimi||'').toLowerCase() === 'false';
+  const guruhChanged = oldGuruhID !== newGuruhID;
+
+  // 1) O'quvchini yangilash
+  const tasks = [
+    fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+      action:'update_mk_yangi', id:mkEditingOquvchiId,
+      fio, telefon:tel, guruhID:newGuruhID
+    })}).then(r=>r.json())
+  ];
+  // 2) Agar DOIMIY va guruh O'ZGARGAN — eski guruh -1, yangi guruh +1
+  if (isDoimiy && guruhChanged) {
+    const oldG = mkGuruhs.find(gg => gg.id === oldGuruhID);
+    const newG = mkGuruhs.find(gg => gg.id === newGuruhID);
+    if (oldG) {
+      const oldNewCount = Math.max(0, (parseInt(oldG.oquvchiSoni) || 0) - 1);
+      tasks.push(fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+        action:'update_mk_guruh', id:oldG.id, oquvchiSoni:oldNewCount
+      })}).then(r=>r.json()));
     }
+    if (newG) {
+      const newNewCount = (parseInt(newG.oquvchiSoni) || 0) + 1;
+      tasks.push(fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+        action:'update_mk_guruh', id:newG.id, oquvchiSoni:newNewCount
+      })}).then(r=>r.json()));
+    }
+  }
+  Promise.all(tasks).then(results => {
+    const fail = results.find(r => r && r.status !== 'ok');
+    if (fail) {
+      const msg = String(fail.message || '');
+      if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+        alert('⚠️ Apps Script yangilanmagan!');
+        return;
+      }
+      alert('⚠️ ' + msg);
+      return;
+    }
+    closeMkOquvchiEdit();
+    loadMarkaz();
   });
 }
 
@@ -6930,14 +6957,30 @@ function mkDeleteOquvchi(yangiId) {
   const y = mkYangis.find(yy => yy.id === yangiId);
   if (!y) return;
   if (!confirm('"' + y.fio + '" — ' + t('mk_oquvchi_del_confirm'))) return;
-  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
-    action:'delete_mk_yangi', id:yangiId
-  })}).then(r=>r.json()).then(res => {
-    if (res.status === 'ok') {
-      loadMarkaz();
-    } else {
-      alert('⚠️ ' + (res.message||''));
+  // Agar doimiy bo'lsa — son ham kamayadi
+  const isDoimiy = String(y.yangimi||'').toLowerCase() === 'false';
+  const g = mkGuruhs.find(gg => gg.id === y.guruhID);
+  const tasks = [
+    fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+      action:'delete_mk_yangi', id:yangiId
+    })}).then(r=>r.json())
+  ];
+  if (isDoimiy && g) {
+    const newCount = Math.max(0, (parseInt(g.oquvchiSoni) || 0) - 1);
+    tasks.push(fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
+    })}).then(r=>r.json()));
+  }
+  Promise.all(tasks).then(results => {
+    const fail = results.find(r => r && r.status !== 'ok');
+    if (fail) {
+      const msg = String(fail.message || '');
+      if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
+        alert('⚠️ Apps Script yangilanmagan!');
+        return;
+      }
     }
+    loadMarkaz();
   });
 }
 
@@ -7301,43 +7344,59 @@ function mkOpenXonaRasm(xonaId) {
 // ============================================================
 function mkPromoteYangi(yangiId, guruhId) {
   const y = mkYangis.find(yy => yy.id === yangiId);
-  if (!y) return;
+  const g = mkGuruhs.find(gg => gg.id === guruhId);
+  if (!y || !g) return;
   if (!confirm('"' + y.fio + '" — ' + t('mk_promote_confirm'))) return;
-  fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
-    action:'update_mk_yangi', id:y.id, yangimi:'false'
-  })}).then(r=>r.json()).then(res => {
-    if (res.status === 'ok') {
-      loadMarkaz();
-    } else {
-      const msg = String(res.message || '');
+  // 1) Guruh oquvchiSoni +1
+  // 2) Yangi yozuvni yangimi=false qilamiz (FIO saqlanadi)
+  const newCount = (parseInt(g.oquvchiSoni) || 0) + 1;
+  Promise.all([
+    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
+    })}).then(r=>r.json()),
+    fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'update_mk_yangi', id:y.id, yangimi:'false'
+    })}).then(r=>r.json())
+  ]).then(results => {
+    const fail = results.find(r => r && r.status !== 'ok');
+    if (fail) {
+      const msg = String(fail.message || '');
       if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
         alert('⚠️ Apps Script yangilanmagan!\n\n' +
-              'Sheets → Apps Script → eski kodni o\'chiring va yangisini joylang.\n' +
-              'Keyin Deploy → Manage deployments → ✏️ qalam → New version → Deploy\n\n' +
-              'Aks holda bu funksiya ishlamaydi.');
-      } else {
-        alert('⚠️ ' + msg);
+              'Sheets → Apps Script → yangi kodni joylang.\n' +
+              'Keyin Deploy → Manage deployments → ✏️ → New version → Deploy');
+        return;
       }
     }
+    loadMarkaz();
   }).catch(() => alert('⚠️ Server bilan aloqa yo\'q'));
 }
 
 function mkPromoteAllYangis(guruhId) {
+  const g = mkGuruhs.find(gg => gg.id === guruhId);
+  if (!g) return;
   const yangilar = mkYangis.filter(y =>
     y.guruhID === guruhId && String(y.yangimi||'true').toLowerCase() !== 'false');
   if (!yangilar.length) return;
   if (!confirm(yangilar.length + ' ta — ' + t('mk_promote_all_confirm'))) return;
-  const tasks = yangilar.map(y =>
+  // Son N ga oshadi
+  const newCount = (parseInt(g.oquvchiSoni) || 0) + yangilar.length;
+  const tasks = [
     fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
-      action:'update_mk_yangi', id:y.id, yangimi:'false'
+      action:'update_mk_guruh', id:g.id, oquvchiSoni:newCount
     })}).then(r=>r.json())
-  );
+  ];
+  yangilar.forEach(y => {
+    tasks.push(fetch(SHEETS_API, { method:'POST', body: new URLSearchParams({
+      action:'update_mk_yangi', id:y.id, yangimi:'false'
+    })}).then(r=>r.json()));
+  });
   Promise.all(tasks).then(results => {
-    const fail = results.find(r => r.status !== 'ok');
+    const fail = results.find(r => r && r.status !== 'ok');
     if (fail) {
       const msg = String(fail.message || '');
       if (msg.toLowerCase().includes('noma') || msg.toLowerCase().includes('unknown')) {
-        alert('⚠️ Apps Script yangilanmagan! Sheets → Apps Script → Deploy → New version');
+        alert('⚠️ Apps Script yangilanmagan! New version → Deploy qiling.');
         return;
       }
     }
