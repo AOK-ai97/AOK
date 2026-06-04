@@ -1661,6 +1661,17 @@ Ozodbek 4</div>
           </div>
         </div>
 
+        <!-- Fanlar -->
+        <div class="card">
+          <div class="card-title" data-i18n="mk_fans">📚 Fanlar</div>
+          <div style="display:flex;gap:8px;margin:8px 0;">
+            <button class="btn btn-primary" onclick="mkAddFan()" data-i18n="mk_add_fan">➕ Fan qo'shish</button>
+          </div>
+          <div id="mkFansList" style="margin-top:10px;">
+            <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+          </div>
+        </div>
+
         <!-- Guruhlar -->
         <div class="card">
           <div class="card-title" data-i18n="mk_guruhs">📅 Guruhlar (dars jadvali)</div>
@@ -1754,6 +1765,9 @@ Ozodbek 4</div>
           <label data-i18n="mk_g_ustoz">👨‍🏫 Ustoz:</label>
           <select id="mkGuruhUstoz" class="select-input"></select>
 
+          <label data-i18n="mk_g_fan">📚 Fan:</label>
+          <select id="mkGuruhFan" class="select-input"></select>
+
           <label data-i18n="mk_g_kuntyp">📅 Kun turi:</label>
           <div class="pay-type-row">
             <button class="pay-type-btn active" data-mkdt="toq"
@@ -1793,6 +1807,14 @@ Ozodbek 4</div>
 
           <label data-i18n="mk_g_oquvchi">👥 O'quvchilar soni:</label>
           <input type="number" id="mkGuruhOquvchi" value="0" min="0">
+
+          <label data-i18n="mk_g_izoh">💬 Izoh (guruh haqida ma'lumot):</label>
+          <textarea id="mkGuruhIzoh" rows="3"
+                    data-i18n-ph="mk_g_izoh_ph"
+                    placeholder="Masalan: Daraja: Boshlang'ich, Kitob: English File 2, Telefon: +998..."
+                    style="width:100%;min-height:60px;padding:8px;font-family:inherit;
+                    background:var(--input-bg);color:var(--text);border:1px solid var(--border);
+                    border-radius:6px;font-size:13px;resize:vertical;"></textarea>
         </div>
         <div class="modal-footer">
           <button class="btn btn-ghost" onclick="closeMkGuruhDialog()" data-i18n="cancel">Bekor</button>
@@ -1955,6 +1977,25 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- MARKAZ — FAN DIALOGI -->
+    <div class="modal-overlay" id="mkFanModal">
+      <div class="modal" style="max-width:480px;">
+        <div class="modal-header">
+          <span id="mkFanModalTitle" data-i18n="mk_fan_new">📚 Yangi fan</span>
+          <button class="modal-close" onclick="closeMkFanDialog()">✕</button>
+        </div>
+        <div class="modal-body">
+          <label data-i18n="mk_fan_nomi">Fan nomi:</label>
+          <input type="text" id="mkFanNomi" data-i18n-ph="mk_fan_ph"
+                 placeholder="Masalan: Ingliz tili, Matematika, Fizika...">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeMkFanDialog()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" onclick="saveMkFanDialog()" data-i18n="save">💾 Saqlash</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ARXIV -->
     <div class="page" id="page-archive">
       <div class="page-title" data-i18n="archive_title">🗃️ Arxiv</div>
@@ -2081,6 +2122,15 @@ const I18N = {
     mk_g_select_days:"Kunlarni belgilang:",
     mk_g_vaqtdan:"⏰ Vaqt dan:", mk_g_vaqtgacha:"⏰ Vaqt gacha:",
     mk_g_oquvchi:"👥 O'quvchilar soni:",
+    mk_g_izoh:"💬 Izoh (guruh haqida ma'lumot):",
+    mk_g_fan:"📚 Fan:", mk_no_fan:"Fan tanlanmagan",
+    mk_fans:"📚 Fanlar", mk_add_fan:"➕ Fan qo'shish",
+    mk_no_fans:"Hali fan qo'shilmagan",
+    mk_fan_new:"📚 Yangi fan", mk_fan_edit:"✏️ Fanni tahrirlash",
+    mk_fan_nomi:"Fan nomi:", mk_fan_ph:"Masalan: Ingliz tili, Matematika, Fizika...",
+    mk_fan_del_confirm:"Fanni o'chirasizmi?",
+    mk_err_fan_nomi:"Fan nomini kiriting!",
+    mk_g_izoh_ph:"Masalan: Daraja: Boshlang'ich, Kitob: English File 2, Telefon: +998...",
     mk_guruh_del_confirm:"Guruh o'chirilsinmi?",
     mk_guruhs_count:"guruh",
     mk_err_xona_nomi:"Xona nomini kiriting!", mk_err_ustoz_ism:"Ustoz F.I.O sini kiriting!",
@@ -6719,8 +6769,10 @@ function mkHourOf(v) {
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 let mkTasks = [];
 let mkMaps = [];  // Bir nechta xarita rasmlari
+let mkFans = []; // Fanlar ro'yxati
 let mkEditingOquvchiId = null;
 let mkXonaTempRasm = '';
+let mkEditingFanId = null;
 
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 function loadMarkaz() {
@@ -6737,6 +6789,7 @@ function loadMarkaz() {
     { key:'filials', url:'list_mk_filials' },
     { key:'xonas',   url:'list_mk_xonas' },
     { key:'ustozs',  url:'list_mk_ustozs' },
+    { key:'fans',    url:'list_mk_fans' },
     { key:'guruhs',  url:'list_mk_guruhs' },
     { key:'yangis',  url:'list_mk_yangis' },
     { key:'tasks',   url:'list_mk_tasks' },
@@ -6761,6 +6814,7 @@ function loadMarkaz() {
         if (e.key === 'filials') mkFilials = res.rows || [];
         else if (e.key === 'xonas')  mkXonas  = res.rows || [];
         else if (e.key === 'ustozs') mkUstozs = res.rows || [];
+        else if (e.key === 'fans')   mkFans   = res.rows || [];
         else if (e.key === 'guruhs') mkGuruhs = res.rows || [];
         else if (e.key === 'yangis') mkYangis = res.rows || [];
         else if (e.key === 'tasks')  mkTasks  = res.rows || [];
@@ -7291,6 +7345,7 @@ function mkRender() {
   } else {
     mkRenderXonas();
     mkRenderUstozs();
+    mkRenderFans();
     mkRenderGuruhs();
   }
 }
@@ -7533,7 +7588,13 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     // To'liq vaqt oralig'i
     const vaqtFull = mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha);
 
-    body += '<div onclick="mkAddYangiToGuruh(\'' + g.id + '\')" ' +
+    // Izoh (tooltip va badge)
+    const izohText = String(g.izoh || '').trim();
+    const titleAttr = izohText ? ' title="' + escapeHtml(izohText).replace(/"/g,'&quot;') + '"' : '';
+    const izohBadge = izohText ? ' <span style="color:#f59e0b;cursor:help;" ' +
+      'title="' + escapeHtml(izohText).replace(/"/g,'&quot;') + '">💬</span>' : '';
+
+    body += '<div onclick="mkAddYangiToGuruh(\'' + g.id + '\')"' + titleAttr + ' ' +
       'style="display:flex;gap:8px;padding:7px 0;cursor:pointer;' +
       'border-bottom:1px solid var(--border);background:' + blockBg + ';' +
       blockBorder + '">' +
@@ -7546,9 +7607,18 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
       '<div style="flex:1;min-width:0;">' +
       // Istisno belgi (agar bo'lsa)
       exceptionBadge +
-      // Ustoz nomi + konflikt badge
+      // Ustoz nomi + konflikt badge + izoh badge
       '<div style="font-size:11px;font-weight:700;color:var(--text);">' +
-      '👨‍🏫 ' + escapeHtml(ustozName) + conflictBadge + '</div>' +
+      '👨‍🏫 ' + escapeHtml(ustozName) + conflictBadge + izohBadge + '</div>' +
+      // Fan nomi (ustoz tagida)
+      (function() {
+        const fan = mkFans.find(f => f.id === g.fanID);
+        if (fan) {
+          return '<div style="font-size:10px;color:#0891b2;font-weight:600;' +
+            'margin-top:1px;">📚 ' + escapeHtml(fan.nomi) + '</div>';
+        }
+        return '';
+      })() +
       // Foiz
       '<div style="font-size:10px;color:var(--text-dim);margin:2px 0;">' +
       jami + '/' + cap + ' (' + pct + '%)</div>' +
@@ -7904,6 +7974,33 @@ function mkRenderUstozs() {
   list.innerHTML = html;
 }
 
+function mkRenderFans() {
+  const list = document.getElementById('mkFansList');
+  if (!list) return;
+  if (!mkFans.length) {
+    list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:14px;">' +
+      '📭 ' + t('mk_no_fans') + '</div>';
+    return;
+  }
+  let html = '';
+  mkFans.forEach(f => {
+    const guruhCount = mkGuruhs.filter(g => g.fanID === f.id).length;
+    html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
+      'border-radius:6px;padding:10px;margin-bottom:6px;display:flex;' +
+      'justify-content:space-between;gap:8px;align-items:center;">' +
+      '<div style="flex:1;min-width:0;">' +
+      '<b>📚 ' + escapeHtml(f.nomi) + '</b>' +
+      '<div style="color:var(--text-dim);font-size:12px;margin-top:2px;">' +
+      guruhCount + ' ' + t('mk_guruhs_count') + '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:4px;">' +
+      '<button class="icon-btn edit" onclick="mkEditFan(\'' + f.id + '\')">✏️</button>' +
+      '<button class="icon-btn del" onclick="mkDeleteFan(\'' + f.id + '\')">🗑️</button>' +
+      '</div></div>';
+  });
+  list.innerHTML = html;
+}
+
 function mkRenderGuruhs() {
   const list = document.getElementById('mkGuruhsList');
   // Joriy filialdagi xonalardagi guruhlar
@@ -7923,6 +8020,7 @@ function mkRenderGuruhs() {
   guruhs.forEach(g => {
     const x = mkXonas.find(xx => xx.id === g.xonaID);
     const u = mkUstozs.find(uu => uu.id === g.ustozID);
+    const fan = mkFans.find(ff => ff.id === g.fanID);
     const kunMatn = mkFormatDayType(g);
     const hasC = conflictIDs.has(g.id);
     html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
@@ -7935,9 +8033,11 @@ function mkRenderGuruhs() {
         '⚠️ ' + t('mk_conflict_msg') + '</div><br>' : '') +
       '<b>🏠 ' + (x ? escapeHtml(x.nomi) : '?') + '</b> — ' +
       '👨‍🏫 ' + (u ? escapeHtml(u.ism) : '?') +
+      (fan ? ' <span style="color:#0891b2;font-size:11px;">📚 ' + escapeHtml(fan.nomi) + '</span>' : '') +
       '<br><span style="font-size:12px;color:var(--text-dim);">' +
       kunMatn + ' • ⏰ ' + mkFormatTime(g.vaqtDan) + '–' + mkFormatTime(g.vaqtGacha) +
-      ' • 👥 ' + (g.oquvchiSoni||0) + ' o\'quvchi</span>' +
+      ' • 👥 ' + (g.oquvchiSoni||0) + ' o\'quvchi' +
+      (g.izoh ? ' • 💬' : '') + '</span>' +
       '</div>' +
       '<div style="display:flex;gap:4px;">' +
       '<button class="icon-btn edit" onclick="mkEditGuruh(\'' + g.id + '\')">✏️</button>' +
@@ -8073,6 +8173,59 @@ function mkDeleteXona(id) {
 }
 
 // ============================================================
+// ============================================================
+//  MARKAZ — FAN CRUD
+// ============================================================
+function mkAddFan() {
+  mkEditingFanId = null;
+  document.getElementById('mkFanModalTitle').textContent = '📚 ' + t('mk_fan_new');
+  document.getElementById('mkFanNomi').value = '';
+  document.getElementById('mkFanModal').classList.add('open');
+}
+
+function mkEditFan(id) {
+  const f = mkFans.find(ff => ff.id === id);
+  if (!f) return;
+  mkEditingFanId = id;
+  document.getElementById('mkFanModalTitle').textContent = '✏️ ' + t('mk_fan_edit');
+  document.getElementById('mkFanNomi').value = f.nomi || '';
+  document.getElementById('mkFanModal').classList.add('open');
+}
+
+function closeMkFanDialog() {
+  document.getElementById('mkFanModal').classList.remove('open');
+}
+
+function saveMkFanDialog() {
+  const nomi = document.getElementById('mkFanNomi').value.trim();
+  if (!nomi) { alert(t('mk_err_fan_nomi')); return; }
+  const params = new URLSearchParams({ nomi });
+  if (mkEditingFanId) {
+    params.set('action','update_mk_fan');
+    params.set('id', mkEditingFanId);
+  } else {
+    params.set('action','save_mk_fan');
+  }
+  fetch(SHEETS_API, { method:'POST', body:params })
+    .then(r => r.json()).then(res => {
+      if (res.status === 'ok') {
+        closeMkFanDialog();
+        loadMarkaz();
+      } else alert('⚠️ ' + (res.message||''));
+    });
+}
+
+function mkDeleteFan(id) {
+  if (!confirm(t('mk_fan_del_confirm'))) return;
+  fetch(SHEETS_API, { method:'POST', body:new URLSearchParams({
+    action:'delete_mk_fan', id
+  })}).then(r => r.json()).then(res => {
+    if (res.status === 'ok') loadMarkaz();
+    else alert('⚠️ ' + (res.message||''));
+  });
+}
+
+// ============================================================
 //  MARKAZ — USTOZ CRUD
 // ============================================================
 function mkAddUstoz() {
@@ -8149,9 +8302,13 @@ function mkAddGuruh() {
     '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
   document.getElementById('mkGuruhUstoz').innerHTML = mkUstozs.map(u =>
     '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
+  document.getElementById('mkGuruhFan').innerHTML =
+    '<option value="">— ' + t('mk_no_fan') + ' —</option>' +
+    mkFans.map(f => '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
   document.getElementById('mkGuruhVaqtDan').value = '08:00';
   document.getElementById('mkGuruhVaqtGacha').value = '10:00';
   document.getElementById('mkGuruhOquvchi').value = '0';
+  document.getElementById('mkGuruhIzoh').value = '';
   mkSelDayType('toq');
   document.querySelectorAll('#mkGuruhDaysBox input').forEach(c => c.checked = false);
   document.getElementById('mkGuruhModal').classList.add('open');
@@ -8167,11 +8324,16 @@ function mkEditGuruh(id) {
     '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
   document.getElementById('mkGuruhUstoz').innerHTML = mkUstozs.map(u =>
     '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
+  document.getElementById('mkGuruhFan').innerHTML =
+    '<option value="">— ' + t('mk_no_fan') + ' —</option>' +
+    mkFans.map(f => '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
   document.getElementById('mkGuruhXona').value = g.xonaID;
   document.getElementById('mkGuruhUstoz').value = g.ustozID;
+  document.getElementById('mkGuruhFan').value = g.fanID || '';
   document.getElementById('mkGuruhVaqtDan').value = mkFormatTime(g.vaqtDan) === '—' ? '08:00' : mkFormatTime(g.vaqtDan);
   document.getElementById('mkGuruhVaqtGacha').value = mkFormatTime(g.vaqtGacha) === '—' ? '10:00' : mkFormatTime(g.vaqtGacha);
   document.getElementById('mkGuruhOquvchi').value = g.oquvchiSoni || 0;
+  document.getElementById('mkGuruhIzoh').value = g.izoh || '';
   mkSelDayType(g.kunTuri || 'toq');
   const days = String(g.tanlanganKunlar||'').split(',').filter(Boolean);
   document.querySelectorAll('#mkGuruhDaysBox input').forEach(c => {
@@ -8198,6 +8360,8 @@ function saveMkGuruhDialog() {
   if (vaqtDan) vaqtDan = vaqtDan.slice(0,2) + ':00';
   if (vaqtGacha) vaqtGacha = vaqtGacha.slice(0,2) + ':00';
   const oquvchiSoni = parseInt(document.getElementById('mkGuruhOquvchi').value) || 0;
+  const izoh = document.getElementById('mkGuruhIzoh').value.trim();
+  const fanID = document.getElementById('mkGuruhFan').value;
   const kunTuri = mkGuruhSelectedDayType;
   if (!xonaID) { alert(t('mk_err_xona_select')); return; }
   if (!ustozID) { alert(t('mk_err_ustoz_select')); return; }
@@ -8209,7 +8373,7 @@ function saveMkGuruhDialog() {
   }
   const params = new URLSearchParams({
     xonaID, ustozID, kunTuri, tanlanganKunlar,
-    vaqtDan, vaqtGacha, oquvchiSoni
+    vaqtDan, vaqtGacha, oquvchiSoni, izoh, fanID
   });
   if (mkEditingGuruhId) {
     params.set('action','update_mk_guruh');
