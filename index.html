@@ -6948,6 +6948,28 @@ function mkSortByName(arr, field) {
   );
 }
 
+// Xona nomini ajratish: "1-room" → { raqam:1, turi:"room" }
+function mkParseXonaNomi(nomi) {
+  const s = String(nomi||'').trim();
+  const m = s.match(/^(\d+)[-\s]*(.+?)$/);
+  if (m) return { raqam: parseInt(m[1])||0, turi: (m[2]||'').toLowerCase().trim() };
+  return { raqam: 0, turi: s.toLowerCase() };
+}
+
+// Xonalar uchun maxsus saralash:
+// Avval xona TURI bo'yicha (alfavit): "eski" < "room"
+// Keyin xona ICHIDA raqam bo'yicha (1, 2, 3, ... 10)
+function mkSortXonas(arr) {
+  return arr.slice().sort((a, b) => {
+    const A = mkParseXonaNomi(a.nomi);
+    const B = mkParseXonaNomi(b.nomi);
+    if (A.turi !== B.turi) {
+      return A.turi.localeCompare(B.turi, undefined, { sensitivity:'base' });
+    }
+    return A.raqam - B.raqam;
+  });
+}
+
 // Guruhni kun tartibida saralash (Du=1, Se=2, ...)
 const MK_DAY_ORDER = { 'Du':1, 'Se':2, 'Cho':3, 'Pa':4, 'Ju':5, 'Sh':6, 'Ya':7 };
 
@@ -7123,7 +7145,7 @@ function loadMarkaz() {
     const fx = document.getElementById('mkFilterXona');
     if (fx) {
       const curX = fx.value;
-      const sortedX = mkSortByName(mkXonas.filter(x => x.filialID === mkCurrentFilialID), 'nomi');
+      const sortedX = mkSortXonas(mkXonas.filter(x => x.filialID === mkCurrentFilialID));
       fx.innerHTML = '<option value="">— ' + t('mk_filter_all_xona') + ' —</option>' +
         sortedX.map(x =>
           '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
@@ -7681,38 +7703,21 @@ function mkRenderVisual() {
   const conflicts = mkDetectConflicts(allFilialGuruhs);
 
   // Etajga ko'ra guruhlash
-  const byEtaj = {};
-  xonas.forEach(x => {
-    const e = String(x.etaj || '1');
-    if (!byEtaj[e]) byEtaj[e] = [];
-    byEtaj[e].push(x);
-  });
-  // Etajlar ham natural sort
-  const etajs = Object.keys(byEtaj).sort((a,b) =>
-    a.localeCompare(b, undefined, {numeric:true}));
-  // Har etaj ichida xonalarni natural sort
-  etajs.forEach(e => {
-    byEtaj[e] = mkSortByName(byEtaj[e], 'nomi');
-  });
+  // Xonalar — bir gridda (etaj guruhi yo'q), nomi bo'yicha tartibda
+  const sortedXonas = mkSortXonas(xonas);
 
-  let html = '';
-  etajs.forEach(etaj => {
-    html += '<div class="card" style="padding:14px;">' +
-      '<div style="font-weight:700;font-size:14px;color:var(--accent);margin-bottom:10px;">' +
-      '📍 ' + etaj + '-ETAJ</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;">';
-    byEtaj[etaj].forEach(x => {
-      try {
-        html += mkRenderXonaCard(x, activeGuruhs, conflicts);
-      } catch (err) {
-        console.error('Xona kartochkasi xato:', x.nomi, err);
-        html += '<div style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;' +
-          'border-radius:8px;padding:10px;font-size:11px;color:var(--danger);">' +
-          '⚠️ ' + escapeHtml(x.nomi || '?') + ': ' + escapeHtml(String(err.message||err)) + '</div>';
-      }
-    });
-    html += '</div></div>';
+  let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;">';
+  sortedXonas.forEach(x => {
+    try {
+      html += mkRenderXonaCard(x, activeGuruhs, conflicts);
+    } catch (err) {
+      console.error('Xona kartochkasi xato:', x.nomi, err);
+      html += '<div style="background:rgba(239,68,68,0.1);border:1px solid #ef4444;' +
+        'border-radius:8px;padding:10px;font-size:11px;color:var(--danger);">' +
+        '⚠️ ' + escapeHtml(x.nomi || '?') + ': ' + escapeHtml(String(err.message||err)) + '</div>';
+    }
   });
+  html += '</div>';
   grid.innerHTML = html;
 }
 
@@ -7958,8 +7963,14 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     '<div style="font-weight:700;font-size:14px;color:var(--accent);min-width:0;">' +
     '🏠 ' + escapeHtml(xona.nomi) + '</div>' +
     '</div>' +
-    '<div style="font-size:11px;color:var(--text-dim);flex-shrink:0;">' +
+    '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;">' +
+    // Etaj badge
+    (xona.etaj ? '<div style="background:var(--input-bg);color:var(--text-dim);' +
+      'padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;">' +
+      '📍 ' + escapeHtml(String(xona.etaj)) + '-etaj</div>' : '') +
+    '<div style="font-size:11px;color:var(--text-dim);">' +
     cap + ' ' + t('mk_kishi') + '</div>' +
+    '</div>' +
     '</div>' +
     // Jihozlar
     (xona.jihozlar ? '<div style="font-size:11px;color:var(--text-dim);margin-bottom:8px;">' +
@@ -8234,8 +8245,8 @@ function mkRenderXonas() {
   const searchEl = document.getElementById('mkSearchXonas');
   const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
   let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
-  // Tartibga ko'ra (1, 2, 3, 10, ...)
-  xonas = mkSortByName(xonas, 'nomi');
+  // Avval turi bo'yicha (eski, room...), keyin raqam bo'yicha
+  xonas = mkSortXonas(xonas);
   if (search) {
     xonas = xonas.filter(x =>
       String(x.nomi||'').toLowerCase().includes(search) ||
@@ -8691,7 +8702,7 @@ function mkAddGuruh() {
   mkEditingGuruhId = null;
   document.getElementById('mkGuruhModalTitle').textContent = '📅 ' + t('mk_guruh_new');
   // Xona va ustoz selektlari
-  const xs = mkSortByName(mkXonas.filter(x => x.filialID === mkCurrentFilialID), 'nomi');
+  const xs = mkSortXonas(mkXonas.filter(x => x.filialID === mkCurrentFilialID));
   document.getElementById('mkGuruhXona').innerHTML = xs.map(x =>
     '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
   document.getElementById('mkGuruhUstoz').innerHTML = mkSortByName(mkUstozs,'ism').map(u =>
@@ -8714,7 +8725,7 @@ function mkEditGuruh(id) {
   if (!g) return;
   mkEditingGuruhId = id;
   document.getElementById('mkGuruhModalTitle').textContent = '✏️ ' + t('mk_guruh_edit');
-  const xs = mkSortByName(mkXonas.filter(x => x.filialID === mkCurrentFilialID), 'nomi');
+  const xs = mkSortXonas(mkXonas.filter(x => x.filialID === mkCurrentFilialID));
   document.getElementById('mkGuruhXona').innerHTML = xs.map(x =>
     '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
   document.getElementById('mkGuruhUstoz').innerHTML = mkSortByName(mkUstozs,'ism').map(u =>
