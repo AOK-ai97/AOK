@@ -581,6 +581,55 @@ textarea {
 .ar-filter-btn.active {
   background:var(--accent); color:var(--btn-fg);
 }
+/* MARKAZ — accordion & filter */
+.mk-acc-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.mk-acc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+  gap: 8px;
+}
+.mk-acc-head:hover { background: var(--card-hover); }
+.mk-acc-title { font-weight: 700; font-size: 14px; color: var(--accent); flex:1; }
+.mk-acc-count {
+  background: var(--input-bg); color: var(--text-dim);
+  padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.mk-acc-arrow {
+  font-size: 16px; color: var(--text-dim); font-weight: 700;
+  transition: transform 0.2s; width: 16px; text-align: center;
+}
+.mk-acc-card.collapsed .mk-acc-arrow { transform: rotate(45deg); }
+.mk-acc-body {
+  padding: 12px 14px 14px 14px;
+  border-top: 1px solid var(--border);
+}
+.mk-acc-card.collapsed .mk-acc-body { display: none; }
+.mk-filter-bar {
+  display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+}
+.mk-filter-bar input, .mk-filter-bar select {
+  padding: 6px 8px; font-size: 12px; border-radius: 6px;
+  border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
+}
+.mk-filter-bar input[type="search"] { flex: 1; min-width: 130px; }
+.mk-filter-bar select { min-width: 110px; }
+.mk-filter-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: rgba(0,212,170,0.12); color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 12px;
+  padding: 3px 10px; font-size: 11px; cursor: pointer;
+}
 </style>
 </head>
 <body>
@@ -1614,6 +1663,33 @@ Ozodbek 4</div>
 
       <!-- VIZUAL BO'LIMI -->
       <div id="mkVizualSection">
+        <!-- FILTR BAR -->
+        <div class="card" style="padding:10px 12px;">
+          <div class="mk-filter-bar">
+            <input type="search" id="mkFilterText" data-i18n-ph="mk_filter_text_ph"
+                   placeholder="🔍 Qidirish (ustoz, xona, fan, nomi, izoh...)"
+                   onkeyup="mkFilterChange()">
+            <select id="mkFilterUstoz" onchange="mkFilterChange()">
+              <option value="" data-i18n="mk_filter_all_ustoz">— Barcha ustozlar —</option>
+            </select>
+            <select id="mkFilterXona" onchange="mkFilterChange()">
+              <option value="" data-i18n="mk_filter_all_xona">— Barcha xonalar —</option>
+            </select>
+            <select id="mkFilterVaqt" onchange="mkFilterChange()">
+              <option value="" data-i18n="mk_filter_all_vaqt">— Barcha vaqt —</option>
+              <option value="ertalab">🌅 06–12</option>
+              <option value="kunduz">☀️ 12–18</option>
+              <option value="kech">🌙 18–22</option>
+            </select>
+            <label style="display:flex;gap:4px;align-items:center;font-size:11px;cursor:pointer;padding:0 6px;">
+              <input type="checkbox" id="mkFilterYangi" onchange="mkFilterChange()">
+              <span data-i18n="mk_filter_yangilar">🔴 Yangi bor</span>
+            </label>
+            <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;"
+                    onclick="mkFilterReset()" title="Tozalash">↺</button>
+          </div>
+        </div>
+
         <!-- Kun turi tab (Toq/Juft/Istisno) -->
         <div class="card">
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
@@ -1640,48 +1716,98 @@ Ozodbek 4</div>
       <!-- SOZLASH BO'LIMI -->
       <div id="mkSozlashSection" style="display:none;">
         <!-- Xonalar -->
-        <div class="card">
-          <div class="card-title" data-i18n="mk_xonas">🏠 Xonalar</div>
-          <div style="display:flex;gap:8px;margin:8px 0;">
-            <button class="btn btn-primary" onclick="mkAddXona()" data-i18n="mk_add_xona">➕ Xona qo'shish</button>
+        <div class="mk-acc-card" data-acc="xonas">
+          <div class="mk-acc-head" onclick="mkToggleAcc(this)">
+            <div class="mk-acc-title" data-i18n="mk_xonas">🏠 Xonalar</div>
+            <span class="mk-acc-count" id="mkAccCountXonas">0</span>
+            <span class="mk-acc-arrow">+</span>
           </div>
-          <div id="mkXonasList" style="margin-top:10px;">
-            <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+          <div class="mk-acc-body">
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+              <input type="search" id="mkSearchXonas" placeholder="🔍 Qidirish..."
+                     onkeyup="mkRenderXonas()"
+                     style="flex:1;min-width:140px;padding:6px 8px;font-size:12px;
+                     border-radius:6px;border:1px solid var(--border);
+                     background:var(--input-bg);color:var(--text);">
+              <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;"
+                      onclick="mkAddXona()" data-i18n="mk_add_xona">➕ Xona qo'shish</button>
+            </div>
+            <div id="mkXonasList">
+              <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+            </div>
           </div>
         </div>
 
         <!-- Ustozlar -->
-        <div class="card">
-          <div class="card-title" data-i18n="mk_ustozs">👨‍🏫 Ustozlar</div>
-          <div style="display:flex;gap:8px;margin:8px 0;">
-            <button class="btn btn-primary" onclick="mkAddUstoz()" data-i18n="mk_add_ustoz">➕ Ustoz qo'shish</button>
+        <div class="mk-acc-card collapsed" data-acc="ustozs">
+          <div class="mk-acc-head" onclick="mkToggleAcc(this)">
+            <div class="mk-acc-title" data-i18n="mk_ustozs">👨‍🏫 Ustozlar</div>
+            <span class="mk-acc-count" id="mkAccCountUstozs">0</span>
+            <span class="mk-acc-arrow">+</span>
           </div>
-          <div id="mkUstozsList" style="margin-top:10px;">
-            <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+          <div class="mk-acc-body">
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+              <input type="search" id="mkSearchUstozs" placeholder="🔍 Qidirish..."
+                     onkeyup="mkRenderUstozs()"
+                     style="flex:1;min-width:140px;padding:6px 8px;font-size:12px;
+                     border-radius:6px;border:1px solid var(--border);
+                     background:var(--input-bg);color:var(--text);">
+              <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;"
+                      onclick="mkAddUstoz()" data-i18n="mk_add_ustoz">➕ Ustoz qo'shish</button>
+            </div>
+            <div id="mkUstozsList">
+              <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+            </div>
           </div>
         </div>
 
         <!-- Fanlar -->
-        <div class="card">
-          <div class="card-title" data-i18n="mk_fans">📚 Fanlar</div>
-          <div style="display:flex;gap:8px;margin:8px 0;">
-            <button class="btn btn-primary" onclick="mkAddFan()" data-i18n="mk_add_fan">➕ Fan qo'shish</button>
+        <div class="mk-acc-card collapsed" data-acc="fans">
+          <div class="mk-acc-head" onclick="mkToggleAcc(this)">
+            <div class="mk-acc-title" data-i18n="mk_fans">📚 Fanlar</div>
+            <span class="mk-acc-count" id="mkAccCountFans">0</span>
+            <span class="mk-acc-arrow">+</span>
           </div>
-          <div id="mkFansList" style="margin-top:10px;">
-            <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+          <div class="mk-acc-body">
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+              <input type="search" id="mkSearchFans" placeholder="🔍 Qidirish..."
+                     onkeyup="mkRenderFans()"
+                     style="flex:1;min-width:140px;padding:6px 8px;font-size:12px;
+                     border-radius:6px;border:1px solid var(--border);
+                     background:var(--input-bg);color:var(--text);">
+              <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;"
+                      onclick="mkAddFan()" data-i18n="mk_add_fan">➕ Fan qo'shish</button>
+            </div>
+            <div id="mkFansList">
+              <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+            </div>
           </div>
         </div>
 
         <!-- Guruhlar -->
-        <div class="card">
-          <div class="card-title" data-i18n="mk_guruhs">📅 Guruhlar (dars jadvali)</div>
-          <div style="display:flex;gap:8px;margin:8px 0;">
-            <button class="btn btn-primary" onclick="mkAddGuruh()" data-i18n="mk_add_guruh">➕ Guruh ochish</button>
+        <div class="mk-acc-card collapsed" data-acc="guruhs">
+          <div class="mk-acc-head" onclick="mkToggleAcc(this)">
+            <div class="mk-acc-title" data-i18n="mk_guruhs">📋 Guruhlar</div>
+            <span class="mk-acc-count" id="mkAccCountGuruhs">0</span>
+            <span class="mk-acc-arrow">+</span>
           </div>
-          <div id="mkGuruhsList" style="margin-top:10px;">
-            <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+          <div class="mk-acc-body">
+            <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+              <input type="search" id="mkSearchGuruhs" placeholder="🔍 Qidirish..."
+                     onkeyup="mkRenderGuruhs()"
+                     style="flex:1;min-width:140px;padding:6px 8px;font-size:12px;
+                     border-radius:6px;border:1px solid var(--border);
+                     background:var(--input-bg);color:var(--text);">
+              <button class="btn btn-primary" style="padding:6px 12px;font-size:12px;"
+                      onclick="mkAddGuruh()" data-i18n="mk_add_guruh">➕ Guruh qo'shish</button>
+            </div>
+            <div id="mkGuruhsList">
+              <div style="color:var(--text-dim);font-size:13px;">⏳ ...</div>
+            </div>
           </div>
         </div>
+      </div>
+
       </div>
     </div>
 
@@ -2153,6 +2279,10 @@ const I18N = {
     mk_g_izoh:"💬 Izoh (guruh haqida ma'lumot):",
     mk_g_fan:"📚 Fan:", mk_no_fan:"Fan tanlanmagan",
     mk_g_nomi:"📝 Guruh nomi (ixtiyoriy):",
+    mk_filter_text_ph:"🔍 Qidirish (ustoz, xona, fan, nomi, izoh...)",
+    mk_filter_all_ustoz:"Barcha ustozlar", mk_filter_all_xona:"Barcha xonalar",
+    mk_filter_all_vaqt:"Barcha vaqt", mk_filter_yangilar:"🔴 Yangi bor",
+    mk_filter_reset:"↺", mk_no_results:"Natija topilmadi",
     mk_g_nomi_ph:"Masalan: A1-1, Kichik guruh, Beta...",
     mk_izoh_title:"💬 Guruh izohi", mk_izoh_edit:"✏️ Tahrirlash",
     mk_fans:"📚 Fanlar", mk_add_fan:"➕ Fan qo'shish",
@@ -6804,6 +6934,71 @@ let mkFans = []; // Fanlar ro'yxati
 let mkEditingOquvchiId = null;
 let mkXonaTempRasm = '';
 let mkEditingFanId = null;
+let mkFilters = { text:'', ustozId:'', xonaId:'', vaqt:'', yangilar:false };
+
+// Accordion toggle
+function mkToggleAcc(headEl) {
+  const card = headEl.closest('.mk-acc-card');
+  if (!card) return;
+  card.classList.toggle('collapsed');
+}
+
+// Filtr o'zgargan
+function mkFilterChange() {
+  const tx = document.getElementById('mkFilterText');
+  const us = document.getElementById('mkFilterUstoz');
+  const xn = document.getElementById('mkFilterXona');
+  const vq = document.getElementById('mkFilterVaqt');
+  const yn = document.getElementById('mkFilterYangi');
+  mkFilters.text = tx ? tx.value.trim().toLowerCase() : '';
+  mkFilters.ustozId = us ? us.value : '';
+  mkFilters.xonaId = xn ? xn.value : '';
+  mkFilters.vaqt = vq ? vq.value : '';
+  mkFilters.yangilar = yn ? yn.checked : false;
+  mkRender();
+}
+
+function mkFilterReset() {
+  const tx = document.getElementById('mkFilterText'); if (tx) tx.value = '';
+  const us = document.getElementById('mkFilterUstoz'); if (us) us.value = '';
+  const xn = document.getElementById('mkFilterXona'); if (xn) xn.value = '';
+  const vq = document.getElementById('mkFilterVaqt'); if (vq) vq.value = '';
+  const yn = document.getElementById('mkFilterYangi'); if (yn) yn.checked = false;
+  mkFilters = { text:'', ustozId:'', xonaId:'', vaqt:'', yangilar:false };
+  mkRender();
+}
+
+// Guruh filtrlardan o'tadimi?
+function mkGuruhMatchesFilter(g) {
+  if (mkFilters.ustozId && g.ustozID !== mkFilters.ustozId) return false;
+  if (mkFilters.xonaId && g.xonaID !== mkFilters.xonaId) return false;
+  if (mkFilters.vaqt) {
+    const h = mkHourOf(g.vaqtDan);
+    if (isNaN(h)) return false;
+    if (mkFilters.vaqt === 'ertalab' && (h < 6 || h >= 12)) return false;
+    if (mkFilters.vaqt === 'kunduz' && (h < 12 || h >= 18)) return false;
+    if (mkFilters.vaqt === 'kech' && (h < 18 || h > 22)) return false;
+  }
+  if (mkFilters.yangilar) {
+    const hasYangi = mkYangis.some(y => {
+      if (y.guruhID !== g.id) return false;
+      if (y.yangimi === false) return false;
+      return String(y.yangimi == null ? '' : y.yangimi).toLowerCase().trim() !== 'false';
+    });
+    if (!hasYangi) return false;
+  }
+  if (mkFilters.text) {
+    const t = mkFilters.text;
+    const u = mkUstozs.find(uu => uu.id === g.ustozID);
+    const x = mkXonas.find(xx => xx.id === g.xonaID);
+    const f = mkFans.find(ff => ff.id === g.fanID);
+    const hay = [
+      u && u.ism, x && x.nomi, f && f.nomi, g.nomi, g.izoh
+    ].filter(Boolean).join(' ').toLowerCase();
+    if (!hay.includes(t)) return false;
+  }
+  return true;
+}
 
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 function loadMarkaz() {
@@ -6870,6 +7065,37 @@ function loadMarkaz() {
       }
       sel.value = mkCurrentFilialID;
     }
+
+    // Filter dropdownlarini to'ldirish (joriy filial)
+    const filialXonaIDs = new Set(mkXonas.filter(x => x.filialID === mkCurrentFilialID).map(x => x.id));
+    const filialUstozIDs = new Set(mkGuruhs.filter(g => filialXonaIDs.has(g.xonaID)).map(g => g.ustozID));
+
+    const fu = document.getElementById('mkFilterUstoz');
+    if (fu) {
+      const curU = fu.value;
+      fu.innerHTML = '<option value="">— ' + t('mk_filter_all_ustoz') + ' —</option>' +
+        mkUstozs.filter(u => filialUstozIDs.has(u.id)).map(u =>
+          '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
+      fu.value = curU;
+    }
+    const fx = document.getElementById('mkFilterXona');
+    if (fx) {
+      const curX = fx.value;
+      fx.innerHTML = '<option value="">— ' + t('mk_filter_all_xona') + ' —</option>' +
+        mkXonas.filter(x => x.filialID === mkCurrentFilialID).map(x =>
+          '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
+      fx.value = curX;
+    }
+
+    // Sozlash accordion sonlari
+    const cx = document.getElementById('mkAccCountXonas');
+    if (cx) cx.textContent = mkXonas.filter(x => x.filialID === mkCurrentFilialID).length;
+    const cu = document.getElementById('mkAccCountUstozs');
+    if (cu) cu.textContent = mkUstozs.length;
+    const cf = document.getElementById('mkAccCountFans');
+    if (cf) cf.textContent = mkFans.length;
+    const cg = document.getElementById('mkAccCountGuruhs');
+    if (cg) cg.textContent = mkGuruhs.filter(g => filialXonaIDs.has(g.xonaID)).length;
 
     // Vazifalar tugmasi
     const undone = mkTasks.filter(t => String(t.bajarildi).toLowerCase() !== 'true').length;
@@ -7401,7 +7627,9 @@ function mkRenderVisual() {
   // Toq → toq + (istisno bilan Du/Cho/Ju tanlangan)
   // Juft → juft + (istisno bilan Se/Pa/Sh tanlangan)
   // Istisno → faqat istisno
-  const activeGuruhs = mkGuruhs.filter(g => mkDayBelongsToType(g, mkCurrentDayType));
+  const activeGuruhs = mkGuruhs
+    .filter(g => mkDayBelongsToType(g, mkCurrentDayType))
+    .filter(g => mkGuruhMatchesFilter(g));
 
   // Muammoni aniqlash — JORIY FILIAL ning BARCHA guruhlari ichida
   // (chunki istisno guruh boshqa kun turi bilan kesishadi)
@@ -7953,10 +8181,20 @@ function mkDaysOverlap(a, b) {
 // ============================================================
 function mkRenderXonas() {
   const list = document.getElementById('mkXonasList');
-  const xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+  if (!list) return;
+  const searchEl = document.getElementById('mkSearchXonas');
+  const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+  if (search) {
+    xonas = xonas.filter(x =>
+      String(x.nomi||'').toLowerCase().includes(search) ||
+      String(x.etaj||'').toLowerCase().includes(search) ||
+      String(x.jihozlar||'').toLowerCase().includes(search)
+    );
+  }
   if (!xonas.length) {
     list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:14px;">' +
-      '📭 ' + t('mk_no_xonas_short') + '</div>';
+      (search ? '🔍 ' + t('mk_no_results') : '📭 ' + t('mk_no_xonas_short')) + '</div>';
     return;
   }
   let html = '';
@@ -7980,13 +8218,24 @@ function mkRenderXonas() {
 
 function mkRenderUstozs() {
   const list = document.getElementById('mkUstozsList');
-  if (!mkUstozs.length) {
+  if (!list) return;
+  const searchEl = document.getElementById('mkSearchUstozs');
+  const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  let ustozs = mkUstozs.slice();
+  if (search) {
+    ustozs = ustozs.filter(u =>
+      String(u.ism||'').toLowerCase().includes(search) ||
+      String(u.telefon||'').toLowerCase().includes(search) ||
+      String(u.fan||'').toLowerCase().includes(search)
+    );
+  }
+  if (!ustozs.length) {
     list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:14px;">' +
-      '📭 ' + t('mk_no_ustozs') + '</div>';
+      (search ? '🔍 ' + t('mk_no_results') : '📭 ' + t('mk_no_ustozs')) + '</div>';
     return;
   }
   let html = '';
-  mkUstozs.forEach(u => {
+  ustozs.forEach(u => {
     // O'quvchilar soni (barcha guruhlardan)
     const myGuruhs = mkGuruhs.filter(g => g.ustozID === u.id);
     const totalOq = myGuruhs.reduce((s,g) => s + (parseInt(g.oquvchiSoni)||0), 0);
@@ -8016,13 +8265,19 @@ function mkRenderUstozs() {
 function mkRenderFans() {
   const list = document.getElementById('mkFansList');
   if (!list) return;
-  if (!mkFans.length) {
+  const searchEl = document.getElementById('mkSearchFans');
+  const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  let fans = mkFans.slice();
+  if (search) {
+    fans = fans.filter(f => String(f.nomi||'').toLowerCase().includes(search));
+  }
+  if (!fans.length) {
     list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:14px;">' +
-      '📭 ' + t('mk_no_fans') + '</div>';
+      (search ? '🔍 ' + t('mk_no_results') : '📭 ' + t('mk_no_fans')) + '</div>';
     return;
   }
   let html = '';
-  mkFans.forEach(f => {
+  fans.forEach(f => {
     const guruhCount = mkGuruhs.filter(g => g.fanID === f.id).length;
     html += '<div style="background:var(--input-bg);border:1px solid var(--border);' +
       'border-radius:6px;padding:10px;margin-bottom:6px;display:flex;' +
@@ -8042,13 +8297,28 @@ function mkRenderFans() {
 
 function mkRenderGuruhs() {
   const list = document.getElementById('mkGuruhsList');
+  if (!list) return;
+  const searchEl = document.getElementById('mkSearchGuruhs');
+  const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
   // Joriy filialdagi xonalardagi guruhlar
   const xonaIDs = new Set(mkXonas.filter(x =>
     x.filialID === mkCurrentFilialID).map(x => x.id));
-  const guruhs = mkGuruhs.filter(g => xonaIDs.has(g.xonaID));
+  let guruhs = mkGuruhs.filter(g => xonaIDs.has(g.xonaID));
+  if (search) {
+    guruhs = guruhs.filter(g => {
+      const u = mkUstozs.find(uu => uu.id === g.ustozID);
+      const x = mkXonas.find(xx => xx.id === g.xonaID);
+      const f = mkFans.find(ff => ff.id === g.fanID);
+      const hay = [
+        u && u.ism, x && x.nomi, f && f.nomi, g.nomi, g.izoh,
+        mkFormatTime(g.vaqtDan), mkFormatTime(g.vaqtGacha)
+      ].filter(Boolean).join(' ').toLowerCase();
+      return hay.includes(search);
+    });
+  }
   if (!guruhs.length) {
     list.innerHTML = '<div style="color:var(--text-dim);font-size:13px;text-align:center;padding:14px;">' +
-      '📭 ' + t('mk_no_guruhs') + '</div>';
+      (search ? '🔍 ' + t('mk_no_results') : '📭 ' + t('mk_no_guruhs')) + '</div>';
     return;
   }
   // To'qnashuvlarni topamiz
