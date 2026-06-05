@@ -6934,6 +6934,47 @@ let mkFans = []; // Fanlar ro'yxati
 let mkEditingOquvchiId = null;
 let mkXonaTempRasm = '';
 let mkEditingFanId = null;
+// ============================================================
+//  MARKAZ — SARALASH (saralash) yordamchilari
+// ============================================================
+// Natural sort — "1-HONA" < "2-HONA" < "10-HONA"
+function mkSortByName(arr, field) {
+  return arr.slice().sort((a, b) =>
+    String(a[field]||'').localeCompare(
+      String(b[field]||''),
+      undefined,
+      { numeric:true, sensitivity:'base' }
+    )
+  );
+}
+
+// Guruhni kun tartibida saralash (Du=1, Se=2, ...)
+const MK_DAY_ORDER = { 'Du':1, 'Se':2, 'Cho':3, 'Pa':4, 'Ju':5, 'Sh':6, 'Ya':7 };
+
+function mkGuruhEarliestDay(g) {
+  let days = [];
+  if (g.kunTuri === 'toq') days = ['Du','Cho','Ju'];
+  else if (g.kunTuri === 'juft') days = ['Se','Pa','Sh'];
+  else if (g.kunTuri === 'istisno') {
+    days = String(g.tanlanganKunlar||'').split(',').map(s=>s.trim()).filter(Boolean);
+  }
+  if (!days.length) return 999;
+  return Math.min.apply(null, days.map(d => MK_DAY_ORDER[d] || 999));
+}
+
+function mkSortGuruhsByDayTime(arr) {
+  return arr.slice().sort((a, b) => {
+    const dayA = mkGuruhEarliestDay(a);
+    const dayB = mkGuruhEarliestDay(b);
+    if (dayA !== dayB) return dayA - dayB;
+    const hA = mkHourOf(a.vaqtDan); const hB = mkHourOf(b.vaqtDan);
+    if (isNaN(hA) && isNaN(hB)) return 0;
+    if (isNaN(hA)) return 1;
+    if (isNaN(hB)) return -1;
+    return hA - hB;
+  });
+}
+
 let mkFilters = { text:'', ustozId:'', xonaId:'', vaqt:'', yangilar:false };
 
 // Accordion toggle
@@ -7073,16 +7114,18 @@ function loadMarkaz() {
     const fu = document.getElementById('mkFilterUstoz');
     if (fu) {
       const curU = fu.value;
+      const sortedU = mkSortByName(mkUstozs.filter(u => filialUstozIDs.has(u.id)), 'ism');
       fu.innerHTML = '<option value="">— ' + t('mk_filter_all_ustoz') + ' —</option>' +
-        mkUstozs.filter(u => filialUstozIDs.has(u.id)).map(u =>
+        sortedU.map(u =>
           '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
       fu.value = curU;
     }
     const fx = document.getElementById('mkFilterXona');
     if (fx) {
       const curX = fx.value;
+      const sortedX = mkSortByName(mkXonas.filter(x => x.filialID === mkCurrentFilialID), 'nomi');
       fx.innerHTML = '<option value="">— ' + t('mk_filter_all_xona') + ' —</option>' +
-        mkXonas.filter(x => x.filialID === mkCurrentFilialID).map(x =>
+        sortedX.map(x =>
           '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
       fx.value = curX;
     }
@@ -7644,7 +7687,13 @@ function mkRenderVisual() {
     if (!byEtaj[e]) byEtaj[e] = [];
     byEtaj[e].push(x);
   });
-  const etajs = Object.keys(byEtaj).sort();
+  // Etajlar ham natural sort
+  const etajs = Object.keys(byEtaj).sort((a,b) =>
+    a.localeCompare(b, undefined, {numeric:true}));
+  // Har etaj ichida xonalarni natural sort
+  etajs.forEach(e => {
+    byEtaj[e] = mkSortByName(byEtaj[e], 'nomi');
+  });
 
   let html = '';
   etajs.forEach(etaj => {
@@ -8185,6 +8234,8 @@ function mkRenderXonas() {
   const searchEl = document.getElementById('mkSearchXonas');
   const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
   let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+  // Tartibga ko'ra (1, 2, 3, 10, ...)
+  xonas = mkSortByName(xonas, 'nomi');
   if (search) {
     xonas = xonas.filter(x =>
       String(x.nomi||'').toLowerCase().includes(search) ||
@@ -8221,7 +8272,7 @@ function mkRenderUstozs() {
   if (!list) return;
   const searchEl = document.getElementById('mkSearchUstozs');
   const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
-  let ustozs = mkUstozs.slice();
+  let ustozs = mkSortByName(mkUstozs, 'ism');
   if (search) {
     ustozs = ustozs.filter(u =>
       String(u.ism||'').toLowerCase().includes(search) ||
@@ -8267,7 +8318,7 @@ function mkRenderFans() {
   if (!list) return;
   const searchEl = document.getElementById('mkSearchFans');
   const search = searchEl ? searchEl.value.trim().toLowerCase() : '';
-  let fans = mkFans.slice();
+  let fans = mkSortByName(mkFans, 'nomi');
   if (search) {
     fans = fans.filter(f => String(f.nomi||'').toLowerCase().includes(search));
   }
@@ -8304,6 +8355,8 @@ function mkRenderGuruhs() {
   const xonaIDs = new Set(mkXonas.filter(x =>
     x.filialID === mkCurrentFilialID).map(x => x.id));
   let guruhs = mkGuruhs.filter(g => xonaIDs.has(g.xonaID));
+  // Kun va vaqt bo'yicha saralash (Du 08:00 birinchi)
+  guruhs = mkSortGuruhsByDayTime(guruhs);
   if (search) {
     guruhs = guruhs.filter(g => {
       const u = mkUstozs.find(uu => uu.id === g.ustozID);
@@ -8638,14 +8691,14 @@ function mkAddGuruh() {
   mkEditingGuruhId = null;
   document.getElementById('mkGuruhModalTitle').textContent = '📅 ' + t('mk_guruh_new');
   // Xona va ustoz selektlari
-  const xs = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+  const xs = mkSortByName(mkXonas.filter(x => x.filialID === mkCurrentFilialID), 'nomi');
   document.getElementById('mkGuruhXona').innerHTML = xs.map(x =>
     '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
-  document.getElementById('mkGuruhUstoz').innerHTML = mkUstozs.map(u =>
+  document.getElementById('mkGuruhUstoz').innerHTML = mkSortByName(mkUstozs,'ism').map(u =>
     '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
   document.getElementById('mkGuruhFan').innerHTML =
     '<option value="">— ' + t('mk_no_fan') + ' —</option>' +
-    mkFans.map(f => '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
+    mkSortByName(mkFans,'nomi').map(f => '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
   document.getElementById('mkGuruhVaqtDan').value = '08:00';
   document.getElementById('mkGuruhVaqtGacha').value = '10:00';
   document.getElementById('mkGuruhOquvchi').value = '0';
@@ -8661,14 +8714,14 @@ function mkEditGuruh(id) {
   if (!g) return;
   mkEditingGuruhId = id;
   document.getElementById('mkGuruhModalTitle').textContent = '✏️ ' + t('mk_guruh_edit');
-  const xs = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+  const xs = mkSortByName(mkXonas.filter(x => x.filialID === mkCurrentFilialID), 'nomi');
   document.getElementById('mkGuruhXona').innerHTML = xs.map(x =>
     '<option value="' + x.id + '">' + escapeHtml(x.nomi) + '</option>').join('');
-  document.getElementById('mkGuruhUstoz').innerHTML = mkUstozs.map(u =>
+  document.getElementById('mkGuruhUstoz').innerHTML = mkSortByName(mkUstozs,'ism').map(u =>
     '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
   document.getElementById('mkGuruhFan').innerHTML =
     '<option value="">— ' + t('mk_no_fan') + ' —</option>' +
-    mkFans.map(f => '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
+    mkSortByName(mkFans,'nomi').map(f => '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
   document.getElementById('mkGuruhXona').value = g.xonaID;
   document.getElementById('mkGuruhUstoz').value = g.ustozID;
   document.getElementById('mkGuruhFan').value = g.fanID || '';
