@@ -7886,31 +7886,6 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
     const jami = sonManual + doimiy.length + yangilar.length;
     const pct = cap ? Math.round(jami * 100 / cap) : 0;
 
-    // Konflikt: eski (ko'k) yoki yangi (qizil)?
-    const myConflict = conflicts.find(c => c.guruhID === g.id);
-    let blockBg = 'rgba(16,185,129,0.06)';   // Default yashil
-    let blockBorder = '';
-    let conflictBadge = '';
-    if (myConflict) {
-      if (myConflict.role === 'new') {
-        // YANGI qo'shilgan — qizil, chet PASTDA
-        blockBg = 'rgba(239,68,68,0.10)';
-        blockBorder = 'border-bottom:3px solid #ef4444;';
-        conflictBadge = '<span style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;' +
-          'padding:1px 5px;border-radius:3px;margin-left:4px;">YANGI</span>';
-      } else {
-        // ESKI joy egasi — ko'k, chet TEPADA
-        blockBg = 'rgba(59,130,246,0.10)';
-        blockBorder = 'border-top:3px solid #3b82f6;';
-        conflictBadge = '<span style="background:#3b82f6;color:#fff;font-size:9px;font-weight:700;' +
-          'padding:1px 5px;border-radius:3px;margin-left:4px;">ESKI</span>';
-      }
-    } else if (isPushti) {
-      // ISTISNO guruh — pushti soyali chet (chap+o'ng)
-      blockBg = 'linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.14))';
-      blockBorder = 'box-shadow: inset 3px 0 0 #ec4899, inset -3px 0 0 #ec4899;';
-    }
-
     // Istisno guruh ekanligini belgilash (agar joriy yorliq Toq/Juft bo'lsa)
     const isExceptionGroup = (g.kunTuri === 'istisno' && mkCurrentDayType !== 'istisno');
     let exceptionBadge = '';
@@ -7935,6 +7910,31 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
         exceptionBadge += '<span style="background:#ec4899;color:#fff;font-size:9px;font-weight:700;' +
           'padding:1px 5px;border-radius:3px;margin-left:4px;">⚠️ ' + matchedOthers.join(', ') + '</span>';
       }
+    }
+
+    // Konflikt: eski (ko'k) yoki yangi (qizil)?
+    const myConflict = conflicts.find(c => c.guruhID === g.id);
+    let blockBg = 'rgba(16,185,129,0.06)';   // Default yashil
+    let blockBorder = '';
+    let conflictBadge = '';
+    if (myConflict) {
+      if (myConflict.role === 'new') {
+        // YANGI qo'shilgan — qizil, chet PASTDA
+        blockBg = 'rgba(239,68,68,0.10)';
+        blockBorder = 'border-bottom:3px solid #ef4444;';
+        conflictBadge = '<span style="background:#ef4444;color:#fff;font-size:9px;font-weight:700;' +
+          'padding:1px 5px;border-radius:3px;margin-left:4px;">YANGI</span>';
+      } else {
+        // ESKI joy egasi — ko'k, chet TEPADA
+        blockBg = 'rgba(59,130,246,0.10)';
+        blockBorder = 'border-top:3px solid #3b82f6;';
+        conflictBadge = '<span style="background:#3b82f6;color:#fff;font-size:9px;font-weight:700;' +
+          'padding:1px 5px;border-radius:3px;margin-left:4px;">ESKI</span>';
+      }
+    } else if (isPushti) {
+      // ISTISNO guruh — pushti soyali chet (chap+o'ng)
+      blockBg = 'linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.14))';
+      blockBorder = 'box-shadow: inset 3px 0 0 #ec4899, inset -3px 0 0 #ec4899;';
     }
 
     // YASHIL: son = qo'lda kiritilgan (eski) + doimiy ro'yxat (FIO bilan saqlanganlar)
