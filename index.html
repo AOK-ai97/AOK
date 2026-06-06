@@ -630,6 +630,7 @@ textarea {
   border: 1px solid var(--accent); border-radius: 12px;
   padding: 3px 10px; font-size: 11px; cursor: pointer;
 }
+
 </style>
 </head>
 <body>
@@ -1690,15 +1691,17 @@ Ozodbek 4</div>
           </div>
         </div>
 
-        <!-- Kun turi tab (Toq/Juft/Istisno) -->
+        <!-- Kun turi tab (Toq/Juft) + Hisobot tugmasi -->
         <div class="card">
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <button class="btn btn-primary" onclick="mkPrintReport()" style="padding:6px 12px;font-size:12px;font-weight:700;">
+              📄 <span data-i18n="mk_print_report">Hisobot yaratish</span>
+            </button>
+            <div style="width:1px;height:24px;background:var(--border);margin:0 4px;"></div>
             <button class="btn ar-filter-btn active" data-kuntyp="toq"
                     onclick="mkSetDayType('toq')" data-i18n="mk_day_odd">🔄 Toq kunlar</button>
             <button class="btn btn-ghost ar-filter-btn" data-kuntyp="juft"
                     onclick="mkSetDayType('juft')" data-i18n="mk_day_even">📅 Juft kunlar</button>
-            <button class="btn btn-ghost ar-filter-btn" data-kuntyp="istisno"
-                    onclick="mkSetDayType('istisno')" data-i18n="mk_day_excl">⚠️ Istisno</button>
           </div>
           <div style="font-size:12px;color:var(--text-dim);margin-top:8px;" id="mkDayInfo"></div>
         </div>
@@ -2107,6 +2110,49 @@ Ozodbek 4</div>
       </div>
     </div>
 
+    <!-- MARKAZ — HISOBOT OPSIYALARI MODAL -->
+    <div class="modal-overlay" id="mkReportModal">
+      <div class="modal" style="max-width:540px;">
+        <div class="modal-header">
+          <span data-i18n="mk_report_title">📄 Hisobot yaratish</span>
+          <button class="modal-close" onclick="closeMkReport()">✕</button>
+        </div>
+        <div class="modal-body">
+          <div style="background:var(--input-bg);border-left:3px solid var(--accent);
+               padding:8px 12px;border-radius:4px;margin-bottom:12px;font-size:12px;color:var(--text-dim);">
+            📋 <span data-i18n="mk_report_info">PDF da nimalarni chiqarish kerakligini tanlang. A4 yon turish (landscape).</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label class="check-row"><input type="checkbox" id="mkOptUstoz" checked>
+              <span data-i18n="mk_opt_ustoz">👨‍🏫 O'qituvchilar ismi</span></label>
+            <label class="check-row"><input type="checkbox" id="mkOptFan" checked>
+              <span data-i18n="mk_opt_fan">📚 Fanlar nomi</span></label>
+            <label class="check-row"><input type="checkbox" id="mkOptIstisno" checked>
+              <span data-i18n="mk_opt_istisno">🌸 Istisno kunlar (pushti)</span></label>
+            <label class="check-row"><input type="checkbox" id="mkOptDoimiy" checked>
+              <span data-i18n="mk_opt_doimiy">🟢 Doimiy o'quvchilar soni</span></label>
+            <label class="check-row"><input type="checkbox" id="mkOptYangi" checked>
+              <span data-i18n="mk_opt_yangi">🔴 Yangi o'quvchilar soni</span></label>
+            <label class="check-row"><input type="checkbox" id="mkOptIzoh" checked>
+              <span data-i18n="mk_opt_izoh">💬 Izohlar</span></label>
+            <label class="check-row"><input type="checkbox" id="mkOptYangiList" checked>
+              <span data-i18n="mk_opt_yangi_list">📋 Yangi o'quvchilar ro'yxati (alohida sahifa)</span></label>
+          </div>
+          <div style="margin-top:14px;background:rgba(0,212,170,0.05);padding:8px 12px;
+               border-radius:4px;font-size:11px;color:var(--text-dim);">
+            <b data-i18n="mk_report_struct">📑 Sahifalar:</b><br>
+            • 1-Varaq: Birinchi 8 xona<br>
+            • 2-Varaq: Keyingi 8 xona (agar 8+ xona bo'lsa)<br>
+            • 3-Varaq: Yangi o'quvchilar ro'yxati (sana bilan)
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeMkReport()" data-i18n="cancel">Bekor</button>
+          <button class="btn btn-primary" onclick="mkGenerateReport()" data-i18n="mk_report_gen">📄 PDF yaratish</button>
+        </div>
+      </div>
+    </div>
+
     <!-- MARKAZ — IZOHNI KO'RISH (💬 bosilganda) -->
     <div class="modal-overlay" id="mkIzohModal">
       <div class="modal" style="max-width:480px;">
@@ -2283,6 +2329,13 @@ const I18N = {
     mk_filter_all_ustoz:"Barcha ustozlar", mk_filter_all_xona:"Barcha xonalar",
     mk_filter_all_vaqt:"Barcha vaqt", mk_filter_yangilar:"🔴 Yangi bor",
     mk_filter_reset:"↺", mk_no_results:"Natija topilmadi",
+    mk_print_report:"Hisobot yaratish", mk_report_title:"📄 Hisobot yaratish",
+    mk_report_info:"PDF da nimalarni chiqarish kerakligini tanlang. A4 yon turish.",
+    mk_opt_ustoz:"👨‍🏫 O'qituvchilar ismi", mk_opt_fan:"📚 Fanlar nomi",
+    mk_opt_istisno:"🌸 Istisno kunlar (pushti)", mk_opt_doimiy:"🟢 Doimiy o'quvchilar soni",
+    mk_opt_yangi:"🔴 Yangi o'quvchilar soni", mk_opt_izoh:"💬 Izohlar",
+    mk_opt_yangi_list:"📋 Yangi o'quvchilar ro'yxati (alohida sahifa)",
+    mk_report_struct:"📑 Sahifalar:", mk_report_gen:"📄 PDF yaratish",
     mk_g_nomi_ph:"Masalan: A1-1, Kichik guruh, Beta...",
     mk_izoh_title:"💬 Guruh izohi", mk_izoh_edit:"✏️ Tahrirlash",
     mk_fans:"📚 Fanlar", mk_add_fan:"➕ Fan qo'shish",
@@ -6927,6 +6980,22 @@ function mkHourOf(v) {
   return parseInt(f.slice(0,2));
 }
 
+// Sanani DD.MM ga formatlash — "2026-05-15" → "15.05"
+function mkFormatSana(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  // ISO YYYY-MM-DD
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return iso[3] + '.' + iso[2];
+  // Date object
+  const d = new Date(v);
+  if (!isNaN(d.getTime())) {
+    return String(d.getDate()).padStart(2,'0') + '.' +
+           String(d.getMonth()+1).padStart(2,'0');
+  }
+  return s.slice(0, 10);
+}
+
 // Markazni boshlash — barcha ma'lumotlarni yuklash
 let mkTasks = [];
 let mkMaps = [];  // Bir nechta xarita rasmlari
@@ -7373,24 +7442,26 @@ function mkRenderDoimiyList() {
       '📭 ' + t('mk_no_doimiy') + '</div>';
     return;
   }
-  body.innerHTML = list.map((y, i) =>
-    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;' +
-    'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);' +
-    'border-radius:6px;padding:9px 12px;margin-bottom:6px;">' +
-    '<div style="flex:1;min-width:0;font-size:13px;line-height:1.4;">' +
-    '<b style="color:#f59e0b;">' + (i+1) + '. ' + escapeHtml(String(y.fio)) + '</b>' +
-    (y.telefon ? '<br><span style="color:var(--text-dim);font-size:11px;">📞 ' +
-      escapeHtml(String(y.telefon)) + '</span>' : '') +
-    '</div>' +
-    '<div style="display:flex;gap:5px;">' +
-    '<button onclick="mkEditOquvchi(\'' + y.id + '\')" ' +
-    'style="background:#f59e0b;color:#fff;border:none;border-radius:5px;' +
-    'padding:5px 10px;font-size:13px;cursor:pointer;">✏️</button>' +
-    '<button onclick="mkDeleteOquvchi(\'' + y.id + '\')" ' +
-    'style="background:#ef4444;color:#fff;border:none;border-radius:5px;' +
-    'padding:5px 10px;font-size:13px;cursor:pointer;">🗑️</button>' +
-    '</div></div>'
-  ).join('');
+  body.innerHTML = list.map((y, i) => {
+    const sana = y.qoshilganSana ? mkFormatSana(y.qoshilganSana) : '';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;' +
+      'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);' +
+      'border-radius:6px;padding:9px 12px;margin-bottom:6px;">' +
+      '<div style="flex:1;min-width:0;font-size:13px;line-height:1.4;">' +
+      '<b style="color:#f59e0b;">' + (i+1) + '. ' + escapeHtml(String(y.fio)) + '</b>' +
+      (sana ? ' <span style="color:var(--text-dim);font-size:11px;font-weight:400;">📅 ' + sana + '</span>' : '') +
+      (y.telefon ? '<br><span style="color:var(--text-dim);font-size:11px;">📞 ' +
+        escapeHtml(String(y.telefon)) + '</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:5px;">' +
+      '<button onclick="mkEditOquvchi(\'' + y.id + '\')" ' +
+      'style="background:#f59e0b;color:#fff;border:none;border-radius:5px;' +
+      'padding:5px 10px;font-size:13px;cursor:pointer;">✏️</button>' +
+      '<button onclick="mkDeleteOquvchi(\'' + y.id + '\')" ' +
+      'style="background:#ef4444;color:#fff;border:none;border-radius:5px;' +
+      'padding:5px 10px;font-size:13px;cursor:pointer;">🗑️</button>' +
+      '</div></div>';
+  }).join('');
 }
 
 // ============================================================
@@ -7725,9 +7796,10 @@ function mkRenderVisual() {
 function mkDayBelongsToType(g, dayType) {
   if (g.kunTuri === dayType) return true;
   if (g.kunTuri === 'istisno') {
-    const days = new Set(String(g.tanlanganKunlar||'').split(',').filter(Boolean));
+    const days = new Set(String(g.tanlanganKunlar||'').split(',').map(s=>s.trim()).filter(Boolean));
     if (dayType === 'toq') {
-      return days.has('Du') || days.has('Cho') || days.has('Ju');
+      // Yakshanba ham Toq ga kiritamiz
+      return days.has('Du') || days.has('Cho') || days.has('Ju') || days.has('Ya');
     }
     if (dayType === 'juft') {
       return days.has('Se') || days.has('Pa') || days.has('Sh');
@@ -7833,16 +7905,36 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
         conflictBadge = '<span style="background:#3b82f6;color:#fff;font-size:9px;font-weight:700;' +
           'padding:1px 5px;border-radius:3px;margin-left:4px;">ESKI</span>';
       }
+    } else if (isPushti) {
+      // ISTISNO guruh — pushti soyali chet (chap+o'ng)
+      blockBg = 'linear-gradient(135deg,rgba(236,72,153,0.08),rgba(236,72,153,0.14))';
+      blockBorder = 'box-shadow: inset 3px 0 0 #ec4899, inset -3px 0 0 #ec4899;';
     }
 
     // Istisno guruh ekanligini belgilash (agar joriy yorliq Toq/Juft bo'lsa)
     const isExceptionGroup = (g.kunTuri === 'istisno' && mkCurrentDayType !== 'istisno');
     let exceptionBadge = '';
+    let isPushti = false;
     if (isExceptionGroup) {
-      const days = String(g.tanlanganKunlar||'').split(',').filter(Boolean).join(', ');
-      exceptionBadge = '<div style="background:rgba(245,158,11,0.15);color:#f59e0b;' +
-        'padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;' +
-        'display:inline-block;margin-bottom:3px;">⚠️ Istisno: ' + days + '</div><br>';
+      isPushti = true;
+      const days = String(g.tanlanganKunlar||'').split(',').map(s=>s.trim()).filter(Boolean);
+      const hasYa = days.includes('Ya');
+      const otherDays = days.filter(d => d !== 'Ya');
+      // Yakshanba — alohida badge (faqat Toq tabda)
+      if (hasYa && mkCurrentDayType === 'toq') {
+        exceptionBadge += '<span style="background:#ec4899;color:#fff;font-size:9px;font-weight:700;' +
+          'padding:1px 5px;border-radius:3px;margin-left:4px;">🌟 Yakshanba</span>';
+      }
+      // Boshqa istisno kunlar — joriy tabga mos kelganlari
+      const matchedOthers = otherDays.filter(d => {
+        if (mkCurrentDayType === 'toq') return ['Du','Cho','Ju'].includes(d);
+        if (mkCurrentDayType === 'juft') return ['Se','Pa','Sh'].includes(d);
+        return false;
+      });
+      if (matchedOthers.length) {
+        exceptionBadge += '<span style="background:#ec4899;color:#fff;font-size:9px;font-weight:700;' +
+          'padding:1px 5px;border-radius:3px;margin-left:4px;">⚠️ ' + matchedOthers.join(', ') + '</span>';
+      }
     }
 
     // YASHIL: son = qo'lda kiritilgan (eski) + doimiy ro'yxat (FIO bilan saqlanganlar)
@@ -7868,11 +7960,13 @@ function mkRenderXonaCard(xona, activeGuruhs, conflicts) {
         '<div style="font-size:10px;color:#ef4444;font-weight:700;margin-bottom:3px;">' +
         '🔴 ' + t('mk_yangilar') + ' (' + yangilar.length + '):</div>';
       yangilar.forEach(y => {
+        const sana = y.qoshilganSana ? mkFormatSana(y.qoshilganSana) : '';
         yangiHtml += '<div style="display:flex;justify-content:space-between;align-items:center;' +
           'gap:4px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);' +
           'border-radius:4px;padding:4px 6px;margin-bottom:3px;">' +
           '<div style="font-size:10px;color:#ef4444;flex:1;min-width:0;line-height:1.3;">' +
           '<b>' + escapeHtml(String(y.fio)) + '</b>' +
+          (sana ? ' <span style="color:var(--text-dim);font-weight:400;">📅 ' + sana + '</span>' : '') +
           (y.telefon ? '<br><span style="color:var(--text-dim);font-weight:400;">📞 ' +
             escapeHtml(String(y.telefon)) + '</span>' : '') +
           '</div>' +
@@ -8547,6 +8641,269 @@ function mkDeleteXona(id) {
 }
 
 // ============================================================
+// ============================================================
+//  MARKAZ — HISOBOT PDF
+// ============================================================
+function mkPrintReport() {
+  // Modal ochish
+  document.getElementById('mkReportModal').classList.add('open');
+}
+
+function closeMkReport() {
+  document.getElementById('mkReportModal').classList.remove('open');
+}
+
+function mkGenerateReport() {
+  closeMkReport();
+  setTimeout(() => mkBuildPDF(), 100);
+}
+
+function mkBuildPDF() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('⚠️ jsPDF kutubxonasi yuklanmadi');
+    return;
+  }
+  const opts = {
+    showUstoz:    document.getElementById('mkOptUstoz').checked,
+    showDoimiy:   document.getElementById('mkOptDoimiy').checked,
+    showYangi:    document.getElementById('mkOptYangi').checked,
+    showIstisno:  document.getElementById('mkOptIstisno').checked,
+    showYangiList: document.getElementById('mkOptYangiList').checked,
+    showFan:      document.getElementById('mkOptFan').checked,
+    showIzoh:     document.getElementById('mkOptIzoh').checked
+  };
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', format:'a4', unit:'mm'});
+  const pageW = 297, pageH = 210;
+  const margin = 8;
+
+  // ----- Header funksiyasi -----
+  const filial = mkFilials.find(f => f.id === mkCurrentFilialID);
+  const filNomi = filial ? filial.nomi : 'AOK Markaz';
+  const kunNomi = mkCurrentDayType === 'toq' ? 'TOQ KUNLAR (Du, Cho, Ju, Ya)' :
+                  mkCurrentDayType === 'juft' ? 'JUFT KUNLAR (Se, Pa, Sh)' : '';
+  const sana = new Date().toLocaleDateString('uz-UZ');
+
+  function drawHeader(pageLabel) {
+    doc.setFontSize(14);
+    doc.setTextColor(0,0,0);
+    doc.setFont(undefined, 'bold');
+    doc.text(filNomi + ' — ' + kunNomi, pageW/2, margin+5, {align:'center'});
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100,100,100);
+    doc.text('Sana: ' + sana + '  •  ' + pageLabel, pageW/2, margin+10, {align:'center'});
+    doc.setDrawColor(180,180,180);
+    doc.line(margin, margin+12, pageW-margin, margin+12);
+  }
+
+  // ----- Xona kartochkasi chizish -----
+  function drawXonaCard(x, posX, posY, w, h) {
+    // Border
+    doc.setDrawColor(180,180,180);
+    doc.setFillColor(255,255,255);
+    doc.roundedRect(posX, posY, w, h, 2, 2, 'FD');
+
+    // Sarlavha — xona nomi va etaj
+    doc.setFillColor(245,245,250);
+    doc.rect(posX, posY, w, 7, 'F');
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(0,140,140);
+    doc.text(String(x.nomi||'?'), posX+2, posY+5);
+    doc.setFontSize(7);
+    doc.setFont(undefined, 'normal');
+    doc.setTextColor(100,100,100);
+    if (x.etaj) {
+      doc.text(String(x.etaj) + '-etaj', posX+w-2, posY+5, {align:'right'});
+    }
+
+    // Bu xona guruhlari (filtr bilan)
+    let guruhs = mkGuruhs.filter(g => g.xonaID === x.id);
+    guruhs = guruhs.filter(g => mkDayBelongsToType(g, mkCurrentDayType));
+    guruhs = guruhs.filter(g => mkGuruhMatchesFilter(g));
+    // Vaqt bo'yicha saralash
+    guruhs.sort((a,b) => (mkHourOf(a.vaqtDan)||0) - (mkHourOf(b.vaqtDan)||0));
+
+    if (!guruhs.length) {
+      doc.setFontSize(8);
+      doc.setTextColor(180,180,180);
+      doc.text('— Bo\'sh —', posX+w/2, posY+h/2, {align:'center'});
+      return;
+    }
+
+    // Har guruh — bir qator
+    let cy = posY + 9;
+    const lineH = Math.max(7, (h - 9) / guruhs.length);
+    guruhs.forEach(g => {
+      if (cy + 6 > posY + h - 1) return;
+      const u = mkUstozs.find(uu => uu.id === g.ustozID);
+      const fan = mkFans.find(ff => ff.id === g.fanID);
+      const isIstisno = g.kunTuri === 'istisno';
+      // Rang: istisno → pushti fon
+      if (isIstisno && opts.showIstisno) {
+        doc.setFillColor(252, 232, 244);
+        doc.rect(posX+1, cy-3.5, w-2, lineH-1, 'F');
+      }
+      // Vaqt
+      doc.setFontSize(7);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(50,50,50);
+      const vaqt = String(mkHourOf(g.vaqtDan)||'').padStart(2,'0') + ':00–' +
+                   String(mkHourOf(g.vaqtGacha)||'').padStart(2,'0') + ':00';
+      doc.text(vaqt, posX+2, cy);
+      // Ustoz
+      if (opts.showUstoz) {
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(20,20,20);
+        const ustText = u ? String(u.ism) : '—';
+        doc.text(ustText.slice(0,18), posX+22, cy);
+      }
+      // Istisno belgi (kunlar)
+      if (isIstisno && opts.showIstisno) {
+        const days = String(g.tanlanganKunlar||'').split(',').map(s=>s.trim()).filter(Boolean);
+        const hasYa = days.includes('Ya');
+        const txt = (hasYa ? '🌟Ya ' : '') + days.filter(d=>d!=='Ya').join(',');
+        doc.setFontSize(6);
+        doc.setTextColor(180,30,120);
+        doc.text(txt, posX+w-2, cy, {align:'right'});
+      }
+      // Keyingi qator — fan, sonlar
+      let cy2 = cy + 3;
+      if (opts.showFan && fan) {
+        doc.setFontSize(6);
+        doc.setTextColor(8,145,178);
+        doc.text('📚 ' + String(fan.nomi).slice(0,16), posX+22, cy2);
+      }
+      // Sonlar
+      const sonManual = parseInt(g.oquvchiSoni) || 0;
+      const yangi = mkYangis.filter(y => {
+        if (y.guruhID !== g.id) return false;
+        if (y.yangimi === false) return false;
+        return String(y.yangimi||'true').toLowerCase().trim() !== 'false';
+      });
+      const doimiy = mkYangis.filter(y => {
+        if (y.guruhID !== g.id) return false;
+        if (y.yangimi === false) return true;
+        return String(y.yangimi||'').toLowerCase().trim() === 'false';
+      });
+      doc.setFontSize(6);
+      let rightX = posX + w - 2;
+      if (opts.showYangi && yangi.length) {
+        doc.setTextColor(220,30,30);
+        doc.text('🔴' + yangi.length, rightX, cy2, {align:'right'});
+        rightX -= 9;
+      }
+      if (opts.showDoimiy && (sonManual + doimiy.length) > 0) {
+        doc.setTextColor(16,150,80);
+        doc.text('🟢' + (sonManual + doimiy.length), rightX, cy2, {align:'right'});
+      }
+      cy += lineH;
+    });
+  }
+
+  // ----- 1-2 sahifa: xonalarni bo'lib chiqarish -----
+  let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+  xonas = mkSortXonas(xonas);
+  // Foydalanuvchi 16 ta xona deydi, 8 + 8 ga bo'lamiz
+  // Agar kam bo'lsa — 1 sahifa bilan
+  const PER_PAGE = 8;
+  const totalPages = Math.max(1, Math.ceil(xonas.length / PER_PAGE));
+
+  for (let p = 0; p < totalPages; p++) {
+    if (p > 0) doc.addPage('a4', 'landscape');
+    drawHeader('Varaq ' + (p+1) + '/' + (totalPages + (opts.showYangiList ? 1 : 0)));
+    const pageXonas = xonas.slice(p * PER_PAGE, (p+1) * PER_PAGE);
+    // 4 ustun x 2 qator grid
+    const cols = 4, rows = 2;
+    const gridW = pageW - 2*margin;
+    const gridH = pageH - margin - 22; // header ostida
+    const gridTop = margin + 16;
+    const cellW = (gridW - (cols-1)*3) / cols;
+    const cellH = (gridH - (rows-1)*3) / rows;
+    pageXonas.forEach((x, i) => {
+      const c = i % cols;
+      const r = Math.floor(i / cols);
+      const px = margin + c * (cellW + 3);
+      const py = gridTop + r * (cellH + 3);
+      drawXonaCard(x, px, py, cellW, cellH);
+    });
+  }
+
+  // ----- Oxirgi sahifa: Yangi o'quvchilar -----
+  if (opts.showYangiList) {
+    doc.addPage('a4', 'landscape');
+    drawHeader('Yangi qo\'shilgan o\'quvchilar');
+    // Yangilar — sana bo'yicha saralangan (yangisi yuqorida)
+    const allYangi = mkYangis.filter(y => {
+      if (y.yangimi === false) return false;
+      return String(y.yangimi||'true').toLowerCase().trim() !== 'false';
+    });
+    // Faqat joriy filial xonalaridagi guruhlardagi
+    const filialXonaIds = new Set(mkXonas.filter(x => x.filialID === mkCurrentFilialID).map(x=>x.id));
+    const filteredYangi = allYangi.filter(y => {
+      const g = mkGuruhs.find(gg => gg.id === y.guruhID);
+      return g && filialXonaIds.has(g.xonaID);
+    });
+    // Sana bo'yicha saralash (yangi birinchi)
+    filteredYangi.sort((a,b) => String(b.qoshilganSana||'').localeCompare(String(a.qoshilganSana||'')));
+
+    if (!filteredYangi.length) {
+      doc.setFontSize(12);
+      doc.setTextColor(150,150,150);
+      doc.text('Yangi qo\'shilgan o\'quvchi yo\'q', pageW/2, pageH/2, {align:'center'});
+    } else {
+      // autoTable
+      const rows = filteredYangi.map((y, i) => {
+        const g = mkGuruhs.find(gg => gg.id === y.guruhID);
+        const x = g ? mkXonas.find(xx => xx.id === g.xonaID) : null;
+        const u = g ? mkUstozs.find(uu => uu.id === g.ustozID) : null;
+        const fan = g ? mkFans.find(ff => ff.id === g.fanID) : null;
+        const vaqt = g ?
+          (String(mkHourOf(g.vaqtDan)||'').padStart(2,'0') + ':00–' +
+           String(mkHourOf(g.vaqtGacha)||'').padStart(2,'0') + ':00') : '—';
+        const sanaT = mkFormatSana(y.qoshilganSana) || '—';
+        return [
+          String(i+1),
+          sanaT,
+          String(y.fio||''),
+          String(y.telefon||'—'),
+          x ? x.nomi : '—',
+          u ? u.ism : '—',
+          fan ? fan.nomi : '—',
+          vaqt,
+          g && g.nomi ? g.nomi : '—'
+        ];
+      });
+      doc.autoTable({
+        startY: margin + 16,
+        head: [['#','Sana','FIO','Telefon','Xona','Ustoz','Fan','Vaqt','Guruh']],
+        body: rows,
+        styles: { fontSize: 8, cellPadding: 1.5 },
+        headStyles: { fillColor: [0, 140, 140], textColor: [255,255,255], fontSize: 8 },
+        alternateRowStyles: { fillColor: [248,250,252] },
+        columnStyles: {
+          0: { cellWidth: 10, halign: 'center' },
+          1: { cellWidth: 18, halign: 'center' },
+          2: { cellWidth: 50 },
+          3: { cellWidth: 32 },
+          4: { cellWidth: 26 },
+          5: { cellWidth: 50 },
+          6: { cellWidth: 32 },
+          7: { cellWidth: 25, halign: 'center' },
+          8: { cellWidth: 'auto' }
+        }
+      });
+    }
+  }
+
+  // PDF saqlash
+  const fileName = 'AOK_Markaz_Hisobot_' + new Date().toISOString().slice(0,10) + '.pdf';
+  doc.save(fileName);
+}
+
 // ============================================================
 //  MARKAZ — IZOH KO'RISH (💬 belgi bosilganda)
 // ============================================================
