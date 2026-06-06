@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
@@ -2006,6 +2007,22 @@ Ozodbek 4</div>
             </div>
           </div>
 
+          <!-- Fan va Ustoz filterlari (ixtiyoriy) -->
+          <div style="display:flex;gap:10px;margin-top:10px;">
+            <div style="flex:1;">
+              <label data-i18n="mk_yangi_filter_fan">📚 Fan (ixtiyoriy):</label>
+              <select id="mkYangiFilterFan">
+                <option value="" data-i18n="mk_yangi_any">— Barchasi —</option>
+              </select>
+            </div>
+            <div style="flex:1;">
+              <label data-i18n="mk_yangi_filter_ustoz">👨‍🏫 O'qituvchi (ixtiyoriy):</label>
+              <select id="mkYangiFilterUstoz">
+                <option value="" data-i18n="mk_yangi_any">— Barchasi —</option>
+              </select>
+            </div>
+          </div>
+
           <button class="btn btn-primary" style="width:100%;margin-top:12px;"
                   onclick="mkYangiFindGuruhs()">
             <span data-i18n="mk_yangi_find">🔍 Mos guruhlarni topish</span>
@@ -2357,6 +2374,7 @@ const I18N = {
     mk_promote_confirm:"doimiy ro'yxatga kiritamizmi?",
     mk_promote_all_confirm:"yangi o'quvchini doimiyga kiritamizmi?",
     mk_add_yangi:"➕ Yangi o'quvchini qo'shish",
+    mk_yangi_filter_fan:"📚 Fan (ixtiyoriy):", mk_yangi_filter_ustoz:"👨‍🏫 O'qituvchi (ixtiyoriy):", mk_yangi_any:"Barchasi",
     mk_add_yangi_hint:"Vaqt va kunni tanlang — mos guruhlar avtomatik tavsiya qilinadi",
     mk_yangi_title:"👤 Yangi o'quvchi qo'shish",
     mk_yangi_fio:"F.I.O:", mk_yangi_tel:"📞 Telefon:",
@@ -2596,6 +2614,8 @@ const I18N = {
     mk_promote_confirm:"add to permanent list?",
     mk_promote_all_confirm:"new students to permanent list?",
     mk_add_yangi:"➕ Add new student",
+    mk_yangi_filter_fan:"📚 Subject (optional):", mk_yangi_filter_ustoz:"👨‍🏫 Teacher (optional):", mk_yangi_any:"All",
+    mk_yangi_filter_fan:"📚 Subject (optional):", mk_yangi_filter_ustoz:"👨‍🏫 Teacher (optional):", mk_yangi_any:"All",
     mk_add_yangi_hint:"Select time and days — matching groups will be suggested",
     mk_yangi_title:"👤 Add new student",
     mk_yangi_fio:"Full name:", mk_yangi_tel:"📞 Phone:",
@@ -2835,6 +2855,7 @@ const I18N = {
     mk_promote_confirm:"добавить в постоянный список?",
     mk_promote_all_confirm:"новых студентов в список?",
     mk_add_yangi:"➕ Добавить нового студента",
+    mk_yangi_filter_fan:"📚 Предмет (опц):", mk_yangi_filter_ustoz:"👨‍🏫 Препод. (опц):", mk_yangi_any:"Все",
     mk_add_yangi_hint:"Выберите время и дни — подходящие группы будут предложены",
     mk_yangi_title:"👤 Добавить нового студента",
     mk_yangi_fio:"Ф.И.О:", mk_yangi_tel:"📞 Телефон:",
@@ -8145,6 +8166,22 @@ function mkAddYangi() {
   document.getElementById('mkYangiVaqtGacha').value = '10:00';
   document.getElementById('mkYangiTavsiya').innerHTML = '';
   document.querySelectorAll('#mkYangiDaysBox input').forEach(c => c.checked = false);
+  // Fan dropdown
+  const fSel = document.getElementById('mkYangiFilterFan');
+  if (fSel) {
+    fSel.innerHTML = '<option value="">— ' + t('mk_yangi_any') + ' —</option>' +
+      mkSortByName(mkFans, 'nomi').map(f =>
+        '<option value="' + f.id + '">' + escapeHtml(f.nomi) + '</option>').join('');
+    fSel.value = '';
+  }
+  // Ustoz dropdown
+  const uSel = document.getElementById('mkYangiFilterUstoz');
+  if (uSel) {
+    uSel.innerHTML = '<option value="">— ' + t('mk_yangi_any') + ' —</option>' +
+      mkSortByName(mkUstozs, 'ism').map(u =>
+        '<option value="' + u.id + '">' + escapeHtml(u.ism) + '</option>').join('');
+    uSel.value = '';
+  }
   mkYangiSelDt('toq');
   document.getElementById('mkYangiModal').classList.add('open');
   setTimeout(() => document.getElementById('mkYangiFIO').focus(), 100);
@@ -8188,11 +8225,19 @@ function mkYangiFindGuruhs() {
   const filialXonaIds = new Set(mkXonas.filter(x =>
     x.filialID === mkCurrentFilialID).map(x => x.id));
 
+  // Fan va Ustoz filtri (ixtiyoriy)
+  const filterFanId = document.getElementById('mkYangiFilterFan').value;
+  const filterUstozId = document.getElementById('mkYangiFilterUstoz').value;
+
   const matching = mkGuruhs.filter(g => {
     if (!filialXonaIds.has(g.xonaID)) return false;
     if (!mkDaysOverlap(fakeGuruh, g)) return false;
     if (!mkTimeOverlap(fakeGuruh.vaqtDan, fakeGuruh.vaqtGacha,
                        g.vaqtDan, g.vaqtGacha)) return false;
+    // Qo'shimcha Fan filtri
+    if (filterFanId && g.fanID !== filterFanId) return false;
+    // Qo'shimcha Ustoz filtri
+    if (filterUstozId && g.ustozID !== filterUstozId) return false;
     return true;
   });
 
@@ -8658,11 +8703,17 @@ function mkGenerateReport() {
   setTimeout(() => mkBuildPDF(), 100);
 }
 
-function mkBuildPDF() {
-  if (!window.jspdf || !window.jspdf.jsPDF) {
-    alert('⚠️ jsPDF kutubxonasi yuklanmadi');
-    return;
+// ============================================================
+//  MARKAZ — HISOBOT (html2canvas → JPG + PDF)
+// ============================================================
+async function mkBuildPDF() {
+  if (!window.html2canvas) {
+    alert('⚠️ html2canvas kutubxonasi yuklanmadi'); return;
   }
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('⚠️ jsPDF kutubxonasi yuklanmadi'); return;
+  }
+
   const opts = {
     showUstoz:    document.getElementById('mkOptUstoz').checked,
     showDoimiy:   document.getElementById('mkOptDoimiy').checked,
@@ -8673,113 +8724,199 @@ function mkBuildPDF() {
     showIzoh:     document.getElementById('mkOptIzoh').checked
   };
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape', format:'a4', unit:'mm'});
-  const pageW = 297, pageH = 210;
-  const margin = 8;
+  // Yuklash xabari
+  const loadBox = document.createElement('div');
+  loadBox.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+    'background:#fff;color:#000;padding:20px 30px;border-radius:10px;z-index:99999;' +
+    'box-shadow:0 8px 32px rgba(0,0,0,0.3);font-size:14px;font-weight:600;';
+  loadBox.textContent = '⏳ Hisobot tayyorlanmoqda...';
+  document.body.appendChild(loadBox);
 
-  // ----- Header funksiyasi -----
-  const filial = mkFilials.find(f => f.id === mkCurrentFilialID);
-  const filNomi = filial ? filial.nomi : 'AOK Markaz';
-  const kunNomi = mkCurrentDayType === 'toq' ? 'TOQ KUNLAR (Du, Cho, Ju, Ya)' :
-                  mkCurrentDayType === 'juft' ? 'JUFT KUNLAR (Se, Pa, Sh)' : '';
-  const sana = new Date().toLocaleDateString('uz-UZ');
+  try {
+    // Print HTML yaratish
+    const wrap = document.createElement('div');
+    wrap.id = 'mkPrintWrap';
+    wrap.style.cssText = 'position:fixed;left:-99999px;top:0;width:1600px;' +
+      'background:#ffffff;color:#1e293b;padding:30px;box-sizing:border-box;' +
+      'font-family:"Segoe UI",Arial,sans-serif;';
 
-  function drawHeader(pageLabel) {
-    doc.setFontSize(14);
-    doc.setTextColor(0,0,0);
-    doc.setFont(undefined, 'bold');
-    doc.text(filNomi + ' — ' + kunNomi, pageW/2, margin+5, {align:'center'});
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(100,100,100);
-    doc.text('Sana: ' + sana + '  •  ' + pageLabel, pageW/2, margin+10, {align:'center'});
-    doc.setDrawColor(180,180,180);
-    doc.line(margin, margin+12, pageW-margin, margin+12);
+    const filial = mkFilials.find(f => f.id === mkCurrentFilialID);
+    const filNomi = filial ? filial.nomi : 'AOK Markaz';
+    const kunNomi = mkCurrentDayType === 'toq' ? 'TOQ KUNLAR (Du, Cho, Ju, Ya)' :
+                    mkCurrentDayType === 'juft' ? 'JUFT KUNLAR (Se, Pa, Sh)' : '';
+    const sana = new Date().toLocaleDateString('uz-UZ');
+
+    wrap.innerHTML =
+      '<div style="text-align:center;margin-bottom:24px;border-bottom:2px solid #0891b2;padding-bottom:14px;">' +
+        '<div style="font-size:28px;font-weight:800;color:#0891b2;">' +
+          escapeHtml(filNomi) + ' — ' + kunNomi +
+        '</div>' +
+        '<div style="font-size:14px;color:#64748b;margin-top:4px;">Sana: ' + sana + '</div>' +
+      '</div>' +
+      '<div id="mkPrintGrid"></div>';
+
+    // Xonalarni render qilish
+    let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
+    xonas = mkSortXonas(xonas);
+    const conflicts = mkDetectConflicts ? mkDetectConflicts() : [];
+
+    let gridHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">';
+    xonas.forEach(x => {
+      gridHtml += mkRenderXonaCardPrint(x, conflicts, opts);
+    });
+    gridHtml += '</div>';
+
+    // Yangi o'quvchilar ro'yxati
+    if (opts.showYangiList) {
+      const xonaIds = new Set(xonas.map(x => x.id));
+      const yangilar = mkYangis.filter(y => {
+        if (y.yangimi === false || String(y.yangimi||'').toLowerCase()==='false') return false;
+        const g = mkGuruhs.find(gg => gg.id === y.guruhID);
+        return g && xonaIds.has(g.xonaID);
+      }).sort((a,b) => String(b.qoshilganSana||'').localeCompare(String(a.qoshilganSana||'')));
+
+      if (yangilar.length) {
+        gridHtml += '<div style="margin-top:30px;page-break-before:always;">' +
+          '<h2 style="color:#ef4444;font-size:22px;border-bottom:2px solid #ef4444;padding-bottom:8px;">' +
+          '🔴 Yangi qo\'shilgan o\'quvchilar (' + yangilar.length + ')</h2>' +
+          '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;">' +
+          '<thead><tr style="background:#0891b2;color:#fff;">' +
+          '<th style="padding:8px;border:1px solid #0891b2;text-align:center;width:40px;">#</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;width:80px;">Sana</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;">FIO</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;width:130px;">Telefon</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;width:90px;">Xona</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;">Ustoz</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;">Fan</th>' +
+          '<th style="padding:8px;border:1px solid #0891b2;width:100px;">Vaqt</th>' +
+          '</tr></thead><tbody>';
+        yangilar.forEach((y, i) => {
+          const g = mkGuruhs.find(gg => gg.id === y.guruhID);
+          const xon = g ? mkXonas.find(xx => xx.id === g.xonaID) : null;
+          const u = g ? mkUstozs.find(uu => uu.id === g.ustozID) : null;
+          const fan = g ? mkFans.find(ff => ff.id === g.fanID) : null;
+          const vaqt = g ? (mkFormatTimeHour(g.vaqtDan) + '–' + mkFormatTimeHour(g.vaqtGacha)) : '—';
+          const bg = i%2===0 ? '#fff' : '#f8fafc';
+          gridHtml += '<tr style="background:' + bg + ';">' +
+            '<td style="padding:6px;border:1px solid #ddd;text-align:center;">' + (i+1) + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;text-align:center;">' + escapeHtml(mkFormatSana(y.qoshilganSana)) + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;font-weight:600;">' + escapeHtml(String(y.fio||'')) + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;">' + escapeHtml(String(y.telefon||'—')) + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;">' + escapeHtml(xon?xon.nomi:'—') + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;">' + escapeHtml(u?u.ism:'—') + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;color:#0891b2;">' + escapeHtml(fan?fan.nomi:'—') + '</td>' +
+            '<td style="padding:6px;border:1px solid #ddd;text-align:center;">' + escapeHtml(vaqt) + '</td>' +
+            '</tr>';
+        });
+        gridHtml += '</tbody></table></div>';
+      }
+    }
+
+    wrap.querySelector('#mkPrintGrid').innerHTML = gridHtml;
+    document.body.appendChild(wrap);
+
+    // html2canvas
+    const canvas = await html2canvas(wrap, {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+      useCORS: true,
+      windowWidth: 1600
+    });
+
+    document.body.removeChild(wrap);
+
+    const dateStr = new Date().toISOString().slice(0,10);
+
+    // === JPG download ===
+    const jpgURL = canvas.toDataURL('image/jpeg', 0.92);
+    const jpgLink = document.createElement('a');
+    jpgLink.download = 'AOK_Markaz_' + dateStr + '.jpg';
+    jpgLink.href = jpgURL;
+    jpgLink.click();
+
+    // === PDF — multi-page ===
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({orientation:'portrait', format:'a4', unit:'mm'});
+    const pageW = 210, pageH = 297;
+    const marginMM = 8;
+    const pdfW = pageW - 2*marginMM;
+    const pdfH = pageH - 2*marginMM;
+
+    // px → mm
+    const pxPerMm = canvas.width / pdfW;
+    const pageHpx = pdfH * pxPerMm;
+    let curY = 0, page = 0;
+
+    while (curY < canvas.height) {
+      if (page > 0) pdf.addPage();
+      const segH = Math.min(pageHpx, canvas.height - curY);
+      // Segment canvas
+      const seg = document.createElement('canvas');
+      seg.width = canvas.width;
+      seg.height = segH;
+      const ctx = seg.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0,0,seg.width,seg.height);
+      ctx.drawImage(canvas, 0, -curY);
+      const segURL = seg.toDataURL('image/jpeg', 0.92);
+      const segMm = segH / pxPerMm;
+      pdf.addImage(segURL, 'JPEG', marginMM, marginMM, pdfW, segMm);
+      curY += pageHpx;
+      page++;
+    }
+
+    pdf.save('AOK_Markaz_' + dateStr + '.pdf');
+  } catch (err) {
+    console.error('PDF xato:', err);
+    alert('⚠️ PDF yaratishda xato: ' + err.message);
+  } finally {
+    if (loadBox.parentNode) loadBox.parentNode.removeChild(loadBox);
+  }
+}
+
+// Print uchun bitta xona kartochkasi (light mode)
+function mkRenderXonaCardPrint(xona, conflicts, opts) {
+  const cap = parseInt(xona.sigimi) || 0;
+  let xonaGuruhs = mkGuruhs.filter(g => g.xonaID === xona.id);
+  xonaGuruhs = xonaGuruhs.filter(g => mkDayBelongsToType(g, mkCurrentDayType));
+  xonaGuruhs = xonaGuruhs.filter(g => mkGuruhMatchesFilter(g));
+
+  let html = '<div style="background:#fff;border:1px solid #d1d5db;border-radius:8px;' +
+    'padding:10px;page-break-inside:avoid;">';
+
+  // Sarlavha
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;' +
+    'border-bottom:2px solid #0891b2;padding-bottom:6px;margin-bottom:8px;">' +
+    '<div style="font-weight:700;color:#0891b2;font-size:15px;">🏠 ' +
+    escapeHtml(xona.nomi) + '</div>' +
+    '<div style="font-size:11px;color:#64748b;text-align:right;">' +
+    (xona.etaj ? '📍 ' + escapeHtml(String(xona.etaj)) + '-etaj<br>' : '') +
+    cap + ' kishi</div></div>';
+
+  // Jihozlar
+  if (xona.jihozlar) {
+    html += '<div style="font-size:10px;color:#64748b;margin-bottom:6px;">' +
+      escapeHtml(String(xona.jihozlar)) + '</div>';
   }
 
-  // ----- Xona kartochkasi chizish -----
-  function drawXonaCard(x, posX, posY, w, h) {
-    // Border
-    doc.setDrawColor(180,180,180);
-    doc.setFillColor(255,255,255);
-    doc.roundedRect(posX, posY, w, h, 2, 2, 'FD');
-
-    // Sarlavha — xona nomi va etaj
-    doc.setFillColor(245,245,250);
-    doc.rect(posX, posY, w, 7, 'F');
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(0,140,140);
-    doc.text(String(x.nomi||'?'), posX+2, posY+5);
-    doc.setFontSize(7);
-    doc.setFont(undefined, 'normal');
-    doc.setTextColor(100,100,100);
-    if (x.etaj) {
-      doc.text(String(x.etaj) + '-etaj', posX+w-2, posY+5, {align:'right'});
-    }
-
-    // Bu xona guruhlari (filtr bilan)
-    let guruhs = mkGuruhs.filter(g => g.xonaID === x.id);
-    guruhs = guruhs.filter(g => mkDayBelongsToType(g, mkCurrentDayType));
-    guruhs = guruhs.filter(g => mkGuruhMatchesFilter(g));
-    // Vaqt bo'yicha saralash
-    guruhs.sort((a,b) => (mkHourOf(a.vaqtDan)||0) - (mkHourOf(b.vaqtDan)||0));
-
-    if (!guruhs.length) {
-      doc.setFontSize(8);
-      doc.setTextColor(180,180,180);
-      doc.text('— Bo\'sh —', posX+w/2, posY+h/2, {align:'center'});
-      return;
-    }
-
-    // Har guruh — bir qator
-    let cy = posY + 9;
-    const lineH = Math.max(7, (h - 9) / guruhs.length);
-    guruhs.forEach(g => {
-      if (cy + 6 > posY + h - 1) return;
+  // Vaqt slotlari 06:00–22:00
+  const slotsHtml = [];
+  let skipUntil = -1;
+  for (let h = 6; h <= 22; h++) {
+    if (h < skipUntil) continue;
+    // Bu soatda boshlanadigan guruh
+    const g = xonaGuruhs.find(gg => mkHourOf(gg.vaqtDan) === h);
+    if (g) {
       const u = mkUstozs.find(uu => uu.id === g.ustozID);
       const fan = mkFans.find(ff => ff.id === g.fanID);
-      const isIstisno = g.kunTuri === 'istisno';
-      // Rang: istisno → pushti fon
-      if (isIstisno && opts.showIstisno) {
-        doc.setFillColor(252, 232, 244);
-        doc.rect(posX+1, cy-3.5, w-2, lineH-1, 'F');
-      }
-      // Vaqt
-      doc.setFontSize(7);
-      doc.setFont(undefined, 'bold');
-      doc.setTextColor(50,50,50);
-      const vaqt = String(mkHourOf(g.vaqtDan)||'').padStart(2,'0') + ':00–' +
-                   String(mkHourOf(g.vaqtGacha)||'').padStart(2,'0') + ':00';
-      doc.text(vaqt, posX+2, cy);
-      // Ustoz
-      if (opts.showUstoz) {
-        doc.setFontSize(7);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(20,20,20);
-        const ustText = u ? String(u.ism) : '—';
-        doc.text(ustText.slice(0,18), posX+22, cy);
-      }
-      // Istisno belgi (kunlar)
-      if (isIstisno && opts.showIstisno) {
-        const days = String(g.tanlanganKunlar||'').split(',').map(s=>s.trim()).filter(Boolean);
-        const hasYa = days.includes('Ya');
-        const txt = (hasYa ? '🌟Ya ' : '') + days.filter(d=>d!=='Ya').join(',');
-        doc.setFontSize(6);
-        doc.setTextColor(180,30,120);
-        doc.text(txt, posX+w-2, cy, {align:'right'});
-      }
-      // Keyingi qator — fan, sonlar
-      let cy2 = cy + 3;
-      if (opts.showFan && fan) {
-        doc.setFontSize(6);
-        doc.setTextColor(8,145,178);
-        doc.text('📚 ' + String(fan.nomi).slice(0,16), posX+22, cy2);
-      }
+      const hStart = h;
+      const hEnd = mkHourOf(g.vaqtGacha) || (h+1);
+      skipUntil = hEnd;
+
       // Sonlar
       const sonManual = parseInt(g.oquvchiSoni) || 0;
-      const yangi = mkYangis.filter(y => {
+      const yangilar = mkYangis.filter(y => {
         if (y.guruhID !== g.id) return false;
         if (y.yangimi === false) return false;
         return String(y.yangimi||'true').toLowerCase().trim() !== 'false';
@@ -8789,120 +8926,79 @@ function mkBuildPDF() {
         if (y.yangimi === false) return true;
         return String(y.yangimi||'').toLowerCase().trim() === 'false';
       });
-      doc.setFontSize(6);
-      let rightX = posX + w - 2;
-      if (opts.showYangi && yangi.length) {
-        doc.setTextColor(220,30,30);
-        doc.text('🔴' + yangi.length, rightX, cy2, {align:'right'});
-        rightX -= 9;
+      const jami = sonManual + doimiy.length + yangilar.length;
+      const pct = cap ? Math.round(jami*100/cap) : 0;
+
+      // Rang: istisno (pushti), konflikt (ko'k/qizil)
+      const isIstisno = g.kunTuri === 'istisno' && opts.showIstisno;
+      const myConflict = conflicts.find(c => c.guruhID === g.id);
+      let bg = '#f0fdf4', border = '#bbf7d0';
+      if (myConflict) {
+        if (myConflict.role === 'new') { bg = '#fef2f2'; border = '#fecaca'; }
+        else { bg = '#eff6ff'; border = '#bfdbfe'; }
+      } else if (isIstisno) {
+        bg = '#fdf2f8'; border = '#fbcfe8';
+      }
+
+      let slot = '<div style="background:' + bg + ';border-left:3px solid ' + border + ';' +
+        'padding:6px 8px;margin-bottom:3px;border-radius:3px;font-size:11px;line-height:1.5;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">' +
+        '<div style="font-weight:700;color:#475569;font-size:11px;min-width:60px;">' +
+        String(hStart).padStart(2,'0') + ':00<br>' + String(hEnd).padStart(2,'0') + ':00</div>' +
+        '<div style="flex:1;">';
+
+      if (opts.showUstoz && u) {
+        slot += '<div style="font-weight:600;color:#1e293b;">' + escapeHtml(u.ism) + '</div>';
+      }
+      if (opts.showFan && fan) {
+        slot += '<div style="color:#0891b2;font-size:10px;">📚 ' + escapeHtml(fan.nomi) + '</div>';
+      }
+      // Sonlar
+      slot += '<div style="margin-top:2px;font-size:10px;">';
+      if (cap > 0) {
+        slot += '<span style="color:#475569;">' + jami + '/' + cap + ' (' + pct + '%)</span> ';
       }
       if (opts.showDoimiy && (sonManual + doimiy.length) > 0) {
-        doc.setTextColor(16,150,80);
-        doc.text('🟢' + (sonManual + doimiy.length), rightX, cy2, {align:'right'});
+        slot += '<span style="color:#10b981;">🟢 ' + (sonManual + doimiy.length) + ' doimiy</span> ';
       }
-      cy += lineH;
-    });
-  }
+      if (opts.showYangi && yangilar.length) {
+        slot += '<span style="color:#ef4444;">🔴 ' + yangilar.length + ' yangi</span>';
+      }
+      slot += '</div>';
 
-  // ----- 1-2 sahifa: xonalarni bo'lib chiqarish -----
-  let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
-  xonas = mkSortXonas(xonas);
-  // Foydalanuvchi 16 ta xona deydi, 8 + 8 ga bo'lamiz
-  // Agar kam bo'lsa — 1 sahifa bilan
-  const PER_PAGE = 8;
-  const totalPages = Math.max(1, Math.ceil(xonas.length / PER_PAGE));
+      // Istisno belgi
+      if (isIstisno) {
+        const days = String(g.tanlanganKunlar||'').split(',').map(s=>s.trim()).filter(Boolean);
+        const hasYa = days.includes('Ya');
+        const other = days.filter(d=>d!=='Ya').join(', ');
+        slot += '<div style="margin-top:3px;font-size:9px;color:#be185d;">' +
+          (hasYa ? '🌟 Ya' + (other?' • ':'') : '') + (other ? '⚠️ ' + other : '') + '</div>';
+      }
 
-  for (let p = 0; p < totalPages; p++) {
-    if (p > 0) doc.addPage('a4', 'landscape');
-    drawHeader('Varaq ' + (p+1) + '/' + (totalPages + (opts.showYangiList ? 1 : 0)));
-    const pageXonas = xonas.slice(p * PER_PAGE, (p+1) * PER_PAGE);
-    // 4 ustun x 2 qator grid
-    const cols = 4, rows = 2;
-    const gridW = pageW - 2*margin;
-    const gridH = pageH - margin - 22; // header ostida
-    const gridTop = margin + 16;
-    const cellW = (gridW - (cols-1)*3) / cols;
-    const cellH = (gridH - (rows-1)*3) / rows;
-    pageXonas.forEach((x, i) => {
-      const c = i % cols;
-      const r = Math.floor(i / cols);
-      const px = margin + c * (cellW + 3);
-      const py = gridTop + r * (cellH + 3);
-      drawXonaCard(x, px, py, cellW, cellH);
-    });
-  }
+      // Yangi o'quvchilar (FIO)
+      if (opts.showYangi && yangilar.length) {
+        slot += '<div style="margin-top:4px;padding-top:3px;border-top:1px dashed #fecaca;font-size:9px;color:#ef4444;">' +
+          yangilar.map(y => '• ' + escapeHtml(y.fio) +
+            (y.qoshilganSana ? ' 📅 ' + mkFormatSana(y.qoshilganSana) : '')).join('<br>') +
+          '</div>';
+      }
 
-  // ----- Oxirgi sahifa: Yangi o'quvchilar -----
-  if (opts.showYangiList) {
-    doc.addPage('a4', 'landscape');
-    drawHeader('Yangi qo\'shilgan o\'quvchilar');
-    // Yangilar — sana bo'yicha saralangan (yangisi yuqorida)
-    const allYangi = mkYangis.filter(y => {
-      if (y.yangimi === false) return false;
-      return String(y.yangimi||'true').toLowerCase().trim() !== 'false';
-    });
-    // Faqat joriy filial xonalaridagi guruhlardagi
-    const filialXonaIds = new Set(mkXonas.filter(x => x.filialID === mkCurrentFilialID).map(x=>x.id));
-    const filteredYangi = allYangi.filter(y => {
-      const g = mkGuruhs.find(gg => gg.id === y.guruhID);
-      return g && filialXonaIds.has(g.xonaID);
-    });
-    // Sana bo'yicha saralash (yangi birinchi)
-    filteredYangi.sort((a,b) => String(b.qoshilganSana||'').localeCompare(String(a.qoshilganSana||'')));
-
-    if (!filteredYangi.length) {
-      doc.setFontSize(12);
-      doc.setTextColor(150,150,150);
-      doc.text('Yangi qo\'shilgan o\'quvchi yo\'q', pageW/2, pageH/2, {align:'center'});
+      slot += '</div></div></div>';
+      slotsHtml.push(slot);
     } else {
-      // autoTable
-      const rows = filteredYangi.map((y, i) => {
-        const g = mkGuruhs.find(gg => gg.id === y.guruhID);
-        const x = g ? mkXonas.find(xx => xx.id === g.xonaID) : null;
-        const u = g ? mkUstozs.find(uu => uu.id === g.ustozID) : null;
-        const fan = g ? mkFans.find(ff => ff.id === g.fanID) : null;
-        const vaqt = g ?
-          (String(mkHourOf(g.vaqtDan)||'').padStart(2,'0') + ':00–' +
-           String(mkHourOf(g.vaqtGacha)||'').padStart(2,'0') + ':00') : '—';
-        const sanaT = mkFormatSana(y.qoshilganSana) || '—';
-        return [
-          String(i+1),
-          sanaT,
-          String(y.fio||''),
-          String(y.telefon||'—'),
-          x ? x.nomi : '—',
-          u ? u.ism : '—',
-          fan ? fan.nomi : '—',
-          vaqt,
-          g && g.nomi ? g.nomi : '—'
-        ];
-      });
-      doc.autoTable({
-        startY: margin + 16,
-        head: [['#','Sana','FIO','Telefon','Xona','Ustoz','Fan','Vaqt','Guruh']],
-        body: rows,
-        styles: { fontSize: 8, cellPadding: 1.5 },
-        headStyles: { fillColor: [0, 140, 140], textColor: [255,255,255], fontSize: 8 },
-        alternateRowStyles: { fillColor: [248,250,252] },
-        columnStyles: {
-          0: { cellWidth: 10, halign: 'center' },
-          1: { cellWidth: 18, halign: 'center' },
-          2: { cellWidth: 50 },
-          3: { cellWidth: 32 },
-          4: { cellWidth: 26 },
-          5: { cellWidth: 50 },
-          6: { cellWidth: 32 },
-          7: { cellWidth: 25, halign: 'center' },
-          8: { cellWidth: 'auto' }
-        }
-      });
+      // Bo'sh slot
+      slotsHtml.push(
+        '<div style="padding:3px 8px;margin-bottom:2px;font-size:10px;color:#94a3b8;display:flex;align-items:center;gap:8px;">' +
+        '<span style="font-weight:600;color:#94a3b8;min-width:42px;">' + String(h).padStart(2,'0') + ':00</span>' +
+        '<span>⚪ Bo\'sh</span></div>'
+      );
     }
   }
-
-  // PDF saqlash
-  const fileName = 'AOK_Markaz_Hisobot_' + new Date().toISOString().slice(0,10) + '.pdf';
-  doc.save(fileName);
+  html += slotsHtml.join('');
+  html += '</div>';
+  return html;
 }
+
 
 // ============================================================
 //  MARKAZ — IZOH KO'RISH (💬 belgi bosilganda)
