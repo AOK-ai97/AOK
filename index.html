@@ -8758,7 +8758,10 @@ async function mkBuildPDF() {
     // Xonalarni render qilish
     let xonas = mkXonas.filter(x => x.filialID === mkCurrentFilialID);
     xonas = mkSortXonas(xonas);
-    const conflicts = mkDetectConflicts ? mkDetectConflicts() : [];
+    // Konfliktlar — joriy filial guruhlari bilan
+    const filialXonaIds = new Set(xonas.map(x => x.id));
+    const allFilialGuruhs = mkGuruhs.filter(g => filialXonaIds.has(g.xonaID));
+    const conflicts = mkDetectConflicts(allFilialGuruhs) || [];
 
     let gridHtml = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">';
     xonas.forEach(x => {
@@ -8769,7 +8772,8 @@ async function mkBuildPDF() {
     // Yangi o'quvchilar ro'yxati
     if (opts.showYangiList) {
       const xonaIds = new Set(xonas.map(x => x.id));
-      const yangilar = mkYangis.filter(y => {
+      const safeYangis2 = Array.isArray(mkYangis) ? mkYangis : [];
+      const yangilar = safeYangis2.filter(y => {
         if (y.yangimi === false || String(y.yangimi||'').toLowerCase()==='false') return false;
         const g = mkGuruhs.find(gg => gg.id === y.guruhID);
         return g && xonaIds.has(g.xonaID);
@@ -8878,7 +8882,13 @@ async function mkBuildPDF() {
 // Print uchun bitta xona kartochkasi (light mode)
 function mkRenderXonaCardPrint(xona, conflicts, opts) {
   const cap = parseInt(xona.sigimi) || 0;
-  let xonaGuruhs = mkGuruhs.filter(g => g.xonaID === xona.id);
+  const safeYangis = Array.isArray(mkYangis) ? mkYangis : [];
+  const safeUstozs = Array.isArray(mkUstozs) ? mkUstozs : [];
+  const safeFans = Array.isArray(mkFans) ? mkFans : [];
+  const safeGuruhs = Array.isArray(mkGuruhs) ? mkGuruhs : [];
+  const safeConflicts = Array.isArray(conflicts) ? conflicts : [];
+
+  let xonaGuruhs = safeGuruhs.filter(g => g.xonaID === xona.id);
   xonaGuruhs = xonaGuruhs.filter(g => mkDayBelongsToType(g, mkCurrentDayType));
   xonaGuruhs = xonaGuruhs.filter(g => mkGuruhMatchesFilter(g));
 
@@ -8908,20 +8918,20 @@ function mkRenderXonaCardPrint(xona, conflicts, opts) {
     // Bu soatda boshlanadigan guruh
     const g = xonaGuruhs.find(gg => mkHourOf(gg.vaqtDan) === h);
     if (g) {
-      const u = mkUstozs.find(uu => uu.id === g.ustozID);
-      const fan = mkFans.find(ff => ff.id === g.fanID);
+      const u = safeUstozs.find(uu => uu.id === g.ustozID);
+      const fan = safeFans.find(ff => ff.id === g.fanID);
       const hStart = h;
       const hEnd = mkHourOf(g.vaqtGacha) || (h+1);
       skipUntil = hEnd;
 
       // Sonlar
       const sonManual = parseInt(g.oquvchiSoni) || 0;
-      const yangilar = mkYangis.filter(y => {
+      const yangilar = safeYangis.filter(y => {
         if (y.guruhID !== g.id) return false;
         if (y.yangimi === false) return false;
         return String(y.yangimi||'true').toLowerCase().trim() !== 'false';
       });
-      const doimiy = mkYangis.filter(y => {
+      const doimiy = safeYangis.filter(y => {
         if (y.guruhID !== g.id) return false;
         if (y.yangimi === false) return true;
         return String(y.yangimi||'').toLowerCase().trim() === 'false';
@@ -8931,7 +8941,7 @@ function mkRenderXonaCardPrint(xona, conflicts, opts) {
 
       // Rang: istisno (pushti), konflikt (ko'k/qizil)
       const isIstisno = g.kunTuri === 'istisno' && opts.showIstisno;
-      const myConflict = conflicts.find(c => c.guruhID === g.id);
+      const myConflict = safeConflicts.find(c => c.guruhID === g.id);
       let bg = '#f0fdf4', border = '#bbf7d0';
       if (myConflict) {
         if (myConflict.role === 'new') { bg = '#fef2f2'; border = '#fecaca'; }
