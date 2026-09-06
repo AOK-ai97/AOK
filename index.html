@@ -498,29 +498,133 @@ textarea {
 }
 
 /* ===== O'QITUVCHI KARTOCHKA ===== */
+/* ===== O'QITUVCHI KARTOCHKASI (yangi dizayn) ===== */
 .teacher-item {
   background:var(--input-bg); border:1px solid var(--border);
-  border-radius:10px; padding:14px; margin-bottom:10px;
+  border-radius:12px; padding:14px 16px; margin-bottom:10px;
+  position:relative;
+  display:grid;
+  grid-template-columns: 40px 1fr auto;
+  grid-template-rows: auto auto 1fr auto;
+  grid-template-areas:
+    "menu name badge"
+    "actions actions actions"
+    "books books books"
+    "footer footer history";
+  gap:8px 10px;
+  min-height:100px;
+  cursor:pointer;
+  transition: border-color 0.15s;
 }
-.teacher-head {
-  display:flex; justify-content:space-between; align-items:flex-start;
-  gap:10px; flex-wrap:wrap;
+.teacher-item:hover { border-color: var(--accent); }
+.teacher-menu-btn {
+  grid-area:menu;
+  width:32px; height:32px;
+  background:var(--card-hover); border:1px solid var(--border);
+  border-radius:8px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px; font-weight:700; color:var(--text-dim);
+  transition: all 0.15s;
+  padding:0;
 }
+.teacher-menu-btn:hover { background:var(--accent); color:#fff; }
 .teacher-name {
-  font-weight:700; color:var(--text); font-size:15px;
+  grid-area:name;
+  font-weight:700; color:var(--text); font-size:16px;
+  text-align:center; align-self:center;
+  padding:0 8px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  user-select:none;
 }
+.teacher-item.qa-open .teacher-name { color: var(--accent); }
 .teacher-debt {
-  font-size:13px; font-weight:700; color:var(--danger);
+  grid-area:badge;
+  font-size:13px; font-weight:700;
+  background:rgba(239,68,68,0.15); color:var(--danger);
+  padding:4px 10px; border-radius:14px;
+  align-self:center;
+  white-space:nowrap;
 }
-.teacher-debt.zero { color:var(--success); }
+.teacher-debt.zero {
+  background:rgba(16,185,129,0.15); color:var(--success);
+}
+/* Quick actions (kartochkaga bosilganda chiqadigan 3 tugma) */
+.teacher-quick-actions {
+  grid-area: actions;
+  display: none;
+  gap: 8px;
+  padding: 10px 0 4px;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  animation: qaSlide 0.18s ease-out;
+}
+.teacher-quick-actions.open { display: flex; flex-wrap: wrap; }
+@keyframes qaSlide {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.teacher-quick-actions .btn {
+  flex: 1; min-width: 110px;
+  padding: 8px 10px; font-size: 13px;
+}
 .teacher-books {
-  font-size:12px; color:var(--text-dim); margin-top:6px;
-  line-height:1.6;
+  grid-area:books;
+  font-size:12px; color:var(--text-dim);
+  line-height:1.5;
+  padding:6px 8px 0;
+  border-top:1px dashed var(--border);
+  margin-top:4px;
 }
-.teacher-actions {
-  display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;
+.teacher-books .tb-empty {
+  text-align:center; color:var(--text-muted);
+  font-style:italic; padding:6px 0;
 }
-.teacher-actions .btn { padding:7px 12px; font-size:13px; }
+.teacher-books .tb-item {
+  display:flex; justify-content:space-between; gap:8px;
+  padding:3px 0; align-items:flex-start;
+}
+.teacher-books .tb-item-name { color:var(--text); flex:1; min-width:0; }
+.teacher-books .tb-item-date {
+  color:var(--text-muted); font-size:10px; white-space:nowrap;
+}
+.teacher-books .tb-status-paid { color:var(--success); font-size:10px; }
+.teacher-books .tb-status-debt { color:var(--danger); font-size:10px; }
+.teacher-footer { grid-area:footer; }
+.teacher-history-btn {
+  grid-area:history;
+  width:36px; height:36px;
+  background:linear-gradient(135deg, #0891b2, #06b6d4);
+  border:none; border-radius:50%;
+  cursor:pointer; color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; box-shadow:0 3px 8px rgba(8,145,178,0.35);
+  align-self:end; justify-self:end;
+  transition: transform 0.15s;
+  padding:0;
+}
+.teacher-history-btn:hover { transform: scale(1.1); }
+
+/* Dropdown menu (⋮) */
+.teacher-dropdown {
+  position:absolute; top:44px; left:12px;
+  background:var(--card); border:1px solid var(--border);
+  border-radius:10px; padding:6px;
+  z-index:100; box-shadow:0 8px 24px rgba(0,0,0,0.35);
+  min-width:160px;
+  display:none;
+}
+.teacher-dropdown.open { display:block; }
+.teacher-dropdown-item {
+  display:flex; align-items:center; gap:10px;
+  padding:8px 12px; border-radius:6px;
+  cursor:pointer; color:var(--text); font-size:13px;
+  border:none; background:none; width:100%; text-align:left;
+  transition: background 0.1s;
+}
+.teacher-dropdown-item:hover { background:var(--input-bg); }
+.teacher-dropdown-item.del { color:var(--danger); }
+.teacher-dropdown-item.del:hover { background:rgba(239,68,68,0.1); }
+
 
 /* ===== MAGNITCHA (summa to'ldirish) ===== */
 .amount-with-magnet { display:flex; gap:8px; align-items:stretch; }
@@ -1296,6 +1400,22 @@ Ozodbek 4</div>
         <div class="modal-footer">
           <button class="btn btn-ghost" onclick="closeLibHistory()" data-i18n="cancel">Bekor</button>
           <button class="btn btn-primary" onclick="showLibHistory()" data-i18n="refresh">🔄 Yangilash</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY MODAL — bitta o'qituvchining tarix -->
+    <div class="modal-overlay" id="libHistoryModal">
+      <div class="modal" style="max-width:640px;">
+        <div class="modal-header">
+          <span id="libHistoryTitle">📋 Tarix</span>
+          <button class="modal-close" onclick="closeLibHistory()">✕</button>
+        </div>
+        <div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+          <div id="libHistoryList"></div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeLibHistory()">Yopish</button>
         </div>
       </div>
     </div>
@@ -4271,44 +4391,194 @@ function renderTeachers() {
     return;
   }
   let html = '';
-  filtered.forEach(g => {
+  filtered.forEach((g, gi) => {
     const debtClass = g.debt > 0 ? '' : 'zero';
-    const debtText = g.debt > 0 ? ('Qarz: ' + fmt(g.debt)) : 'Qarzi yo\'q ✅';
-    // Kitoblar ro'yxati (faqat qarz qoldiqlari)
-    let booksInfo = '';
-    g.items.forEach(it => {
-      const amt = parseFloat(it.amount) || 0;
-      if (it.item === "TO'LOV") {
-        booksInfo += '<div>💰 To\'lov: ' + fmt(-amt) + '</div>';
-      } else if (amt > 0) {
-        booksInfo += '<div>📖 ' + escapeHtml(String(it.item)) +
-          ' — ' + fmt(amt) + '</div>';
-      } else {
-        booksInfo += '<div>↩️ ' + escapeHtml(String(it.item)) +
-          ' (qaytarildi)</div>';
-      }
+    const debtText = g.debt > 0 ? ('Qarz: ' + fmt(g.debt)) : "Qarzi yo'q ✅";
+
+    // OXIRGI 3 TA KITOB (TO'LOV emas)
+    const bookItems = g.items.filter(it => it.item !== "TO'LOV");
+    // Sana bo'yicha teskari saralash (yangi birinchi)
+    bookItems.sort((a, b) => {
+      const da = new Date(a.date || 0).getTime();
+      const db = new Date(b.date || 0).getTime();
+      return db - da;
     });
-    html += '<div class="teacher-item">' +
-      '<div class="teacher-head">' +
-        '<div class="teacher-name">👤 ' + escapeHtml(g.name) + '</div>' +
-        '<div class="teacher-debt ' + debtClass + '">' + debtText + '</div>' +
+    const last3 = bookItems.slice(0, 3);
+
+    // Ushbu o'qituvchi umumiy qarzi > 0 bo'lsa oxirgi kitoblardan qarz statusi
+    // (soddalashtirilgan: umumiy qarz taqsimlanadi)
+    let remainingDebt = g.debt;
+    let booksInfo = '';
+    if (last3.length) {
+      last3.forEach(it => {
+        const amt = parseFloat(it.amount) || 0;
+        const d = it.date ? new Date(it.date) : null;
+        const dateStr = d ? (String(d.getDate()).padStart(2,'0') + '.' +
+          String(d.getMonth()+1).padStart(2,'0') + ' ' +
+          String(d.getHours()).padStart(2,'0') + ':' +
+          String(d.getMinutes()).padStart(2,'0')) : '';
+        let statusHtml;
+        if (amt < 0) {
+          statusHtml = '<span class="tb-status-paid">↩️ qaytarildi</span>';
+        } else if (remainingDebt >= amt) {
+          statusHtml = '<span class="tb-status-debt">⏳ qarz</span>';
+          remainingDebt -= amt;
+        } else {
+          statusHtml = '<span class="tb-status-paid">✅ to\'langan</span>';
+        }
+        booksInfo += '<div class="tb-item">' +
+          '<span class="tb-item-name">📖 ' + escapeHtml(String(it.item)) +
+          ' — ' + fmt(Math.abs(amt)) + ' ' + statusHtml + '</span>' +
+          '<span class="tb-item-date">' + dateStr + '</span>' +
+          '</div>';
+      });
+      if (bookItems.length > 3) {
+        booksInfo += '<div style="text-align:center;color:var(--text-muted);font-size:10px;margin-top:2px;">' +
+          '... yana ' + (bookItems.length - 3) + ' ta — 🕐 ni bosing</div>';
+      }
+    } else {
+      booksInfo = '<div class="tb-empty">Hali kitob berilmagan</div>';
+    }
+
+    // JSON encode qilib data-name ga (apostrof va boshqa belgilarga chidamli)
+    const dataName = escapeHtml(g.name);
+
+    html += '<div class="teacher-item" onclick="libToggleQuickActions(this, event)">' +
+      '<button class="teacher-menu-btn" data-teacher="' + dataName + '" ' +
+        'onclick="libToggleMenu(this, event)">⋮</button>' +
+      '<div class="teacher-name">👤 ' + dataName + '</div>' +
+      '<div class="teacher-debt ' + debtClass + '">' + debtText + '</div>' +
+      // Quick actions (kartochka bosilganda ochiladi)
+      '<div class="teacher-quick-actions">' +
+        '<button class="btn btn-warning" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'give\',event)">📖 Kitob berish</button>' +
+        '<button class="btn btn-ghost" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'return\',event)">↩️ Qaytarish</button>' +
+        '<button class="btn btn-primary" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'pay\',event)">💰 To\'landi</button>' +
       '</div>' +
-      '<div class="teacher-books">' + (booksInfo || 'Amal yo\'q') + '</div>' +
-      '<div class="teacher-actions">' +
-        '<button class="btn btn-warning" onclick="openGiveBook(\'' +
-          encodeURIComponent(g.name) + '\')">📖 Kitob berish</button>' +
-        '<button class="btn btn-ghost" onclick="openReturnBook(\'' +
-          encodeURIComponent(g.name) + '\')">↩️ Qaytarish</button>' +
-        '<button class="btn btn-primary" onclick="openPayDebt(\'' +
-          encodeURIComponent(g.name) + '\')">💰 To\'landi</button>' +
-        '<button class="icon-btn edit" onclick="editTeacher(\'' +
-          encodeURIComponent(g.name) + '\')">✏️</button>' +
-        '<button class="icon-btn del" onclick="deleteTeacher(\'' +
-          encodeURIComponent(g.name) + '\')">🗑️</button>' +
+      '<div class="teacher-books">' + booksInfo + '</div>' +
+      '<button class="teacher-history-btn" data-teacher="' + dataName + '" ' +
+        'onclick="libShowHistory(this);event.stopPropagation();" title="Tarixi">🕐</button>' +
+      // Dropdown menu (⋮) — faqat Tahrirlash va O'chirish
+      '<div class="teacher-dropdown" data-menu-for="' + dataName + '">' +
+        '<button class="teacher-dropdown-item" data-teacher="' + dataName + '" ' +
+          'onclick="libMenuAct(this,\'edit\')">✏️ Tahrirlash</button>' +
+        '<button class="teacher-dropdown-item del" data-teacher="' + dataName + '" ' +
+          'onclick="libMenuAct(this,\'del\')">🗑️ O\'chirish</button>' +
       '</div>' +
     '</div>';
   });
   el.innerHTML = html;
+}
+
+// Kartochkaga click — quick actions ochish/yopish
+function libToggleQuickActions(cardEl, ev) {
+  // ⋮, dropdown, history, quick-actions ichidagi click — e'tibor bermaymiz
+  if (ev.target.closest('.teacher-menu-btn') ||
+      ev.target.closest('.teacher-dropdown') ||
+      ev.target.closest('.teacher-history-btn') ||
+      ev.target.closest('.teacher-quick-actions')) return;
+  const qa = cardEl.querySelector('.teacher-quick-actions');
+  if (!qa) return;
+  const isOpen = qa.classList.contains('open');
+  // Boshqa kartochkalarni yopish
+  document.querySelectorAll('.teacher-quick-actions.open').forEach(x => {
+    x.classList.remove('open');
+    x.closest('.teacher-item').classList.remove('qa-open');
+  });
+  if (!isOpen) {
+    qa.classList.add('open');
+    cardEl.classList.add('qa-open');
+  }
+}
+
+// Quick action tugmasi bosilganda
+function libQuickAct(btn, action, ev) {
+  if (ev) ev.stopPropagation();
+  const name = btn.getAttribute('data-teacher');
+  const enc = encodeURIComponent(name);
+  if (action === 'give') openGiveBook(enc);
+  else if (action === 'return') openReturnBook(enc);
+  else if (action === 'pay') openPayDebt(enc);
+}
+
+// Menu ochish/yopish (⋮)
+function libToggleMenu(btn, ev) {
+  ev.stopPropagation();
+  const card = btn.closest('.teacher-item');
+  const menu = card.querySelector('.teacher-dropdown');
+  const isOpen = menu.classList.contains('open');
+  // Barcha menyularni yopish
+  document.querySelectorAll('.teacher-dropdown.open').forEach(m => m.classList.remove('open'));
+  if (!isOpen) menu.classList.add('open');
+}
+
+// Menu tugmalari (⋮ dan) — faqat Edit va Delete
+function libMenuAct(btn, action) {
+  const name = btn.getAttribute('data-teacher');
+  document.querySelectorAll('.teacher-dropdown.open').forEach(m => m.classList.remove('open'));
+  const enc = encodeURIComponent(name);
+  if (action === 'edit') editTeacher(enc);
+  else if (action === 'del') deleteTeacher(enc);
+}
+
+// Global click — kartochka tashqarisiga bosilsa hamma yopilsin
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.teacher-item')) {
+    document.querySelectorAll('.teacher-dropdown.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.teacher-quick-actions.open').forEach(x => {
+      x.classList.remove('open');
+      const card = x.closest('.teacher-item');
+      if (card) card.classList.remove('qa-open');
+    });
+  }
+});
+
+// History ko'rsatish
+function libShowHistory(btn) {
+  const name = btn.getAttribute('data-teacher');
+  const items = libDebts.filter(d => String(d.person).trim() === name);
+  if (!items.length) {
+    alert('Hali amal yo\'q');
+    return;
+  }
+  // Sana bo'yicha teskari saralash
+  items.sort((a, b) => new Date(b.date||0).getTime() - new Date(a.date||0).getTime());
+  const container = document.getElementById('libHistoryList');
+  container.innerHTML = items.map(it => {
+    const amt = parseFloat(it.amount) || 0;
+    const d = it.date ? new Date(it.date) : null;
+    const dateStr = d ? (String(d.getDate()).padStart(2,'0') + '.' +
+      String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear() + ' ' +
+      String(d.getHours()).padStart(2,'0') + ':' +
+      String(d.getMinutes()).padStart(2,'0')) : '—';
+    let icon, color, prefix, sumText;
+    if (it.item === "TO'LOV") {
+      icon = '💰'; color = '#10b981'; prefix = "To'lov: "; sumText = '+' + fmt(-amt);
+    } else if (amt < 0) {
+      icon = '↩️'; color = '#3b82f6'; prefix = 'Qaytarildi: '; sumText = String(it.item);
+    } else {
+      icon = '📖'; color = '#f59e0b'; prefix = ''; sumText = it.item + ' — ' + fmt(amt);
+    }
+    return '<div style="display:flex;justify-content:space-between;align-items:flex-start;' +
+      'gap:10px;padding:10px 12px;background:var(--input-bg);border-left:3px solid ' + color + ';' +
+      'border-radius:6px;margin-bottom:6px;">' +
+      '<div style="flex:1;min-width:0;">' +
+      '<div style="font-weight:600;color:var(--text);font-size:13px;">' +
+      icon + ' ' + prefix + escapeHtml(String(sumText)) + '</div>' +
+      (it.note ? '<div style="font-size:11px;color:var(--text-dim);margin-top:2px;">' +
+        escapeHtml(String(it.note)) + '</div>' : '') +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--text-muted);white-space:nowrap;">' + dateStr + '</div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('libHistoryTitle').textContent = '📋 ' + name + ' — Amallar tarixi (' + items.length + ' ta)';
+  document.getElementById('libHistoryModal').classList.add('open');
+}
+
+function closeLibHistory() {
+  document.getElementById('libHistoryModal').classList.remove('open');
 }
 
 // ---- O'QITUVCHI QO'SHISH / EDIT ----
@@ -4383,17 +4653,65 @@ function saveTeacher() {
 
 function deleteTeacher(encName) {
   const name = decodeURIComponent(encName);
-  if (!confirm('"' + name + '" o\'qituvchisini va uning barcha qarz yozuvlarini o\'chirasizmi?')) return;
   const items = libDebts.filter(d => String(d.person).trim() === name);
-  if (!items.length) return;
-  let done = 0;
-  items.forEach(it => {
-    const params = new URLSearchParams({ action: 'delete_debt', id: it.id });
-    fetch(SHEETS_API, { method: 'POST', body: params })
-      .then(() => {
-        done++;
-        if (done === items.length) loadLibraryDebts();
-      });
+  const totalDebt = items.reduce((s, d) => s + (parseFloat(d.amount)||0), 0);
+
+  const msg = '"' + name + '" o\'qituvchisini o\'chirasizmi?\n\n' +
+    '📊 Amallar soni: ' + items.length + ' ta\n' +
+    '💳 Umumiy qoldiq: ' + fmt(totalDebt) + ' so\'m\n\n' +
+    '✅ Barcha ma\'lumotlar Arxiv → Kutubxona ga saqlanadi.';
+  if (!confirm(msg)) return;
+
+  if (!items.length) {
+    // Bo'sh o'qituvchi — hech narsa yo'q
+    alert('Bu o\'qituvchida amal yo\'q — Arxivga tushirilmaydi.');
+    return;
+  }
+
+  // 1. Arxivga barcha yozuvlarni saqlash
+  // Har yozuv uchun alohida arxiv qatori: "[O'chirilgan o'qituvchi: Ism] Item — sana"
+  const arxivPromises = items.map(it => {
+    const amt = parseFloat(it.amount) || 0;
+    const d = it.date ? new Date(it.date) : new Date();
+    const dateStr = String(d.getDate()).padStart(2,'0') + '.' +
+      String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear() + ' ' +
+      String(d.getHours()).padStart(2,'0') + ':' +
+      String(d.getMinutes()).padStart(2,'0');
+    let desc;
+    if (it.item === "TO'LOV") {
+      desc = "[O'chirilgan o'qituvchi: " + name + "] 💰 To'lov: " + fmt(-amt) + ' so\'m (' + dateStr + ')';
+    } else if (amt < 0) {
+      desc = "[O'chirilgan o'qituvchi: " + name + "] ↩️ " + it.item + ' qaytarildi (' + dateStr + ')';
+    } else {
+      desc = "[O'chirilgan o'qituvchi: " + name + "] 📖 " + it.item + ' — ' + fmt(amt) + ' so\'m (' + dateStr + ')';
+    }
+    return fetch(SHEETS_API, {
+      method: 'POST',
+      body: buildArchiveParams('Kutubxona', "O'qituvchi o'chirildi", desc, amt)
+    });
+  });
+
+  // Umumiy sarlavha arxivi (birinchi qator)
+  const sumParams = buildArchiveParams('Kutubxona', "O'qituvchi o'chirildi",
+    '👤 O\'qituvchi: ' + name + ' — ' + items.length + ' ta amal, umumiy qoldiq: ' + fmt(totalDebt) + ' so\'m',
+    totalDebt);
+  arxivPromises.push(fetch(SHEETS_API, { method: 'POST', body: sumParams }));
+
+  Promise.all(arxivPromises).then(() => {
+    // 2. libDebts dan barcha yozuvlarni o'chirish
+    const delPromises = items.map(it => {
+      const params = new URLSearchParams({ action: 'delete_debt', id: it.id });
+      return fetch(SHEETS_API, { method: 'POST', body: params });
+    });
+    return Promise.all(delPromises);
+  }).then(() => {
+    alert('✅ "' + name + '" o\'chirildi va Arxivga saqlandi.');
+    loadLibraryDebts();
+    // Arxiv ochiq bo'lsa qayta yuklash
+    if (typeof loadArchive === 'function') loadArchive();
+  }).catch(err => {
+    alert('⚠️ Xato: ' + err.message);
+    console.error(err);
   });
 }
 
