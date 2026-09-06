@@ -3376,25 +3376,39 @@ function changePinDialog() {
 }
 
 function navigate(page) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector('.nav-item[data-page="' + page + '"]').classList.add('active');
-  closeSidebar();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  // Kutubxona ochilganда — ma'lumotlarni yuklash
-  if (page === 'library') loadLibrary();
-  if (page === 'store') loadStore();
-  if (page === 'markaz') loadMarkaz();
-  if (page === 'archive') loadArchive();
-  if (page === 'home') {
-    // Xarajat sanasi — bugungi (mustaqil, Excel/hisobotdan)
-    const ed = document.getElementById('expDate');
-    if (ed && !ed.value) {
-      ed.value = new Date().toISOString().slice(0,10);
+  try {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const targetPage = document.getElementById('page-' + page);
+    if (!targetPage) {
+      console.error('Sahifa topilmadi: page-' + page);
+      // Home ga qaytish
+      const home = document.getElementById('page-home');
+      if (home) home.classList.add('active');
+      return;
     }
-    loadDailyExpenses();
+    targetPage.classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const navBtn = document.querySelector('.nav-item[data-page="' + page + '"]');
+    if (navBtn) navBtn.classList.add('active');
+    closeSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.error('navigate xato:', err);
   }
+  // Ma'lumot yuklash — har biri alohida try/catch da (bittasi xato bo'lsa boshqasi ishlasin)
+  try { if (page === 'library') loadLibrary(); } catch(e) { console.error('loadLibrary:', e); }
+  try { if (page === 'store') loadStore(); } catch(e) { console.error('loadStore:', e); }
+  try { if (page === 'markaz') loadMarkaz(); } catch(e) { console.error('loadMarkaz:', e); }
+  try { if (page === 'archive') loadArchive(); } catch(e) { console.error('loadArchive:', e); }
+  try {
+    if (page === 'home') {
+      const ed = document.getElementById('expDate');
+      if (ed && !ed.value) {
+        ed.value = new Date().toISOString().slice(0,10);
+      }
+      loadDailyExpenses();
+    }
+  } catch(e) { console.error('loadHome:', e); }
 }
 function openSidebar() {
   document.getElementById('sidebar').classList.add('open');
