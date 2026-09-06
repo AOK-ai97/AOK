@@ -4394,8 +4394,9 @@ function renderTeachers() {
   filtered.forEach((g, gi) => {
     const debtClass = g.debt > 0 ? '' : 'zero';
     const debtText = g.debt > 0 ? ('Qarz: ' + fmt(g.debt)) : "Qarzi yo'q ✅";
+    const isDebtor = g.debt > 0;
 
-    // OXIRGI 3 TA KITOB (TO'LOV emas)
+    // FAQAT KITOB BERISH (TO'LOV va qaytarilgan emas)
     const bookItems = g.items.filter(it => it.item !== "TO'LOV");
     // Sana bo'yicha teskari saralash (yangi birinchi)
     bookItems.sort((a, b) => {
@@ -4403,64 +4404,75 @@ function renderTeachers() {
       const db = new Date(b.date || 0).getTime();
       return db - da;
     });
-    const last3 = bookItems.slice(0, 3);
 
-    // Ushbu o'qituvchi umumiy qarzi > 0 bo'lsa oxirgi kitoblardan qarz statusi
-    // (soddalashtirilgan: umumiy qarz taqsimlanadi)
-    let remainingDebt = g.debt;
     let booksInfo = '';
-    if (last3.length) {
-      last3.forEach(it => {
-        const amt = parseFloat(it.amount) || 0;
-        const d = it.date ? new Date(it.date) : null;
-        const dateStr = d ? (String(d.getDate()).padStart(2,'0') + '.' +
-          String(d.getMonth()+1).padStart(2,'0') + ' ' +
-          String(d.getHours()).padStart(2,'0') + ':' +
-          String(d.getMinutes()).padStart(2,'0')) : '';
-        let statusHtml;
-        if (amt < 0) {
-          statusHtml = '<span class="tb-status-paid">↩️ qaytarildi</span>';
-        } else if (remainingDebt >= amt) {
-          statusHtml = '<span class="tb-status-debt">⏳ qarz</span>';
-          remainingDebt -= amt;
-        } else {
-          statusHtml = '<span class="tb-status-paid">✅ to\'langan</span>';
-        }
-        booksInfo += '<div class="tb-item">' +
-          '<span class="tb-item-name">📖 ' + escapeHtml(String(it.item)) +
-          ' — ' + fmt(Math.abs(amt)) + ' ' + statusHtml + '</span>' +
-          '<span class="tb-item-date">' + dateStr + '</span>' +
-          '</div>';
-      });
-      if (bookItems.length > 3) {
-        booksInfo += '<div style="text-align:center;color:var(--text-muted);font-size:10px;margin-top:2px;">' +
-          '... yana ' + (bookItems.length - 3) + ' ta — 🕐 ni bosing</div>';
-      }
+    if (!isDebtor) {
+      // Qarzi yo'q — kitoblar ro'yxati YO'Q
+      booksInfo = '<div class="tb-empty">✅ Qarzi yo\'q — barcha kitoblar to\'langan</div>';
     } else {
-      booksInfo = '<div class="tb-empty">Hali kitob berilmagan</div>';
+      // Qarz bor — faqat qarzli kitoblarni chiqarish (yangidan boshlab, qarz miqdorigacha)
+      let remaining = g.debt;
+      const debtBooks = [];
+      for (let k = 0; k < bookItems.length; k++) {
+        if (remaining <= 0) break;
+        const it = bookItems[k];
+        const amt = parseFloat(it.amount) || 0;
+        if (amt <= 0) continue;  // Qaytarilganlarni o'tkazib yuborish
+        debtBooks.push({ it: it, amt: Math.min(amt, remaining) });
+        remaining -= amt;
+      }
+      if (debtBooks.length) {
+        const shown = debtBooks.slice(0, 3);
+        shown.forEach(x => {
+          const it = x.it;
+          const d = it.date ? new Date(it.date) : null;
+          const dateStr = d ? (String(d.getDate()).padStart(2,'0') + '.' +
+            String(d.getMonth()+1).padStart(2,'0') + ' ' +
+            String(d.getHours()).padStart(2,'0') + ':' +
+            String(d.getMinutes()).padStart(2,'0')) : '';
+          booksInfo += '<div class="tb-item">' +
+            '<span class="tb-item-name">📖 ' + escapeHtml(String(it.item)) +
+            ' — ' + fmt(x.amt) + ' <span class="tb-status-debt">⏳ qarz</span></span>' +
+            '<span class="tb-item-date">' + dateStr + '</span>' +
+            '</div>';
+        });
+        if (debtBooks.length > 3) {
+          booksInfo += '<div style="text-align:center;color:var(--text-muted);font-size:10px;margin-top:2px;">' +
+            '... yana ' + (debtBooks.length - 3) + ' ta qarzli kitob — 🕐 ni bosing</div>';
+        }
+      } else {
+        booksInfo = '<div class="tb-empty">💳 Qarz bor lekin kitob yo\'q</div>';
+      }
     }
 
-    // JSON encode qilib data-name ga (apostrof va boshqa belgilarga chidamli)
     const dataName = escapeHtml(g.name);
+
+    // QUICK ACTIONS — qarzdor bo'lsa 3 tugma, qarzi yo'q bo'lsa faqat "Kitob berish"
+    let quickActionsHtml;
+    if (isDebtor) {
+      quickActionsHtml =
+        '<button class="btn btn-warning" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'give\',event)">📖 Kitob berish</button>' +
+        '<button class="btn btn-ghost" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'return\',event)">↩️ Qaytarish</button>' +
+        '<button class="btn btn-primary" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'pay\',event)">💰 To\'landi</button>';
+    } else {
+      quickActionsHtml =
+        '<button class="btn btn-warning" data-teacher="' + dataName + '" ' +
+          'onclick="libQuickAct(this,\'give\',event)" style="flex:1;">📖 Kitob berish</button>';
+    }
 
     html += '<div class="teacher-item" onclick="libToggleQuickActions(this, event)">' +
       '<button class="teacher-menu-btn" data-teacher="' + dataName + '" ' +
         'onclick="libToggleMenu(this, event)">⋮</button>' +
       '<div class="teacher-name">👤 ' + dataName + '</div>' +
       '<div class="teacher-debt ' + debtClass + '">' + debtText + '</div>' +
-      // Quick actions (kartochka bosilganda ochiladi)
-      '<div class="teacher-quick-actions">' +
-        '<button class="btn btn-warning" data-teacher="' + dataName + '" ' +
-          'onclick="libQuickAct(this,\'give\',event)">📖 Kitob berish</button>' +
-        '<button class="btn btn-ghost" data-teacher="' + dataName + '" ' +
-          'onclick="libQuickAct(this,\'return\',event)">↩️ Qaytarish</button>' +
-        '<button class="btn btn-primary" data-teacher="' + dataName + '" ' +
-          'onclick="libQuickAct(this,\'pay\',event)">💰 To\'landi</button>' +
-      '</div>' +
+      // Quick actions
+      '<div class="teacher-quick-actions">' + quickActionsHtml + '</div>' +
       '<div class="teacher-books">' + booksInfo + '</div>' +
       '<button class="teacher-history-btn" data-teacher="' + dataName + '" ' +
         'onclick="libShowHistory(this);event.stopPropagation();" title="Tarixi">🕐</button>' +
-      // Dropdown menu (⋮) — faqat Tahrirlash va O'chirish
       '<div class="teacher-dropdown" data-menu-for="' + dataName + '">' +
         '<button class="teacher-dropdown-item" data-teacher="' + dataName + '" ' +
           'onclick="libMenuAct(this,\'edit\')">✏️ Tahrirlash</button>' +
@@ -4581,6 +4593,26 @@ function closeLibHistory() {
   document.getElementById('libHistoryModal').classList.remove('open');
 }
 
+// GLOBAL: barcha modal-overlay ni backdrop-click bilan yopish
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.classList && e.target.classList.contains('modal-overlay')) {
+    e.target.classList.remove('open');
+  }
+});
+// GLOBAL: Escape key — modallar yopilsin
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    // Menu va quick actions ham
+    document.querySelectorAll('.teacher-dropdown.open').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.teacher-quick-actions.open').forEach(x => {
+      x.classList.remove('open');
+      const c = x.closest('.teacher-item');
+      if (c) c.classList.remove('qa-open');
+    });
+  }
+});
+
 // ---- O'QITUVCHI QO'SHISH / EDIT ----
 function openTeacherDialog() {
   editingTeacherName = null;
@@ -4651,9 +4683,15 @@ function saveTeacher() {
   }
 }
 
-function deleteTeacher(encName) {
+async function deleteTeacher(encName) {
   const name = decodeURIComponent(encName);
   const items = libDebts.filter(d => String(d.person).trim() === name);
+
+  if (!items.length) {
+    alert("'" + name + "' o'qituvchisida hech qanday yozuv yo'q. Arxivga tushirish uchun ma'lumot yo'q.");
+    return;
+  }
+
   const totalDebt = items.reduce((s, d) => s + (parseFloat(d.amount)||0), 0);
 
   const msg = '"' + name + '" o\'qituvchisini o\'chirasizmi?\n\n' +
@@ -4662,57 +4700,93 @@ function deleteTeacher(encName) {
     '✅ Barcha ma\'lumotlar Arxiv → Kutubxona ga saqlanadi.';
   if (!confirm(msg)) return;
 
-  if (!items.length) {
-    // Bo'sh o'qituvchi — hech narsa yo'q
-    alert('Bu o\'qituvchida amal yo\'q — Arxivga tushirilmaydi.');
-    return;
-  }
+  // Loading indicator
+  const loadBox = document.createElement('div');
+  loadBox.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+    'background:#1e293b;color:#fff;padding:20px 30px;border-radius:10px;z-index:99999;' +
+    'box-shadow:0 8px 32px rgba(0,0,0,0.5);font-size:14px;font-weight:600;min-width:280px;text-align:center;';
+  loadBox.textContent = '⏳ Boshlanmoqda...';
+  document.body.appendChild(loadBox);
 
-  // 1. Arxivga barcha yozuvlarni saqlash
-  // Har yozuv uchun alohida arxiv qatori: "[O'chirilgan o'qituvchi: Ism] Item — sana"
-  const arxivPromises = items.map(it => {
-    const amt = parseFloat(it.amount) || 0;
-    const d = it.date ? new Date(it.date) : new Date();
-    const dateStr = String(d.getDate()).padStart(2,'0') + '.' +
-      String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear() + ' ' +
-      String(d.getHours()).padStart(2,'0') + ':' +
-      String(d.getMinutes()).padStart(2,'0');
-    let desc;
-    if (it.item === "TO'LOV") {
-      desc = "[O'chirilgan o'qituvchi: " + name + "] 💰 To'lov: " + fmt(-amt) + ' so\'m (' + dateStr + ')';
-    } else if (amt < 0) {
-      desc = "[O'chirilgan o'qituvchi: " + name + "] ↩️ " + it.item + ' qaytarildi (' + dateStr + ')';
-    } else {
-      desc = "[O'chirilgan o'qituvchi: " + name + "] 📖 " + it.item + ' — ' + fmt(amt) + ' so\'m (' + dateStr + ')';
+  let arxivDone = 0;
+  let deleteDone = 0;
+
+  try {
+    // === 1. ARXIVGA SEQUENTIAL YOZISH (bittalab) ===
+    // Umumiy sarlavha
+    loadBox.textContent = '📦 Arxivga sarlavha yozilmoqda...';
+    const sumParams = buildArchiveParams('Kutubxona', "O'qituvchi o'chirildi",
+      '👤 O\'qituvchi: ' + name + ' — ' + items.length + ' ta amal, umumiy qoldiq: ' + fmt(totalDebt) + ' so\'m',
+      totalDebt);
+    const sumRes = await fetch(SHEETS_API, { method: 'POST', body: sumParams });
+    const sumJson = await sumRes.json();
+    if (sumJson.status !== 'ok') {
+      throw new Error('Arxivga sarlavha yozib bo\'lmadi: ' + (sumJson.message || 'noma\'lum xato'));
     }
-    return fetch(SHEETS_API, {
-      method: 'POST',
-      body: buildArchiveParams('Kutubxona', "O'qituvchi o'chirildi", desc, amt)
-    });
-  });
+    arxivDone++;
 
-  // Umumiy sarlavha arxivi (birinchi qator)
-  const sumParams = buildArchiveParams('Kutubxona', "O'qituvchi o'chirildi",
-    '👤 O\'qituvchi: ' + name + ' — ' + items.length + ' ta amal, umumiy qoldiq: ' + fmt(totalDebt) + ' so\'m',
-    totalDebt);
-  arxivPromises.push(fetch(SHEETS_API, { method: 'POST', body: sumParams }));
+    // Har amal alohida arxivga
+    for (let i = 0; i < items.length; i++) {
+      loadBox.textContent = '📦 Arxivga: ' + (i + 1) + ' / ' + items.length;
+      const it = items[i];
+      const amt = parseFloat(it.amount) || 0;
+      const d = it.date ? new Date(it.date) : new Date();
+      const dateStr = String(d.getDate()).padStart(2,'0') + '.' +
+        String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear() + ' ' +
+        String(d.getHours()).padStart(2,'0') + ':' +
+        String(d.getMinutes()).padStart(2,'0');
+      let desc;
+      if (it.item === "TO'LOV") {
+        desc = "[O'chirilgan: " + name + "] 💰 To'lov: " + fmt(-amt) + " so'm (" + dateStr + ")";
+      } else if (amt < 0) {
+        desc = "[O'chirilgan: " + name + "] ↩️ " + it.item + " qaytarildi (" + dateStr + ")";
+      } else {
+        desc = "[O'chirilgan: " + name + "] 📖 " + it.item + " — " + fmt(amt) + " so'm (" + dateStr + ")";
+      }
+      const p = buildArchiveParams('Kutubxona', "O'qituvchi o'chirildi", desc, amt);
+      const r = await fetch(SHEETS_API, { method: 'POST', body: p });
+      const j = await r.json();
+      if (j.status !== 'ok') {
+        throw new Error('Arxiv yozuv ' + (i+1) + '/' + items.length + ' xato: ' +
+          (j.message || 'noma\'lum'));
+      }
+      arxivDone++;
+    }
 
-  Promise.all(arxivPromises).then(() => {
-    // 2. libDebts dan barcha yozuvlarni o'chirish
-    const delPromises = items.map(it => {
-      const params = new URLSearchParams({ action: 'delete_debt', id: it.id });
-      return fetch(SHEETS_API, { method: 'POST', body: params });
-    });
-    return Promise.all(delPromises);
-  }).then(() => {
-    alert('✅ "' + name + '" o\'chirildi va Arxivga saqlandi.');
-    loadLibraryDebts();
-    // Arxiv ochiq bo'lsa qayta yuklash
-    if (typeof loadArchive === 'function') loadArchive();
-  }).catch(err => {
-    alert('⚠️ Xato: ' + err.message);
-    console.error(err);
-  });
+    // === 2. QARZDORLAR DAN O'CHIRISH (sequential) ===
+    for (let i = 0; i < items.length; i++) {
+      loadBox.textContent = '🗑️ O\'chirilmoqda: ' + (i + 1) + ' / ' + items.length;
+      const params = new URLSearchParams({ action: 'delete_debt', id: items[i].id });
+      const r = await fetch(SHEETS_API, { method: 'POST', body: params });
+      const j = await r.json();
+      if (j.status !== 'ok') {
+        throw new Error('O\'chirish ' + (i+1) + '/' + items.length + ' xato: ' +
+          (j.message || 'noma\'lum'));
+      }
+      deleteDone++;
+    }
+
+    loadBox.textContent = '✅ Tayyor!';
+    setTimeout(() => {
+      if (loadBox.parentNode) loadBox.parentNode.removeChild(loadBox);
+      alert('✅ "' + name + '" muvaffaqiyatli o\'chirildi.\n' +
+        '📦 Arxivga ' + arxivDone + ' ta yozuv saqlandi.\n' +
+        '🗑️ Qarzdorlardan ' + deleteDone + ' ta yozuv o\'chirildi.');
+    }, 400);
+
+    await loadLibraryDebts();
+    if (typeof loadArchive === 'function') { try { loadArchive(); } catch(e){} }
+
+  } catch (err) {
+    console.error('deleteTeacher xato:', err);
+    if (loadBox.parentNode) loadBox.parentNode.removeChild(loadBox);
+    alert('⚠️ XATO YUZ BERDI!\n\n' + err.message +
+      '\n\n📦 Arxivga saqlangan: ' + arxivDone + ' ta' +
+      '\n🗑️ O\'chirilgan: ' + deleteDone + ' ta' +
+      '\n\nMa\'lumotlar himoyalash uchun to\'liq o\'chirish bekor qilindi. ' +
+      'Iltimos, internetni tekshiring va qayta urinib ko\'ring.');
+    await loadLibraryDebts();
+  }
 }
 
 // ---- KITOB BERISH ----
